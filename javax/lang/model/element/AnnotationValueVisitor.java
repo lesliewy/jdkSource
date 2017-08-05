@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.lang.model.element;
@@ -30,7 +48,7 @@ import javax.lang.model.type.TypeMirror;
  * {@code NullPointerException} if the additional parameter {@code p}
  * is {@code null}; see documentation of the implementing class for
  * details.
- * 
+ *
  * <p> <b>WARNING:</b> It is possible that methods will be added to
  * this interface to accommodate new, currently unknown, language
  * structures added to future versions of the Java&trade; programming
@@ -43,12 +61,23 @@ import javax.lang.model.type.TypeMirror;
  * parameters, return type, etc. rather than one of the abstract
  * classes.
  *
+ * <p>Note that methods to accommodate new language constructs could
+ * be added in a source <em>compatible</em> way if they were added as
+ * <em>default methods</em>.  However, default methods are only
+ * available on Java SE 8 and higher releases and the {@code
+ * javax.lang.model.*} packages bundled in Java SE 8 are required to
+ * also be runnable on Java SE 7.  Therefore, default methods
+ * <em>cannot</em> be used when extending {@code javax.lang.model.*}
+ * to cover Java SE 8 language features.  However, default methods may
+ * be used in subsequent revisions of the {@code javax.lang.model.*}
+ * packages that are only required to run on Java SE 8 and higher
+ * platform versions.
+ *
  * @param <R> the return type of this visitor's methods
  * @param <P> the type of the additional parameter to this visitor's methods.
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
  * @since 1.6
  */
 public interface AnnotationValueVisitor<R, P> {
@@ -179,7 +208,7 @@ public interface AnnotationValueVisitor<R, P> {
      * @param  p a visitor-specified parameter
      * @return the result of the visit
      * @throws UnknownAnnotationValueException
-     *	a visitor implementation may optionally throw this exception
+     *  a visitor implementation may optionally throw this exception
      */
     R visitUnknown(AnnotationValue av, P p);
 }

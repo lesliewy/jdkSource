@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.event;
@@ -20,11 +38,10 @@ import javax.swing.table.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Alan Chung
  * @see TableColumnModelListener
  */
@@ -35,10 +52,10 @@ public class TableColumnModelEvent extends java.util.EventObject
 //
 
     /** The index of the column from where it was moved or removed */
-    protected int	fromIndex;
+    protected int       fromIndex;
 
     /** The index of the column to where it was moved or added */
-    protected int	toIndex;
+    protected int       toIndex;
 
 //
 // Constructors
@@ -56,11 +73,11 @@ public class TableColumnModelEvent extends java.util.EventObject
      * @see #getToIndex
      */
     public TableColumnModelEvent(TableColumnModel source, int from, int to) {
-	super(source);
-	fromIndex = from;
-	toIndex = to;
+        super(source);
+        fromIndex = from;
+        toIndex = to;
     }
-    
+
 //
 // Querying Methods
 //

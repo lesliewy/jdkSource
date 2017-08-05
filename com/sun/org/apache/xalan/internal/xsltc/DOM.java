@@ -1,9 +1,13 @@
 /*
- * Copyright 2001-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -13,19 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * $Id: DOM.java,v 1.2.4.1 2005/08/31 10:18:49 pvedula Exp $
- */
 
 package com.sun.org.apache.xalan.internal.xsltc;
 
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;
-
+import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
+import java.util.Map;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
 
 /**
  * @author Jacek Ambroziak
@@ -35,23 +34,23 @@ public interface DOM {
     public final static int  FIRST_TYPE             = 0;
 
     public final static int  NO_TYPE                = -1;
-    
+
     // 0 is reserved for NodeIterator.END
     public final static int NULL     = 0;
 
     // used by some node iterators to know which node to return
     public final static int RETURN_CURRENT = 0;
     public final static int RETURN_PARENT  = 1;
-    
+
     // Constants used by getResultTreeFrag to indicate the types of the RTFs.
     public final static int SIMPLE_RTF   = 0;
     public final static int ADAPTIVE_RTF = 1;
     public final static int TREE_RTF     = 2;
-    
+
     /** returns singleton iterator containg the document root */
     public DTMAxisIterator getIterator();
     public String getStringValue();
-	
+
     public DTMAxisIterator getChildren(final int node);
     public DTMAxisIterator getTypedChildren(final int type);
     public DTMAxisIterator getAxisIterator(final int axis);
@@ -59,7 +58,7 @@ public interface DOM {
     public DTMAxisIterator getNthDescendant(int node, int n, boolean includeself);
     public DTMAxisIterator getNamespaceAxisIterator(final int axis, final int ns);
     public DTMAxisIterator getNodeValueIterator(DTMAxisIterator iter, int returnType,
-					     String value, boolean op);
+                                             String value, boolean op);
     public DTMAxisIterator orderNodes(DTMAxisIterator source, int node);
     public String getNodeName(final int node);
     public String getNodeNameX(final int node);
@@ -70,14 +69,14 @@ public interface DOM {
     public int getAttributeNode(final int gType, final int element);
     public String getStringValueX(final int node);
     public void copy(final int node, SerializationHandler handler)
-	throws TransletException;
+        throws TransletException;
     public void copy(DTMAxisIterator nodes, SerializationHandler handler)
-	throws TransletException;
+        throws TransletException;
     public String shallowCopy(final int node, SerializationHandler handler)
-	throws TransletException;
+        throws TransletException;
     public boolean lessThan(final int node1, final int node2);
     public void characters(final int textNode, SerializationHandler handler)
-	throws TransletException;
+        throws TransletException;
     public Node makeNode(int index);
     public Node makeNode(DTMAxisIterator iter);
     public NodeList makeNodeList(int index);
@@ -90,7 +89,7 @@ public interface DOM {
     public boolean isElement(final int node);
     public boolean isAttribute(final int node);
     public String lookupNamespace(int node, String prefix)
-	throws TransletException;
+        throws TransletException;
     public int getNodeIdent(final int nodehandle);
     public int getNodeHandle(final int nodeId);
     public DOM getResultTreeFrag(int initialSize, int rtfType);
@@ -99,5 +98,6 @@ public interface DOM {
     public int getNSType(int node);
     public int getDocument();
     public String getUnparsedEntityURI(String name);
-    public Hashtable getElementsWithIDs();
+    public Map<String, Integer> getElementsWithIDs();
+    public void release();
 }

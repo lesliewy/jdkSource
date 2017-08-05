@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package java.rmi.server;
 
@@ -12,52 +30,88 @@ import sun.rmi.server.UnicastServerRef2;
 
 /**
  * Used for exporting a remote object with JRMP and obtaining a stub
- * that communicates to the remote object.
+ * that communicates to the remote object. Stubs are either generated
+ * at runtime using dynamic proxy objects, or they are generated statically
+ * at build time, typically using the {@code rmic} tool.
  *
- * <p>For the constructors and static <code>exportObject</code> methods
- * below, the stub for a remote object being exported is obtained as
- * follows:
+ * <p><strong>Deprecated: Static Stubs.</strong> <em>Support for statically
+ * generated stubs is deprecated. This includes the API in this class that
+ * requires the use of static stubs, as well as the runtime support for
+ * loading static stubs.  Generating stubs dynamically is preferred, using one
+ * of the five non-deprecated ways of exporting objects as listed below. Do
+ * not run {@code rmic} to generate static stub classes. It is unnecessary, and
+ * it is also deprecated.</em>
  *
- * <p><ul>
+ * <p>There are six ways to export remote objects:
  *
- * <li>If the remote object is exported using the {@link
- * #exportObject(Remote) UnicastRemoteObject.exportObject(Remote)} method,
- * a stub class (typically pregenerated from the remote object's class
- * using the <code>rmic</code> tool) is loaded and an instance of that stub
- * class is constructed as follows.
+ * <ol>
+ *
+ * <li>Subclassing {@code UnicastRemoteObject} and calling the
+ * {@link #UnicastRemoteObject()} constructor.
+ *
+ * <li>Subclassing {@code UnicastRemoteObject} and calling the
+ * {@link #UnicastRemoteObject(int) UnicastRemoteObject(port)} constructor.
+ *
+ * <li>Subclassing {@code UnicastRemoteObject} and calling the
+ * {@link #UnicastRemoteObject(int, RMIClientSocketFactory, RMIServerSocketFactory)
+ * UnicastRemoteObject(port, csf, ssf)} constructor.
+ *
+ * <li>Calling the
+ * {@link #exportObject(Remote) exportObject(Remote)} method.
+ * <strong>Deprecated.</strong>
+ *
+ * <li>Calling the
+ * {@link #exportObject(Remote, int) exportObject(Remote, port)} method.
+ *
+ * <li>Calling the
+ * {@link #exportObject(Remote, int, RMIClientSocketFactory, RMIServerSocketFactory)
+ * exportObject(Remote, port, csf, ssf)} method.
+ *
+ * </ol>
+ *
+ * <p>The fourth technique, {@link #exportObject(Remote)},
+ * always uses statically generated stubs and is deprecated.
+ *
+ * <p>The other five techniques all use the following approach: if the
+ * {@code java.rmi.server.ignoreStubClasses} property is {@code true}
+ * (case insensitive) or if a static stub cannot be found, stubs are generated
+ * dynamically using {@link java.lang.reflect.Proxy Proxy} objects. Otherwise,
+ * static stubs are used.
+ *
+ * <p>The default value of the
+ * {@code java.rmi.server.ignoreStubClasses} property is {@code false}.
+ *
+ * <p>Statically generated stubs are typically pregenerated from the
+ * remote object's class using the {@code rmic} tool. A static stub is
+ * loaded and an instance of that stub class is constructed as described
+ * below.
+ *
  * <ul>
  *
- * <li>A "root class" is determined as follows:  if the remote object's
+ * <li>A "root class" is determined as follows: if the remote object's
  * class directly implements an interface that extends {@link Remote}, then
  * the remote object's class is the root class; otherwise, the root class is
  * the most derived superclass of the remote object's class that directly
- * implements an interface that extends <code>Remote</code>.
+ * implements an interface that extends {@code Remote}.
  *
  * <li>The name of the stub class to load is determined by concatenating
- * the binary name of the root class with the suffix <code>"_Stub"</code>.
+ * the binary name of the root class with the suffix {@code _Stub}.
  *
  * <li>The stub class is loaded by name using the class loader of the root
- * class.  The stub class must extend {@link RemoteStub} and must have a
- * public constructor that has one parameter, of type {@link RemoteRef}.
+ * class. The stub class must extend {@link RemoteStub} and must have a
+ * public constructor that has one parameter of type {@link RemoteRef}.
  *
  * <li>Finally, an instance of the stub class is constructed with a
  * {@link RemoteRef}.
- * </ul>
  *
- * <li>If the appropriate stub class could not be found, or the stub class
- * could not be loaded, or a problem occurs creating the stub instance, a
+ * <li>If the appropriate stub class could not be found, or if the stub class
+ * could not be loaded, or if a problem occurs creating the stub instance, a
  * {@link StubNotFoundException} is thrown.
  *
- * <p>
- * <li>For all other means of exporting:
- * <p><ul>
+ * </ul>
  *
- * <li>If the remote object's stub class (as defined above) could not be
- * loaded or the system property
- * <code>java.rmi.server.ignoreStubClasses</code> is set to
- * <code>"true"</code> (case insensitive), a {@link
- * java.lang.reflect.Proxy} instance is constructed with the following
- * properties:
+ * <p>Stubs are dynamically generated by constructing an instance of
+ * a {@link java.lang.reflect.Proxy Proxy} with the following characteristics:
  *
  * <ul>
  *
@@ -73,16 +127,19 @@ import sun.rmi.server.UnicastServerRef2;
  *
  * <li>If the proxy could not be created, a {@link StubNotFoundException}
  * will be thrown.
- * </ul>
- *
- * <p>
- * <li>Otherwise, an instance of the remote object's stub class (as
- * described above) is used as the stub.
  *
  * </ul>
- * </ul>
  *
- * @version %I%, %G%
+ * @implNote
+ * Depending upon which constructor or static method is used for exporting an
+ * object, {@link RMISocketFactory} may be used for creating sockets.
+ * By default, server sockets created by {@link RMISocketFactory}
+ * listen on all network interfaces. See the
+ * {@link RMISocketFactory} class and the section
+ * <a href="{@docRoot}/../platform/rmi/spec/rmi-server29.html">RMI Socket Factories</a>
+ * in the
+ * <a href="{@docRoot}/../platform/rmi/spec/rmiTOC.html">Java RMI Specification</a>.
+ *
  * @author  Ann Wollrath
  * @author  Peter Jones
  * @since   JDK1.1
@@ -90,18 +147,18 @@ import sun.rmi.server.UnicastServerRef2;
 public class UnicastRemoteObject extends RemoteServer {
 
     /**
-     * @serial port number on which to export object 
+     * @serial port number on which to export object
      */
     private int port = 0;
 
     /**
-     * @serial client-side socket factory (if any) 
+     * @serial client-side socket factory (if any)
      */
     private RMIClientSocketFactory csf = null;
-    
-    /** 
+
+    /**
      * @serial server-side socket factory (if any) to use when
-     * exporting object 
+     * exporting object
      */
     private RMIServerSocketFactory ssf = null;
 
@@ -111,17 +168,25 @@ public class UnicastRemoteObject extends RemoteServer {
     /**
      * Creates and exports a new UnicastRemoteObject object using an
      * anonymous port.
+     *
+     * <p>The object is exported with a server socket
+     * created using the {@link RMISocketFactory} class.
+     *
      * @throws RemoteException if failed to export object
      * @since JDK1.1
      */
     protected UnicastRemoteObject() throws RemoteException
     {
-	this(0);
+        this(0);
     }
 
     /**
      * Creates and exports a new UnicastRemoteObject object using the
      * particular supplied port.
+     *
+     * <p>The object is exported with a server socket
+     * created using the {@link RMISocketFactory} class.
+     *
      * @param port the port number on which the remote object receives calls
      * (if <code>port</code> is zero, an anonymous port is chosen)
      * @throws RemoteException if failed to export object
@@ -129,13 +194,18 @@ public class UnicastRemoteObject extends RemoteServer {
      */
     protected UnicastRemoteObject(int port) throws RemoteException
     {
-	this.port = port;
-	exportObject((Remote) this, port);
+        this.port = port;
+        exportObject((Remote) this, port);
     }
 
     /**
      * Creates and exports a new UnicastRemoteObject object using the
      * particular supplied port and socket factories.
+     *
+     * <p>Either socket factory may be {@code null}, in which case
+     * the corresponding client or server socket creation method of
+     * {@link RMISocketFactory} is used instead.
+     *
      * @param port the port number on which the remote object receives calls
      * (if <code>port</code> is zero, an anonymous port is chosen)
      * @param csf the client-side socket factory for making calls to the
@@ -145,26 +215,26 @@ public class UnicastRemoteObject extends RemoteServer {
      * @since 1.2
      */
     protected UnicastRemoteObject(int port,
-				  RMIClientSocketFactory csf,
-				  RMIServerSocketFactory ssf)
-	throws RemoteException
+                                  RMIClientSocketFactory csf,
+                                  RMIServerSocketFactory ssf)
+        throws RemoteException
     {
-	this.port = port;
-	this.csf = csf;
-	this.ssf = ssf;
-	exportObject((Remote) this, port, csf, ssf);
+        this.port = port;
+        this.csf = csf;
+        this.ssf = ssf;
+        exportObject((Remote) this, port, csf, ssf);
     }
 
     /**
      * Re-export the remote object when it is deserialized.
      */
-    private void readObject(java.io.ObjectInputStream in) 
-	throws java.io.IOException, java.lang.ClassNotFoundException
+    private void readObject(java.io.ObjectInputStream in)
+        throws java.io.IOException, java.lang.ClassNotFoundException
     {
-	in.defaultReadObject();
-	reexport();
+        in.defaultReadObject();
+        reexport();
     }
-    
+
     /**
      * Returns a clone of the remote object that is distinct from
      * the original.
@@ -176,13 +246,13 @@ public class UnicastRemoteObject extends RemoteServer {
      */
     public Object clone() throws CloneNotSupportedException
     {
-	try {
-	    UnicastRemoteObject cloned = (UnicastRemoteObject) super.clone();
-	    cloned.reexport();
-	    return cloned;
-	} catch (RemoteException e) {
-	    throw new ServerCloneException("Clone failed", e);
-	}
+        try {
+            UnicastRemoteObject cloned = (UnicastRemoteObject) super.clone();
+            cloned.reexport();
+            return cloned;
+        } catch (RemoteException e) {
+            throw new ServerCloneException("Clone failed", e);
+        }
     }
 
     /*
@@ -192,37 +262,52 @@ public class UnicastRemoteObject extends RemoteServer {
      */
     private void reexport() throws RemoteException
     {
-	if (csf == null && ssf == null) {
-	    exportObject((Remote) this, port);
-	} else {
-	    exportObject((Remote) this, port, csf, ssf);
-	}
+        if (csf == null && ssf == null) {
+            exportObject((Remote) this, port);
+        } else {
+            exportObject((Remote) this, port, csf, ssf);
+        }
     }
 
-    /** 
+    /**
      * Exports the remote object to make it available to receive incoming
-     * calls using an anonymous port.
+     * calls using an anonymous port. This method will always return a
+     * statically generated stub.
+     *
+     * <p>The object is exported with a server socket
+     * created using the {@link RMISocketFactory} class.
+     *
      * @param obj the remote object to be exported
      * @return remote object stub
      * @exception RemoteException if export fails
      * @since JDK1.1
+     * @deprecated This method is deprecated because it supports only static stubs.
+     * Use {@link #exportObject(Remote, int) exportObject(Remote, port)} or
+     * {@link #exportObject(Remote, int, RMIClientSocketFactory, RMIServerSocketFactory)
+     * exportObject(Remote, port, csf, ssf)}
+     * instead.
      */
+    @Deprecated
     public static RemoteStub exportObject(Remote obj)
-	throws RemoteException
+        throws RemoteException
     {
-	/*
-	 * Use UnicastServerRef constructor passing the boolean value true
-	 * to indicate that only a generated stub class should be used.  A
-	 * generated stub class must be used instead of a dynamic proxy
-	 * because the return value of this method is RemoteStub which a
-	 * dynamic proxy class cannot extend.
-	 */
-	return (RemoteStub) exportObject(obj, new UnicastServerRef(true));
+        /*
+         * Use UnicastServerRef constructor passing the boolean value true
+         * to indicate that only a generated stub class should be used.  A
+         * generated stub class must be used instead of a dynamic proxy
+         * because the return value of this method is RemoteStub which a
+         * dynamic proxy class cannot extend.
+         */
+        return (RemoteStub) exportObject(obj, new UnicastServerRef(true));
     }
 
-    /** 
+    /**
      * Exports the remote object to make it available to receive incoming
      * calls, using the particular supplied port.
+     *
+     * <p>The object is exported with a server socket
+     * created using the {@link RMISocketFactory} class.
+     *
      * @param obj the remote object to be exported
      * @param port the port to export the object on
      * @return remote object stub
@@ -230,14 +315,19 @@ public class UnicastRemoteObject extends RemoteServer {
      * @since 1.2
      */
     public static Remote exportObject(Remote obj, int port)
-	throws RemoteException
+        throws RemoteException
     {
-	return exportObject(obj, new UnicastServerRef(port));
+        return exportObject(obj, new UnicastServerRef(port));
     }
 
     /**
      * Exports the remote object to make it available to receive incoming
      * calls, using a transport specified by the given socket factory.
+     *
+     * <p>Either socket factory may be {@code null}, in which case
+     * the corresponding client or server socket creation method of
+     * {@link RMISocketFactory} is used instead.
+     *
      * @param obj the remote object to be exported
      * @param port the port to export the object on
      * @param csf the client-side socket factory for making calls to the
@@ -248,12 +338,12 @@ public class UnicastRemoteObject extends RemoteServer {
      * @since 1.2
      */
     public static Remote exportObject(Remote obj, int port,
-				      RMIClientSocketFactory csf,
-				      RMIServerSocketFactory ssf)
-	throws RemoteException
+                                      RMIClientSocketFactory csf,
+                                      RMIServerSocketFactory ssf)
+        throws RemoteException
     {
-	
-	return exportObject(obj, new UnicastServerRef2(port, csf, ssf));
+
+        return exportObject(obj, new UnicastServerRef2(port, csf, ssf));
     }
 
     /**
@@ -275,21 +365,21 @@ public class UnicastRemoteObject extends RemoteServer {
      * @since 1.2
      */
     public static boolean unexportObject(Remote obj, boolean force)
-	throws java.rmi.NoSuchObjectException
+        throws java.rmi.NoSuchObjectException
     {
-	return sun.rmi.transport.ObjectTable.unexportObject(obj, force);
+        return sun.rmi.transport.ObjectTable.unexportObject(obj, force);
     }
 
     /**
      * Exports the specified object using the specified server ref.
      */
     private static Remote exportObject(Remote obj, UnicastServerRef sref)
-	throws RemoteException
+        throws RemoteException
     {
-	// if obj extends UnicastRemoteObject, set its ref.
-	if (obj instanceof UnicastRemoteObject) {
-	    ((UnicastRemoteObject) obj).ref = sref;
-	}
-	return sref.exportObject(obj, null, false);
+        // if obj extends UnicastRemoteObject, set its ref.
+        if (obj instanceof UnicastRemoteObject) {
+            ((UnicastRemoteObject) obj).ref = sref;
+        }
+        return sref.exportObject(obj, null, false);
     }
 }

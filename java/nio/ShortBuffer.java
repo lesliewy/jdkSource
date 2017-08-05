@@ -1,13 +1,36 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
 
 package java.nio;
+
+
+
+
+
 
 
 
@@ -21,15 +44,15 @@ package java.nio;
  *
  * <ul>
  *
- *   <li><p> Absolute and relative {@link #get() </code><i>get</i><code>} and
- *   {@link #put(short) </code><i>put</i><code>} methods that read and write
+ *   <li><p> Absolute and relative {@link #get() <i>get</i>} and
+ *   {@link #put(short) <i>put</i>} methods that read and write
  *   single shorts; </p></li>
  *
- *   <li><p> Relative {@link #get(short[]) </code><i>bulk get</i><code>}
+ *   <li><p> Relative {@link #get(short[]) <i>bulk get</i>}
  *   methods that transfer contiguous sequences of shorts from this buffer
  *   into an array; and</p></li>
  *
- *   <li><p> Relative {@link #put(short[]) </code><i>bulk put</i><code>}
+ *   <li><p> Relative {@link #put(short[]) <i>bulk put</i>}
  *   methods that transfer contiguous sequences of shorts from a
  *   short array or some other short
  *   buffer into this buffer;&#32;and </p></li>
@@ -47,14 +70,14 @@ package java.nio;
 
 
  *
- *   <li><p> Methods for {@link #compact </code>compacting<code>}, {@link
- *   #duplicate </code>duplicating<code>}, and {@link #slice
- *   </code>slicing<code>} a short buffer.  </p></li>
+ *   <li><p> Methods for {@link #compact compacting}, {@link
+ *   #duplicate duplicating}, and {@link #slice slicing}
+ *   a short buffer.  </p></li>
  *
  * </ul>
  *
  * <p> Short buffers can be created either by {@link #allocate
- * </code><i>allocation</i><code>}, which allocates space for the buffer's
+ * <i>allocation</i>}, which allocates space for the buffer's
  *
 
 
@@ -63,7 +86,7 @@ package java.nio;
 
 
  *
- * content, by {@link #wrap(short[]) </code><i>wrapping</i><code>} an existing
+ * content, by {@link #wrap(short[]) <i>wrapping</i>} an existing
  * short array  into a buffer, or by creating a
  * <a href="ByteBuffer.html#views"><i>view</i></a> of an existing byte buffer.
  *
@@ -233,7 +256,6 @@ package java.nio;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version %I%, %E%
  * @since 1.4
  */
 
@@ -246,26 +268,27 @@ public abstract class ShortBuffer
     // reduce the number of virtual method invocations needed to access these
     // values, which is especially costly when coding small buffers.
     //
-    final short[] hb;			// Non-null only for heap buffers
+    final short[] hb;                  // Non-null only for heap buffers
     final int offset;
-    boolean isReadOnly;			// Valid only for heap buffers
+    boolean isReadOnly;                 // Valid only for heap buffers
 
     // Creates a new buffer with the given mark, position, limit, capacity,
     // backing array, and array offset
     //
-    ShortBuffer(int mark, int pos, int lim, int cap,	// package-private
-		 short[] hb, int offset)
+    ShortBuffer(int mark, int pos, int lim, int cap,   // package-private
+                 short[] hb, int offset)
     {
-	super(mark, pos, lim, cap);
-	this.hb = hb;
-	this.offset = offset;
+        super(mark, pos, lim, cap);
+        this.hb = hb;
+        this.offset = offset;
     }
 
     // Creates a new buffer with the given mark, position, limit, and capacity
     //
-    ShortBuffer(int mark, int pos, int lim, int cap) {	// package-private
-	this(mark, pos, lim, cap, null, 0);
+    ShortBuffer(int mark, int pos, int lim, int cap) { // package-private
+        this(mark, pos, lim, cap, null, 0);
     }
+
 
 
 
@@ -294,9 +317,9 @@ public abstract class ShortBuffer
      * Allocates a new short buffer.
      *
      * <p> The new buffer's position will be zero, its limit will be its
-     * capacity, and its mark will be undefined.  It will have a {@link #array
-     * </code>backing array<code>}, and its {@link #arrayOffset </code>array
-     * offset<code>} will be zero.
+     * capacity, its mark will be undefined, and each of its elements will be
+     * initialized to zero.  It will have a {@link #array backing array},
+     * and its {@link #arrayOffset array offset} will be zero.
      *
      * @param  capacity
      *         The new buffer's capacity, in shorts
@@ -307,9 +330,9 @@ public abstract class ShortBuffer
      *          If the <tt>capacity</tt> is a negative integer
      */
     public static ShortBuffer allocate(int capacity) {
-	if (capacity < 0)
-	    throw new IllegalArgumentException();
-	return new HeapShortBuffer(capacity, capacity);
+        if (capacity < 0)
+            throw new IllegalArgumentException();
+        return new HeapShortBuffer(capacity, capacity);
     }
 
     /**
@@ -320,8 +343,8 @@ public abstract class ShortBuffer
      * and vice versa.  The new buffer's capacity will be
      * <tt>array.length</tt>, its position will be <tt>offset</tt>, its limit
      * will be <tt>offset + length</tt>, and its mark will be undefined.  Its
-     * {@link #array </code>backing array<code>} will be the given array, and
-     * its {@link #arrayOffset </code>array offset<code>} will be zero.  </p>
+     * {@link #array backing array} will be the given array, and
+     * its {@link #arrayOffset array offset} will be zero.  </p>
      *
      * @param  array
      *         The array that will back the new buffer
@@ -344,13 +367,13 @@ public abstract class ShortBuffer
      *          parameters do not hold
      */
     public static ShortBuffer wrap(short[] array,
-				    int offset, int length)
+                                    int offset, int length)
     {
-	try {
-	    return new HeapShortBuffer(array, offset, length);
-	} catch (IllegalArgumentException x) {
-	    throw new IndexOutOfBoundsException();
-	}
+        try {
+            return new HeapShortBuffer(array, offset, length);
+        } catch (IllegalArgumentException x) {
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     /**
@@ -360,9 +383,9 @@ public abstract class ShortBuffer
      * that is, modifications to the buffer will cause the array to be modified
      * and vice versa.  The new buffer's capacity and limit will be
      * <tt>array.length</tt>, its position will be zero, and its mark will be
-     * undefined.  Its {@link #array </code>backing array<code>} will be the
-     * given array, and its {@link #arrayOffset </code>array offset<code>} will
-     * be zero.  </p> 
+     * undefined.  Its {@link #array backing array} will be the
+     * given array, and its {@link #arrayOffset array offset>} will
+     * be zero.  </p>
      *
      * @param  array
      *         The array that will back this buffer
@@ -370,7 +393,7 @@ public abstract class ShortBuffer
      * @return  The new short buffer
      */
     public static ShortBuffer wrap(short[] array) {
-	return wrap(array, 0, array.length);
+        return wrap(array, 0, array.length);
     }
 
 
@@ -522,12 +545,12 @@ public abstract class ShortBuffer
      */
     public abstract ShortBuffer asReadOnlyBuffer();
 
-
+
     // -- Singleton get/put methods --
 
     /**
      * Relative <i>get</i> method.  Reads the short at this buffer's
-     * current position, and then increments the position. </p>
+     * current position, and then increments the position.
      *
      * @return  The short at the buffer's current position
      *
@@ -538,7 +561,7 @@ public abstract class ShortBuffer
 
     /**
      * Relative <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
-     * 
+     *
      * <p> Writes the given short into this buffer at the current
      * position, and then increments the position. </p>
      *
@@ -557,7 +580,7 @@ public abstract class ShortBuffer
 
     /**
      * Absolute <i>get</i> method.  Reads the short at the given
-     * index. </p>
+     * index.
      *
      * @param  index
      *         The index from which the short will be read
@@ -570,9 +593,22 @@ public abstract class ShortBuffer
      */
     public abstract short get(int index);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * Absolute <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
-     * 
+     *
      * <p> Writes the given short into this buffer at the given
      * index. </p>
      *
@@ -593,7 +629,7 @@ public abstract class ShortBuffer
      */
     public abstract ShortBuffer put(int index, short s);
 
-
+
     // -- Bulk get operations --
 
     /**
@@ -615,12 +651,13 @@ public abstract class ShortBuffer
      * <tt>src.get(dst,&nbsp;off,&nbsp;len)</tt> has exactly the same effect as
      * the loop
      *
-     * <pre>
+     * <pre>{@code
      *     for (int i = off; i < off + len; i++)
-     *         dst[i] = src.get(); </pre>
+     *         dst[i] = src.get():
+     * }</pre>
      *
      * except that it first checks that there are sufficient shorts in
-     * this buffer and it is potentially much more efficient. </p>
+     * this buffer and it is potentially much more efficient.
      *
      * @param  dst
      *         The array into which shorts are to be written
@@ -646,13 +683,13 @@ public abstract class ShortBuffer
      *          parameters do not hold
      */
     public ShortBuffer get(short[] dst, int offset, int length) {
-	checkBounds(offset, length, dst.length);
-	if (length > remaining())
-	    throw new BufferUnderflowException();
-	int end = offset + length;
-	for (int i = offset; i < end; i++)
-	    dst[i] = get();
-	return this;
+        checkBounds(offset, length, dst.length);
+        if (length > remaining())
+            throw new BufferUnderflowException();
+        int end = offset + length;
+        for (int i = offset; i < end; i++)
+            dst[i] = get();
+        return this;
     }
 
     /**
@@ -665,6 +702,9 @@ public abstract class ShortBuffer
      * <pre>
      *     src.get(a, 0, a.length) </pre>
      *
+     * @param   dst
+     *          The destination array
+     *
      * @return  This buffer
      *
      * @throws  BufferUnderflowException
@@ -672,10 +712,10 @@ public abstract class ShortBuffer
      *          remaining in this buffer
      */
     public ShortBuffer get(short[] dst) {
-	return get(dst, 0, dst.length);
+        return get(dst, 0, dst.length);
     }
 
-
+
     // -- Bulk put operations --
 
     /**
@@ -701,7 +741,7 @@ public abstract class ShortBuffer
      *         dst.put(src.get()); </pre>
      *
      * except that it first checks that there is sufficient space in this
-     * buffer and it is potentially much more efficient. </p>
+     * buffer and it is potentially much more efficient.
      *
      * @param  src
      *         The source buffer from which shorts are to be read;
@@ -720,14 +760,16 @@ public abstract class ShortBuffer
      *          If this buffer is read-only
      */
     public ShortBuffer put(ShortBuffer src) {
-	if (src == this)
-	    throw new IllegalArgumentException();
-	int n = src.remaining();
-	if (n > remaining())
-	    throw new BufferOverflowException();
-	for (int i = 0; i < n; i++)
-	    put(src.get());
-	return this;
+        if (src == this)
+            throw new IllegalArgumentException();
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+        int n = src.remaining();
+        if (n > remaining())
+            throw new BufferOverflowException();
+        for (int i = 0; i < n; i++)
+            put(src.get());
+        return this;
     }
 
     /**
@@ -749,12 +791,13 @@ public abstract class ShortBuffer
      * <tt>dst.put(src,&nbsp;off,&nbsp;len)</tt> has exactly the same effect as
      * the loop
      *
-     * <pre>
+     * <pre>{@code
      *     for (int i = off; i < off + len; i++)
-     *         dst.put(a[i]); </pre>
+     *         dst.put(a[i]);
+     * }</pre>
      *
      * except that it first checks that there is sufficient space in this
-     * buffer and it is potentially much more efficient. </p>
+     * buffer and it is potentially much more efficient.
      *
      * @param  src
      *         The array from which shorts are to be read
@@ -781,13 +824,13 @@ public abstract class ShortBuffer
      *          If this buffer is read-only
      */
     public ShortBuffer put(short[] src, int offset, int length) {
-	checkBounds(offset, length, src.length);
-	if (length > remaining())
-	    throw new BufferOverflowException();
-	int end = offset + length;
-	for (int i = offset; i < end; i++)
-	    this.put(src[i]);
-	return this;
+        checkBounds(offset, length, src.length);
+        if (length > remaining())
+            throw new BufferOverflowException();
+        int end = offset + length;
+        for (int i = offset; i < end; i++)
+            this.put(src[i]);
+        return this;
     }
 
     /**
@@ -801,6 +844,9 @@ public abstract class ShortBuffer
      * <pre>
      *     dst.put(a, 0, a.length) </pre>
      *
+     * @param   src
+     *          The source array
+     *
      * @return  This buffer
      *
      * @throws  BufferOverflowException
@@ -810,7 +856,7 @@ public abstract class ShortBuffer
      *          If this buffer is read-only
      */
     public final ShortBuffer put(short[] src) {
-	return put(src, 0, src.length);
+        return put(src, 0, src.length);
     }
 
 
@@ -898,7 +944,15 @@ public abstract class ShortBuffer
 
 
 
-
+
+
+
+
+
+
+
+
+
     // -- Other stuff --
 
     /**
@@ -913,7 +967,7 @@ public abstract class ShortBuffer
      *          is backed by an array and is not read-only
      */
     public final boolean hasArray() {
-	return (hb != null) && !isReadOnly;
+        return (hb != null) && !isReadOnly;
     }
 
     /**
@@ -936,11 +990,11 @@ public abstract class ShortBuffer
      *          If this buffer is not backed by an accessible array
      */
     public final short[] array() {
-	if (hb == null)
-	    throw new UnsupportedOperationException();
-	if (isReadOnly)
-	    throw new ReadOnlyBufferException();
-	return hb;
+        if (hb == null)
+            throw new UnsupportedOperationException();
+        if (isReadOnly)
+            throw new ReadOnlyBufferException();
+        return hb;
     }
 
     /**
@@ -964,11 +1018,11 @@ public abstract class ShortBuffer
      *          If this buffer is not backed by an accessible array
      */
     public final int arrayOffset() {
-	if (hb == null)
-	    throw new UnsupportedOperationException();
-	if (isReadOnly)
-	    throw new ReadOnlyBufferException();
-	return offset;
+        if (hb == null)
+            throw new UnsupportedOperationException();
+        if (isReadOnly)
+            throw new ReadOnlyBufferException();
+        return offset;
     }
 
     /**
@@ -1004,6 +1058,7 @@ public abstract class ShortBuffer
 
 
 
+
      *
      * @return  This buffer
      *
@@ -1013,7 +1068,7 @@ public abstract class ShortBuffer
     public abstract ShortBuffer compact();
 
     /**
-     * Tells whether or not this short buffer is direct. </p>
+     * Tells whether or not this short buffer is direct.
      *
      * @return  <tt>true</tt> if, and only if, this buffer is direct
      */
@@ -1022,27 +1077,27 @@ public abstract class ShortBuffer
 
 
     /**
-     * Returns a string summarizing the state of this buffer.  </p>
+     * Returns a string summarizing the state of this buffer.
      *
      * @return  A summary string
      */
     public String toString() {
-	StringBuffer sb = new StringBuffer();
-	sb.append(getClass().getName());
-	sb.append("[pos=");
-	sb.append(position());
-	sb.append(" lim=");
-	sb.append(limit());
-	sb.append(" cap=");
-	sb.append(capacity());
-	sb.append("]");
-	return sb.toString();
+        StringBuffer sb = new StringBuffer();
+        sb.append(getClass().getName());
+        sb.append("[pos=");
+        sb.append(position());
+        sb.append(" lim=");
+        sb.append(limit());
+        sb.append(" cap=");
+        sb.append(capacity());
+        sb.append("]");
+        return sb.toString();
     }
 
 
 
 
-    
+
 
     /**
      * Returns the current hash code of this buffer.
@@ -1058,11 +1113,15 @@ public abstract class ShortBuffer
      * @return  The current hash code of this buffer
      */
     public int hashCode() {
-	int h = 1;
-	int p = position();
-	for (int i = limit() - 1; i >= p; i--)
-	    h = 31 * h + (int)get(i);
-	return h;
+        int h = 1;
+        int p = position();
+        for (int i = limit() - 1; i >= p; i--)
+
+
+
+            h = 31 * h + (int)get(i);
+
+        return h;
     }
 
     /**
@@ -1070,7 +1129,7 @@ public abstract class ShortBuffer
      *
      * <p> Two short buffers are equal if, and only if,
      *
-     * <p><ol>
+     * <ol>
      *
      *   <li><p> They have the same element type,  </p></li>
      *
@@ -1079,6 +1138,13 @@ public abstract class ShortBuffer
      *
      *   <li><p> The two sequences of remaining elements, considered
      *   independently of their starting positions, are pointwise equal.
+
+
+
+
+
+
+
      *   </p></li>
      *
      * </ol>
@@ -1091,22 +1157,26 @@ public abstract class ShortBuffer
      *           given object
      */
     public boolean equals(Object ob) {
-	if (!(ob instanceof ShortBuffer))
-	    return false;
-	ShortBuffer that = (ShortBuffer)ob;
-	if (this.remaining() != that.remaining())
-	    return false;
-	int p = this.position();
-	for (int i = this.limit() - 1, j = that.limit() - 1; i >= p; i--, j--) {
-	    short v1 = this.get(i);
-	    short v2 = that.get(j);
-	    if (v1 != v2) {
-		if ((v1 != v1) && (v2 != v2))	// For float and double
-		    continue;
-		return false;
-	    }
-	}
-	return true;
+        if (this == ob)
+            return true;
+        if (!(ob instanceof ShortBuffer))
+            return false;
+        ShortBuffer that = (ShortBuffer)ob;
+        if (this.remaining() != that.remaining())
+            return false;
+        int p = this.position();
+        for (int i = this.limit() - 1, j = that.limit() - 1; i >= p; i--, j--)
+            if (!equals(this.get(i), that.get(j)))
+                return false;
+        return true;
+    }
+
+    private static boolean equals(short x, short y) {
+
+
+
+        return x == y;
+
     }
 
     /**
@@ -1115,30 +1185,44 @@ public abstract class ShortBuffer
      * <p> Two short buffers are compared by comparing their sequences of
      * remaining elements lexicographically, without regard to the starting
      * position of each sequence within its corresponding buffer.
+
+
+
+
+
+
+
+
+     * Pairs of {@code short} elements are compared as if by invoking
+     * {@link Short#compare(short,short)}.
+
      *
      * <p> A short buffer is not comparable to any other type of object.
      *
      * @return  A negative integer, zero, or a positive integer as this buffer
-     *		is less than, equal to, or greater than the given buffer
+     *          is less than, equal to, or greater than the given buffer
      */
     public int compareTo(ShortBuffer that) {
-	int n = this.position() + Math.min(this.remaining(), that.remaining());
-	for (int i = this.position(), j = that.position(); i < n; i++, j++) {
-	    short v1 = this.get(i);
-	    short v2 = that.get(j);
-	    if (v1 == v2)
-		continue;
-	    if ((v1 != v1) && (v2 != v2)) 	// For float and double
-		continue;
-	    if (v1 < v2)
-		return -1;
-	    return +1;
-	}
-	return this.remaining() - that.remaining();
+        int n = this.position() + Math.min(this.remaining(), that.remaining());
+        for (int i = this.position(), j = that.position(); i < n; i++, j++) {
+            int cmp = compare(this.get(i), that.get(j));
+            if (cmp != 0)
+                return cmp;
+        }
+        return this.remaining() - that.remaining();
     }
 
+    private static int compare(short x, short y) {
 
-
+
+
+
+
+
+        return Short.compare(x, y);
+
+    }
+
     // -- Other char stuff --
 
 
@@ -1333,7 +1417,7 @@ public abstract class ShortBuffer
 
 
 
-
+
     // -- Other byte stuff: Access to binary data --
 
 
@@ -1343,7 +1427,7 @@ public abstract class ShortBuffer
      *
      * <p> The byte order of a short buffer created by allocation or by
      * wrapping an existing <tt>short</tt> array is the {@link
-     * ByteOrder#nativeOrder </code>native order<code>} of the underlying
+     * ByteOrder#nativeOrder native order} of the underlying
      * hardware.  The byte order of a short buffer created as a <a
      * href="ByteBuffer.html#views">view</a> of a byte buffer is that of the
      * byte buffer at the moment that the view is created.  </p>
@@ -1351,6 +1435,18 @@ public abstract class ShortBuffer
      * @return  This buffer's byte order
      */
     public abstract ByteOrder order();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

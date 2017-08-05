@@ -1,17 +1,34 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.security.auth.callback;
 
 /**
- * Signals that a <code>CallbackHandler</code> does not
- * recognize a particular <code>Callback</code>.
+ * Signals that a {@code CallbackHandler} does not
+ * recognize a particular {@code Callback}.
  *
- * @version %I%, %G%
  */
 public class UnsupportedCallbackException extends Exception {
 
@@ -23,16 +40,16 @@ public class UnsupportedCallbackException extends Exception {
     private Callback callback;
 
     /**
-     * Constructs a <code>UnsupportedCallbackException</code>
+     * Constructs a {@code UnsupportedCallbackException}
      * with no detail message.
      *
      * <p>
      *
-     * @param callback the unrecognized <code>Callback</code>.
+     * @param callback the unrecognized {@code Callback}.
      */
     public UnsupportedCallbackException(Callback callback) {
-	super();
-	this.callback = callback;
+        super();
+        this.callback = callback;
     }
 
     /**
@@ -42,23 +59,23 @@ public class UnsupportedCallbackException extends Exception {
      *
      * <p>
      *
-     * @param callback the unrecognized <code>Callback</code>. <p>
+     * @param callback the unrecognized {@code Callback}. <p>
      *
      * @param msg the detail message.
      */
     public UnsupportedCallbackException(Callback callback, String msg) {
-	super(msg);
-	this.callback = callback;
+        super(msg);
+        this.callback = callback;
     }
 
     /**
-     * Get the unrecognized <code>Callback</code>.
+     * Get the unrecognized {@code Callback}.
      *
      * <p>
      *
-     * @return the unrecognized <code>Callback</code>.
+     * @return the unrecognized {@code Callback}.
      */
     public Callback getCallback() {
-	return callback;
+        return callback;
     }
 }

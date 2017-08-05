@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.corba.se.impl.orbutil;
@@ -21,7 +39,7 @@ import com.sun.corba.se.impl.util.RepositoryId;
  * are static.
  */
 public final class RepIdDelegator
-    implements RepositoryIdStrings, 
+    implements RepositoryIdStrings,
                RepositoryIdUtility,
                RepositoryIdInterface
 {
@@ -36,7 +54,7 @@ public final class RepIdDelegator
     {
         return RepositoryId.createForJavaType(ser);
     }
-               
+
     public String createForJavaType(Class clz)
         throws TypeMismatchException
     {
@@ -56,7 +74,7 @@ public final class RepIdDelegator
     }
 
     // RepositoryIdUtility methods
-    
+
     public boolean isChunkedEncoding(int valueTag) {
         return RepositoryId.isChunkedEncoding(valueTag);
     }
@@ -102,7 +120,7 @@ public final class RepIdDelegator
     }
 
     public int getStandardRMIUnchunkedNoRepStrId() {
-	return RepositoryId.kPreComputed_StandardRMIUnchunked_NoRep;
+        return RepositoryId.kPreComputed_StandardRMIUnchunked_NoRep;
     }
 
     public int getCodeBaseRMIUnchunkedNoRepStrId() {
@@ -115,14 +133,14 @@ public final class RepIdDelegator
         return delegate.getClassFromType();
     }
 
-    public Class getClassFromType(String codebaseURL) 
+    public Class getClassFromType(String codebaseURL)
         throws ClassNotFoundException, MalformedURLException
     {
         return delegate.getClassFromType(codebaseURL);
     }
 
     public Class getClassFromType(Class expectedType,
-                                  String codebaseURL) 
+                                  String codebaseURL)
         throws ClassNotFoundException, MalformedURLException
     {
         return delegate.getClassFromType(expectedType, codebaseURL);
@@ -133,7 +151,9 @@ public final class RepIdDelegator
     }
 
     // Constructor used for factory/utility cases
-    public RepIdDelegator() {}
+    public RepIdDelegator() {
+        this(null);
+    }
 
     // Constructor used by getIdFromString.  All non-static
     // RepositoryId methods will use the provided delegate.
@@ -141,7 +161,7 @@ public final class RepIdDelegator
         this.delegate = _delegate;
     }
 
-    private RepositoryId delegate;
+    private final RepositoryId delegate;
 
     public String toString() {
         if (delegate != null)
@@ -155,5 +175,13 @@ public final class RepIdDelegator
             return delegate.equals(obj);
         else
             return super.equals(obj);
+    }
+
+    public int hashCode() {
+        if (delegate != null) {
+            return delegate.hashCode();
+        } else {
+            return super.hashCode();
+        }
     }
 }

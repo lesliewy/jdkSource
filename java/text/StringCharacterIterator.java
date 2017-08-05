@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -24,7 +42,7 @@ package java.text;
 
 /**
  * <code>StringCharacterIterator</code> implements the
- * <code>CharacterIterater</code> protocol for a <code>String</code>.
+ * <code>CharacterIterator</code> protocol for a <code>String</code>.
  * The <code>StringCharacterIterator</code> class iterates over the
  * entire <code>String</code>.
  *
@@ -41,6 +59,8 @@ public final class StringCharacterIterator implements CharacterIterator
 
     /**
      * Constructs an iterator with an initial index of 0.
+     *
+     * @param text the {@code String} to be iterated over
      */
     public StringCharacterIterator(String text)
     {
@@ -254,7 +274,7 @@ public final class StringCharacterIterator implements CharacterIterator
             return other;
         }
         catch (CloneNotSupportedException e) {
-            throw new InternalError();
+            throw new InternalError(e);
         }
     }
 

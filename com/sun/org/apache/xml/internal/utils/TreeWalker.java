@@ -1,11 +1,15 @@
 /*
- * Copyright 1999-2004 The Apache Software Foundation.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * $Id: TreeWalker.java,v 1.2.4.1 2005/09/15 08:15:59 suresh_emailid Exp $
- */
+
 package com.sun.org.apache.xml.internal.utils;
 
 import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
@@ -51,7 +53,7 @@ public class TreeWalker
 
   /** DomHelper for this TreeWalker          */
   protected DOMHelper m_dh;
-        
+
         /** Locator object for this TreeWalker          */
         private LocatorImpl m_locator = new LocatorImpl();
 
@@ -74,10 +76,10 @@ public class TreeWalker
   {
     m_contentHandler = ch;
   }
-        
+
         /**
    * Constructor.
-   * @param   contentHandler The implemention of the
+   * @param   contentHandler The implementation of the
    * @param   systemId System identifier for the document.
    * contentHandler operation (toXMLString, digest, ...)
    */
@@ -85,15 +87,8 @@ public class TreeWalker
   {
     this.m_contentHandler = contentHandler;
     m_contentHandler.setDocumentLocator(m_locator);
-    if (systemId != null)
+    if (systemId != null) {
         m_locator.setSystemId(systemId);
-    else {
-        try {
-          // Bug see Bugzilla  26741
-          m_locator.setSystemId(SecuritySupport.getSystemProperty("user.dir") + File.separator + "dummy.xsl");
-         }
-         catch (SecurityException se) {// user.dir not accessible from applet             
-         }
     }
     m_dh = dh;
   }
@@ -107,52 +102,56 @@ public class TreeWalker
   {
     this.m_contentHandler = contentHandler;
     m_contentHandler.setDocumentLocator(m_locator);
-    try {
-       // Bug see Bugzilla  26741
-      m_locator.setSystemId(SecuritySupport.getSystemProperty("user.dir") + File.separator + "dummy.xsl");
-    } 
-    catch (SecurityException se){// user.dir not accessible from applet      
-    }
     m_dh = dh;
   }
-  
+
   /**
    * Constructor.
-   * @param   contentHandler The implemention of the
+   * @param   contentHandler The implementation of the
    * contentHandler operation (toXMLString, digest, ...)
    */
   public TreeWalker(ContentHandler contentHandler)
   {
     this.m_contentHandler = contentHandler;
-                if (m_contentHandler != null)
-                        m_contentHandler.setDocumentLocator(m_locator);
-                try {
-                   // Bug see Bugzilla  26741
-                  m_locator.setSystemId(SecuritySupport.getSystemProperty("user.dir") + File.separator + "dummy.xsl");
-                } 
-                catch (SecurityException se){// user.dir not accessible from applet
-                  
+    if (m_contentHandler != null) {
+        m_contentHandler.setDocumentLocator(m_locator);
     }
     m_dh = new DOM2Helper();
   }
 
   /**
-   * Perform a pre-order traversal non-recursive style.  
+   * Perform a pre-order traversal non-recursive style.
    *
-   * Note that TreeWalker assumes that the subtree is intended to represent 
-   * a complete (though not necessarily well-formed) document and, during a 
-   * traversal, startDocument and endDocument will always be issued to the 
+   * Note that TreeWalker assumes that the subtree is intended to represent
+   * a complete (though not necessarily well-formed) document and, during a
+   * traversal, startDocument and endDocument will always be issued to the
    * SAX listener.
-   *  
+   *
    * @param pos Node in the tree where to start traversal
    *
    * @throws TransformerException
    */
   public void traverse(Node pos) throws org.xml.sax.SAXException
   {
+        this.m_contentHandler.startDocument();
 
-   	this.m_contentHandler.startDocument();
+        traverseFragment(pos);
 
+        this.m_contentHandler.endDocument();
+  }
+
+  /**
+   * Perform a pre-order traversal non-recursive style.
+   *
+   * In contrast to the traverse() method this method will not issue
+   * startDocument() and endDocument() events to the SAX listener.
+   *
+   * @param pos Node in the tree where to start traversal
+   *
+   * @throws TransformerException
+   */
+  public void traverseFragment(Node pos) throws org.xml.sax.SAXException
+  {
     Node top = pos;
 
     while (null != pos)
@@ -188,15 +187,14 @@ public class TreeWalker
 
       pos = nextNode;
     }
-    this.m_contentHandler.endDocument();
   }
 
   /**
    * Perform a pre-order traversal non-recursive style.
 
-   * Note that TreeWalker assumes that the subtree is intended to represent 
-   * a complete (though not necessarily well-formed) document and, during a 
-   * traversal, startDocument and endDocument will always be issued to the 
+   * Note that TreeWalker assumes that the subtree is intended to represent
+   * a complete (though not necessarily well-formed) document and, during a
+   * traversal, startDocument and endDocument will always be issued to the
    * SAX listener.
    *
    * @param pos Node in the tree where to start traversal
@@ -207,8 +205,8 @@ public class TreeWalker
   public void traverse(Node pos, Node top) throws org.xml.sax.SAXException
   {
 
-	this.m_contentHandler.startDocument();
-	
+        this.m_contentHandler.startDocument();
+
     while (null != pos)
     {
       startNode(pos);
@@ -244,7 +242,7 @@ public class TreeWalker
 
   /** Flag indicating whether following text to be processed is raw text          */
   boolean nextIsRaw = false;
-  
+
   /**
    * Optimized dispatch of characters.
    */
@@ -277,7 +275,7 @@ public class TreeWalker
     {
       ((NodeConsumer) m_contentHandler).setOriginatingNode(node);
     }
-                
+
                 if (node instanceof Locator)
                 {
                         Locator loc = (Locator)node;
@@ -311,7 +309,7 @@ public class TreeWalker
       // ??;
       break;
     case Node.DOCUMENT_NODE :
-    
+
       break;
     case Node.ELEMENT_NODE :
       NamedNodeMap atts = ((Element) node).getAttributes();
@@ -328,8 +326,8 @@ public class TreeWalker
         {
           // System.out.println("TreeWalker#startNode: attr["+i+"] = "+attrName+", "+attr.getNodeValue());
           int index;
-          // Use "" instead of null, as Xerces likes "" for the 
-          // name of the default namespace.  Fix attributed 
+          // Use "" instead of null, as Xerces likes "" for the
+          // name of the default namespace.  Fix attributed
           // to "Steven Murray" <smurray@ebt.com>.
           String prefix = (index = attrName.indexOf(":")) < 0
                           ? "" : attrName.substring(index + 1);
@@ -337,7 +335,7 @@ public class TreeWalker
           this.m_contentHandler.startPrefixMapping(prefix,
                                                    attr.getNodeValue());
         }
-        
+
       }
 
       // System.out.println("m_dh.getNamespaceOfNode(node): "+m_dh.getNamespaceOfNode(node));
@@ -377,7 +375,7 @@ public class TreeWalker
       {
         lh.startCDATA();
       }
-      
+
       dispatachChars(node);
 
       {
@@ -427,7 +425,7 @@ public class TreeWalker
   }
 
   /**
-   * End processing of given node 
+   * End processing of given node
    *
    *
    * @param node Node we just finished processing
@@ -441,7 +439,7 @@ public class TreeWalker
     {
     case Node.DOCUMENT_NODE :
       break;
-      
+
     case Node.ELEMENT_NODE :
       String ns = m_dh.getNamespaceOfNode(node);
       if(null == ns)
@@ -461,8 +459,8 @@ public class TreeWalker
         if (attrName.equals("xmlns") || attrName.startsWith("xmlns:"))
         {
           int index;
-          // Use "" instead of null, as Xerces likes "" for the 
-          // name of the default namespace.  Fix attributed 
+          // Use "" instead of null, as Xerces likes "" for the
+          // name of the default namespace.  Fix attributed
           // to "Steven Murray" <smurray@ebt.com>.
           String prefix = (index = attrName.indexOf(":")) < 0
                           ? "" : attrName.substring(index + 1);
@@ -489,4 +487,3 @@ public class TreeWalker
     }
   }
 }  //TreeWalker
-

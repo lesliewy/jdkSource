@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security;
@@ -12,13 +30,13 @@ import java.security.spec.InvalidKeySpecException;
 
 /**
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)
- * for the <code>KeyFactory</code> class.
- * All the abstract methods in this class must be implemented by each 
+ * for the {@code KeyFactory} class.
+ * All the abstract methods in this class must be implemented by each
  * cryptographic service provider who wishes to supply the implementation
  * of a key factory for a particular algorithm.
  *
  * <P> Key factories are used to convert <I>keys</I> (opaque
- * cryptographic keys of type <code>Key</code>) into <I>key specifications</I>
+ * cryptographic keys of type {@code Key}) into <I>key specifications</I>
  * (transparent representations of the underlying key material), and vice
  * versa.
  *
@@ -28,8 +46,8 @@ import java.security.spec.InvalidKeySpecException;
  *
  * <P> Multiple compatible key specifications may exist for the same key.
  * For example, a DSA public key may be specified using
- * <code>DSAPublicKeySpec</code> or
- * <code>X509EncodedKeySpec</code>. A key factory can be used to translate
+ * {@code DSAPublicKeySpec} or
+ * {@code X509EncodedKeySpec}. A key factory can be used to translate
  * between compatible key specifications.
  *
  * <P> A provider should document all the key specifications supported by its
@@ -37,7 +55,6 @@ import java.security.spec.InvalidKeySpecException;
  *
  * @author Jan Luehe
  *
- * @version %I%, %G%
  *
  * @see KeyFactory
  * @see Key
@@ -83,15 +100,17 @@ public abstract class KeyFactorySpi {
     /**
      * Returns a specification (key material) of the given key
      * object.
-     * <code>keySpec</code> identifies the specification class in which 
+     * {@code keySpec} identifies the specification class in which
      * the key material should be returned. It could, for example, be
-     * <code>DSAPublicKeySpec.class</code>, to indicate that the
-     * key material should be returned in an instance of the 
-     * <code>DSAPublicKeySpec</code> class.
+     * {@code DSAPublicKeySpec.class}, to indicate that the
+     * key material should be returned in an instance of the
+     * {@code DSAPublicKeySpec} class.
+     *
+     * @param <T> the type of the key specification to be returned
      *
      * @param key the key.
      *
-     * @param keySpec the specification class in which 
+     * @param keySpec the specification class in which
      * the key material should be returned.
      *
      * @return the underlying key specification (key material) in an instance
@@ -102,8 +121,8 @@ public abstract class KeyFactorySpi {
      * (e.g., the given key has an unrecognized format).
      */
     protected abstract <T extends KeySpec>
-	T engineGetKeySpec(Key key, Class<T> keySpec)
-	throws InvalidKeySpecException;
+        T engineGetKeySpec(Key key, Class<T> keySpec)
+        throws InvalidKeySpecException;
 
     /**
      * Translates a key object, whose provider may be unknown or
@@ -118,6 +137,6 @@ public abstract class KeyFactorySpi {
      * by this key factory.
      */
     protected abstract Key engineTranslateKey(Key key)
-	throws InvalidKeyException;
+        throws InvalidKeyException;
 
 }

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.plaf.basic;
@@ -25,25 +43,24 @@ import java.io.Serializable;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Jeff Dinkins
  */
 public class BasicCheckBoxUI extends BasicRadioButtonUI {
 
     private static final Object BASIC_CHECK_BOX_UI_KEY = new Object();
 
-    private final static String propertyPrefix = "CheckBox" + "."; 
+    private final static String propertyPrefix = "CheckBox" + ".";
 
     // ********************************
-    //            Create PLAF 
+    //            Create PLAF
     // ********************************
     public static ComponentUI createUI(JComponent b) {
         AppContext appContext = AppContext.getAppContext();
-        BasicCheckBoxUI checkboxUI = 
+        BasicCheckBoxUI checkboxUI =
                 (BasicCheckBoxUI) appContext.get(BASIC_CHECK_BOX_UI_KEY);
         if (checkboxUI == null) {
             checkboxUI = new BasicCheckBoxUI();
@@ -53,7 +70,7 @@ public class BasicCheckBoxUI extends BasicRadioButtonUI {
     }
 
     public String getPropertyPrefix() {
-	return propertyPrefix;
+        return propertyPrefix;
     }
 
 }

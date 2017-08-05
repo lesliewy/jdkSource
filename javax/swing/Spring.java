@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -41,13 +59,13 @@ import java.awt.Component;
  *  <p>
  *  A <code>Spring</code> can be treated as a pair of intervals
  *  with a single common point: the preferred value.
- *  The following rules define some of the 
+ *  The following rules define some of the
  *  arithmetic operators that can be applied to intervals
  *  (<code>[a, b]</code> refers to the interval
  *  from <code>a</code>
  *  to <code>b</code>,
  *  where <code>a &lt;= b</code>).
- *  <p>
+ *
  *  <pre>
  *          [a1, b1] + [a2, b2] = [a1 + a2, b1 + b2]
  *
@@ -56,11 +74,11 @@ import java.awt.Component;
  *      max([a1, b1], [a2, b2]) = [max(a1, a2), max(b1, b2)]
  *  </pre>
  *  <p>
- *  
+ *
  *  If we denote <code>Spring</code>s as <code>[a, b, c]</code>,
  *  where <code>a &lt;= b &lt;= c</code>, we can define the same
  *  arithmetic operators on <code>Spring</code>s:
- *  <p>
+ *
  *  <pre>
  *          [a1, b1, c1] + [a2, b2, c2] = [a1 + a2, b1 + b2, c1 + c2]
  *
@@ -71,7 +89,7 @@ import java.awt.Component;
  *  <p>
  *  With both intervals and <code>Spring</code>s we can define "-" and <em>min</em>
  *  in terms of negation:
- *  <p>
+ *
  *  <pre>
  *      X - Y = X + (-Y)
  *
@@ -91,7 +109,7 @@ import java.awt.Component;
  * If you are implementing a <code>SpringLayout</code> you
  * can find further information and examples in
  * <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/layout/spring.html">How to Use SpringLayout</a>,
+ href="https://docs.oracle.com/javase/tutorial/uiswing/layout/spring.html">How to Use SpringLayout</a>,
  * a section in <em>The Java Tutorial.</em>
  * <p>
  * <strong>Warning:</strong>
@@ -99,15 +117,14 @@ import java.awt.Component;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see SpringLayout
  * @see SpringLayout.Constraints
  *
- * @version %I% %G%
- * @author 	Philip Milne
+ * @author      Philip Milne
  * @since       1.4
  */
 public abstract class Spring {
@@ -119,7 +136,7 @@ public abstract class Spring {
 
     /**
      * Used by factory methods to create a <code>Spring</code>.
-     * 
+     *
      * @see #constant(int)
      * @see #constant(int, int, int)
      * @see #max
@@ -195,7 +212,7 @@ public abstract class Spring {
 
         public final void setValue(int size) {
             if (this.size == size) {
-                return; 
+                return;
             }
             if (size == UNSET) {
                 clear();
@@ -207,7 +224,7 @@ public abstract class Spring {
         protected void clear() {
             size = UNSET;
         }
-        
+
         protected void setNonClearValue(int size) {
             this.size = size;
         }
@@ -365,15 +382,15 @@ public abstract class Spring {
 
    /*pp*/ static abstract class SpringMap extends Spring {
        private Spring s;
-       
+
        public SpringMap(Spring s) {
-           this.s = s; 
+           this.s = s;
        }
 
-       protected abstract int map(int i); 
-       
-       protected abstract int inv(int i); 
-       
+       protected abstract int map(int i);
+
+       protected abstract int inv(int i);
+
        public int getMinimumValue() {
            return map(s.getMinimumValue());
        }
@@ -421,7 +438,7 @@ public abstract class Spring {
 
         protected void clear() {
             super.clear();
-            min = pref = max = UNSET; 
+            min = pref = max = UNSET;
             s1.setValue(UNSET);
             s2.setValue(UNSET);
         }

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security;
@@ -15,16 +33,15 @@ package java.security;
  * such that access to the target object is possible
  * only if the Guard object allows it.
  * Once an object is encapsulated by a GuardedObject,
- * access to that object is controlled by the <code>getObject</code>
+ * access to that object is controlled by the {@code getObject}
  * method, which invokes the
- * <code>checkGuard</code> method on the Guard object that is
+ * {@code checkGuard} method on the Guard object that is
  * guarding access. If access is not allowed,
  * an exception is thrown.
  *
  * @see Guard
  * @see Permission
  *
- * @version %I% %E%
  * @author Roland Schemers
  * @author Li Gong
  */
@@ -79,7 +96,7 @@ public class GuardedObject implements java.io.Serializable {
     {
         if (guard != null)
             guard.checkGuard(object);
-	
-	oos.defaultWriteObject();
+
+        oos.defaultWriteObject();
     }
 }

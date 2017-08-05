@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.im;
@@ -10,6 +28,7 @@ package java.awt.im;
 import java.awt.Component;
 import java.util.Locale;
 import java.awt.AWTEvent;
+import java.beans.Transient;
 import java.lang.Character.Subset;
 import sun.awt.im.InputMethodContext;
 
@@ -50,7 +69,6 @@ import sun.awt.im.InputMethodContext;
  *
  * @see java.awt.Component#getInputContext
  * @see java.awt.Component#enableInputMethods
- * @version 	%I%, %G%
  * @author JavaSoft Asia/Pacific
  * @since 1.2
  */
@@ -71,7 +89,7 @@ public class InputContext {
      * Returns a new InputContext instance.
      */
     public static InputContext getInstance() {
-	return new sun.awt.im.InputMethodContext();
+        return new sun.awt.im.InputMethodContext();
     }
 
     /**
@@ -80,7 +98,6 @@ public class InputContext {
      * an input method or keyboard layout has been successfully selected. The
      * following steps are taken until an input method has been selected:
      *
-     * <p>
      * <ul>
      * <li>
      * If the currently selected input method or keyboard layout supports the
@@ -100,7 +117,6 @@ public class InputContext {
      * Otherwise, an input method or keyboard layout that supports the requested
      * locale is selected in an implementation dependent way.</li>
      *
-     * <p>
      * </ul>
      * Before switching away from an input method, any currently uncommitted text
      * is committed. If no input method or keyboard layout supporting the requested
@@ -152,7 +168,7 @@ public class InputContext {
         // real implementation is in sun.awt.im.InputContext
         return null;
     }
-    
+
     /**
      * Sets the subsets of the Unicode character set that input methods of this input
      * context should be allowed to input. Null may be passed in to
@@ -182,10 +198,10 @@ public class InputContext {
      * for composition may still interpret events for control purposes,
      * including to enable or disable itself for composition.
      * <p>
-     * For input methods provided by host operating systems, it is not always possible to 
+     * For input methods provided by host operating systems, it is not always possible to
      * determine whether this operation is supported. For example, an input method may enable
-     * composition only for some locales, and do nothing for other locales. For such input 
-     * methods, it is possible that this method does not throw 
+     * composition only for some locales, and do nothing for other locales. For such input
+     * methods, it is possible that this method does not throw
      * {@link java.lang.UnsupportedOperationException UnsupportedOperationException},
      * but also does not affect whether composition is enabled.
      *
@@ -197,7 +213,7 @@ public class InputContext {
      * @since 1.3
      */
     public void setCompositionEnabled(boolean enable) {
-	// real implementation is in sun.awt.im.InputContext
+        // real implementation is in sun.awt.im.InputContext
     }
 
     /**
@@ -214,9 +230,10 @@ public class InputContext {
      * @see #setCompositionEnabled
      * @since 1.3
      */
+    @Transient
     public boolean isCompositionEnabled() {
-	// real implementation is in sun.awt.im.InputContext
-	return false;
+        // real implementation is in sun.awt.im.InputContext
+        return false;
     }
 
     /**
@@ -239,7 +256,7 @@ public class InputContext {
      * @since 1.3
      */
     public void reconvert() {
-	// real implementation is in sun.awt.im.InputContext
+        // real implementation is in sun.awt.im.InputContext
     }
 
     /**
@@ -267,7 +284,7 @@ public class InputContext {
      * @exception NullPointerException if <code>client</code> is null
      */
     public void removeNotify(Component client) {
-	// real implementation is in sun.awt.im.InputContext
+        // real implementation is in sun.awt.im.InputContext
     }
 
     /**

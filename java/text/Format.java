@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -34,13 +52,13 @@ import java.io.Serializable;
  *
  * <p>
  * Generally, a format's <code>parseObject</code> method must be able to parse
- * any string formatted by its <code>format</code> method. However, there may 
+ * any string formatted by its <code>format</code> method. However, there may
  * be exceptional cases where this is not possible. For example, a
  * <code>format</code> method might create two adjacent integer numbers with
  * no separator in between, and in this case the <code>parseObject</code> could
  * not tell which digits belong to which number.
  *
- * <h4>Subclassing</h4>
+ * <h3>Subclassing</h3>
  *
  * <p>
  * The Java Platform provides three specialized subclasses of <code>Format</code>--
@@ -110,7 +128,6 @@ import java.io.Serializable;
  * @see          java.text.NumberFormat
  * @see          java.text.DateFormat
  * @see          java.text.MessageFormat
- * @version      %I%, %G%
  * @author       Mark Davis
  */
 public abstract class Format implements Serializable, Cloneable {
@@ -241,14 +258,14 @@ public abstract class Format implements Serializable, Cloneable {
             return super.clone();
         } catch (CloneNotSupportedException e) {
             // will never happen
-            return null;
+            throw new InternalError(e);
         }
     }
 
     //
     // Convenience methods for creating AttributedCharacterIterators from
     // different parameters.
-    // 
+    //
 
     /**
      * Creates an <code>AttributedCharacterIterator</code> for the String
@@ -258,13 +275,13 @@ public abstract class Format implements Serializable, Cloneable {
      * @return AttributedCharacterIterator wrapping s
      */
     AttributedCharacterIterator createAttributedCharacterIterator(String s) {
-	AttributedString as = new AttributedString(s);
+        AttributedString as = new AttributedString(s);
 
-	return as.getIterator();
+        return as.getIterator();
     }
 
     /**
-     * Creates an <code>AttributedCharacterIterator</code> containg the
+     * Creates an <code>AttributedCharacterIterator</code> containing the
      * concatenated contents of the passed in
      * <code>AttributedCharacterIterator</code>s.
      *
@@ -310,12 +327,12 @@ public abstract class Format implements Serializable, Cloneable {
      * @return AttributedCharacterIterator wrapping args
      */
     AttributedCharacterIterator createAttributedCharacterIterator(
-	      AttributedCharacterIterator iterator,
+              AttributedCharacterIterator iterator,
               AttributedCharacterIterator.Attribute key, Object value) {
-	AttributedString as = new AttributedString(iterator);
+        AttributedString as = new AttributedString(iterator);
 
-	as.addAttribute(key, value);
-	return as.getIterator();
+        as.addAttribute(key, value);
+        return as.getIterator();
     }
 
 
@@ -353,7 +370,7 @@ public abstract class Format implements Serializable, Cloneable {
      * Delegates should NOT assume that the <code>Format</code> will notify
      * the delegate of fields in any particular order.
      *
-     * @see FieldPosition.Delegate
+     * @see FieldPosition#getFieldDelegate
      * @see CharacterIteratorFieldDelegate
      */
     interface FieldDelegate {

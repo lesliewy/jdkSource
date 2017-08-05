@@ -1,12 +1,16 @@
 /*
- * Copyright 2001, 2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,23 +20,29 @@
 
 package com.sun.org.apache.xerces.internal.impl.dv;
 
-import java.util.Hashtable;
+import com.sun.org.apache.xerces.internal.impl.dv.dtd.DTDDVFactoryImpl;
+import com.sun.org.apache.xerces.internal.impl.dv.dtd.XML11DTDDVFactoryImpl;
 import com.sun.org.apache.xerces.internal.utils.ObjectFactory;
+import java.util.Map;
 
 /**
  * The factory to create and return DTD types. The implementation should
  * store the created datatypes in static data, so that they can be shared by
  * multiple parser instance, and multiple threads.
- * 
- * @xerces.internal 
+ *
+ * @xerces.internal
  *
  * @author Sandy Gao, IBM
  *
- * @version $Id: DTDDVFactory.java,v 1.4 2007/07/19 04:38:28 ofung Exp $
+ * @version $Id: DTDDVFactory.java,v 1.6 2010-11-01 04:39:43 joehw Exp $
  */
 public abstract class DTDDVFactory {
 
-    private static final String DEFAULT_FACTORY_CLASS = "com.sun.org.apache.xerces.internal.impl.dv.dtd.DTDDVFactoryImpl";
+    private static final String DEFAULT_FACTORY_CLASS =
+            "com.sun.org.apache.xerces.internal.impl.dv.dtd.DTDDVFactoryImpl";
+
+    private static final String XML11_DATATYPE_VALIDATOR_FACTORY =
+        "com.sun.org.apache.xerces.internal.impl.dv.dtd.XML11DTDDVFactoryImpl";
 
     /**
      * Get an instance of the default DTDDVFactory implementation.
@@ -54,18 +64,24 @@ public abstract class DTDDVFactory {
      *                                class name or the default class name
      */
     public static final DTDDVFactory getInstance(String factoryClass) throws DVFactoryException {
-
         try {
-            // if the class name is not specified, use the default one
-            return (DTDDVFactory)
-                (ObjectFactory.newInstance(factoryClass, true));
-        } catch (ClassCastException e) {
+            if (DEFAULT_FACTORY_CLASS.equals(factoryClass)) {
+                return new DTDDVFactoryImpl();
+            } else if (XML11_DATATYPE_VALIDATOR_FACTORY.equals(factoryClass)) {
+                return new XML11DTDDVFactoryImpl();
+            } else {
+                //fall back for compatibility
+                return (DTDDVFactory)
+                    (ObjectFactory.newInstance(factoryClass, true));
+            }
+        }
+        catch (ClassCastException e) {
             throw new DVFactoryException("DTD factory class " + factoryClass + " does not extend from DTDDVFactory.");
         }
     }
 
     // can't create a new object of this class
-    protected DTDDVFactory(){}
+    protected DTDDVFactory() {}
 
     /**
      * return a dtd type of the given name
@@ -76,10 +92,10 @@ public abstract class DTDDVFactory {
     public abstract DatatypeValidator getBuiltInDV(String name);
 
     /**
-     * get all built-in DVs, which are stored in a hashtable keyed by the name
+     * get all built-in DVs, which are stored in a map keyed by the name
      *
-     * @return      a hashtable which contains all datatypes
+     * @return      a map which contains all datatypes
      */
-    public abstract Hashtable getBuiltInTypes();
+    public abstract Map<String, DatatypeValidator> getBuiltInTypes();
 
 }

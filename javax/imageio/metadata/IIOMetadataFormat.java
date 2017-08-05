@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.metadata;
@@ -22,7 +40,7 @@ import javax.imageio.ImageTypeSpecifier;
  *
  * <p> N.B: classes that implement this interface should contain a
  * method declared as <code>public static getInstance()</code> which
- * returns an instance of the class.  Commonly, an implentation will
+ * returns an instance of the class.  Commonly, an implementation will
  * construct only a single instance and cache it for future
  * invocations of <code>getInstance</code>.
  *
@@ -50,7 +68,6 @@ import javax.imageio.ImageTypeSpecifier;
  * representing such objects textually.
  * </ul>
  *
- * @version 0.5
  */
 public interface IIOMetadataFormat {
 
@@ -190,7 +207,7 @@ public interface IIOMetadataFormat {
      */
     int VALUE_RANGE_MIN_MAX_INCLUSIVE =
         VALUE_RANGE |
-        VALUE_RANGE_MIN_INCLUSIVE_MASK | 
+        VALUE_RANGE_MIN_INCLUSIVE_MASK |
         VALUE_RANGE_MAX_INCLUSIVE_MASK;
 
     /**
@@ -225,8 +242,12 @@ public interface IIOMetadataFormat {
 
     /**
      * A constant returned by <code>getAttributeDataType</code>
-     * indicating that the value of an attribute is one of 'true' or
-     * 'false'.
+     * indicating that the value of an attribute is one of the boolean
+     * values 'true' or 'false'.
+     * Attribute values of type DATATYPE_BOOLEAN should be marked as
+     * enumerations, and the permitted values should be the string
+     * literal values "TRUE" or "FALSE", although a plugin may also
+     * recognise lower or mixed case equivalents.
      */
     int DATATYPE_BOOLEAN = 1;
 
@@ -286,7 +307,7 @@ public interface IIOMetadataFormat {
      * with child policy <code>CHILD_POLICY_REPEAT</code>.  For
      * example, an element representing color primary information
      * might be required to have at least 3 children, one for each
-     * primay.
+     * primary.
      *
      * @param elementName the name of the element being queried.
      *
@@ -322,7 +343,7 @@ public interface IIOMetadataFormat {
 
     /**
      * Returns a <code>String</code> containing a description of the
-     * named element, or <code>null</code>.  The desciption will be
+     * named element, or <code>null</code>.  The description will be
      * localized for the supplied <code>Locale</code> if possible.
      *
      * <p> If <code>locale</code> is <code>null</code>, the current
@@ -374,7 +395,7 @@ public interface IIOMetadataFormat {
     String[] getChildNames(String elementName);
 
     // Attributes
-    
+
     /**
      * Returns an array of <code>String</code>s listing the names of
      * the attributes that may be associated with the named element.
@@ -399,7 +420,7 @@ public interface IIOMetadataFormat {
      * @param elementName the name of the element being queried.
      * @param attrName the name of the attribute being queried.
      *
-     * @return one of the <code>VALUE_*</code> constants. 
+     * @return one of the <code>VALUE_*</code> constants.
      *
      * @exception IllegalArgumentException if <code>elementName</code>
      * is <code>null</code> or is not a legal element name for this
@@ -413,8 +434,8 @@ public interface IIOMetadataFormat {
     /**
      * Returns one of the constants starting with
      * <code>DATATYPE_</code>, indicating the format and
-     * interpretation of the value of the given attribute within th
-     * enamed element.  If <code>getAttributeValueType</code> returns
+     * interpretation of the value of the given attribute within the
+     * named element.  If <code>getAttributeValueType</code> returns
      * <code>VALUE_LIST</code>, then the legal value is a
      * whitespace-spearated list of values of the returned datatype.
      *
@@ -439,7 +460,7 @@ public interface IIOMetadataFormat {
      * @param elementName the name of the element being queried.
      * @param attrName the name of the attribute being queried.
      *
-     * @return <code>true</code> if the attribut must be present.
+     * @return <code>true</code> if the attribute must be present.
      *
      * @exception IllegalArgumentException if <code>elementName</code>
      * is <code>null</code> or is not a legal element name for this
@@ -452,7 +473,7 @@ public interface IIOMetadataFormat {
 
     /**
      * Returns the default value of the named attribute, if it is not
-     * explictly present within the named element, as a
+     * explicitly present within the named element, as a
      * <code>String</code>, or <code>null</code> if no default value
      * is available.
      *
@@ -509,7 +530,7 @@ public interface IIOMetadataFormat {
      *
      * @return a <code>String</code> containing the smallest legal
      * value for the attribute.
-     * 
+     *
      * @exception IllegalArgumentException if <code>elementName</code>
      * is <code>null</code> or is not a legal element name for this
      * format.
@@ -603,7 +624,7 @@ public interface IIOMetadataFormat {
 
     /**
      * Returns a <code>String</code> containing a description of the
-     * named attribute, or <code>null</code>.  The desciption will be
+     * named attribute, or <code>null</code>.  The description will be
      * localized for the supplied <code>Locale</code> if possible.
      *
      * <p> If <code>locale</code> is <code>null</code>, the current
@@ -642,7 +663,7 @@ public interface IIOMetadataFormat {
      *
      * @param elementName the name of the element being queried.
      *
-     * @return one of the <code>VALUE_*</code> constants. 
+     * @return one of the <code>VALUE_*</code> constants.
      *
      * @exception IllegalArgumentException if <code>elementName</code>
      * is <code>null</code> or is not a legal element name for this
@@ -704,7 +725,7 @@ public interface IIOMetadataFormat {
      * <code>VALUE_ENUMERATION</code>.
      *
      * <p> The <code>Object</code> associated with a node that accepts
-     * emuerated values must be equal to one of the values returned by
+     * enumerated values must be equal to one of the values returned by
      * this method, as defined by the <code>==</code> operator (as
      * opposed to the <code>Object.equals</code> method).
      *

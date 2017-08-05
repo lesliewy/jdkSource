@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -11,7 +29,6 @@ package javax.swing.text;
  * is intended to capture the spirit of an SGML element.
  *
  * @author  Timothy Prinzing
- * @version %I% %G%
  */
 public interface Element {
 
@@ -52,7 +69,7 @@ public interface Element {
      * children, this will be the offset of the first child.
      * As a document position, there is an implied forward bias.
      *
-     * @return the starting offset >= 0 and < getEndOffset();
+     * @return the starting offset &gt;= 0 and &lt; getEndOffset();
      * @see Document
      * @see AbstractDocument
      */
@@ -69,9 +86,9 @@ public interface Element {
      * <code>AbstractDocument</code> models an implied break at the end of
      * the document. As a result of this, it is possible for this to
      * return a value greater than the length of the document.
-     * 
-     * @return the ending offset > getStartOffset() and
-     *     <= getDocument().getLength() + 1
+     *
+     * @return the ending offset &gt; getStartOffset() and
+     *     &lt;= getDocument().getLength() + 1
      * @see Document
      * @see AbstractDocument
      */
@@ -88,8 +105,8 @@ public interface Element {
      * <code>getElementCount() - 1</code> if the location is
      * greater than or equal to the end offset.
      *
-     * @param offset the specified offset >= 0
-     * @return the element index >= 0
+     * @param offset the specified offset &gt;= 0
+     * @return the element index &gt;= 0
      */
     public int getElementIndex(int offset);
 
@@ -97,14 +114,14 @@ public interface Element {
      * Gets the number of child elements contained by this element.
      * If this element is a leaf, a count of zero is returned.
      *
-     * @return the number of child elements >= 0
+     * @return the number of child elements &gt;= 0
      */
     public int getElementCount();
 
     /**
      * Fetches the child element at the given index.
      *
-     * @param index the specified index >= 0
+     * @param index the specified index &gt;= 0
      * @return the child element
      */
     public Element getElement(int index);
@@ -120,4 +137,3 @@ public interface Element {
 
 
 }
-

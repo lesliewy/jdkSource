@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.event;
@@ -11,7 +29,7 @@ import java.util.EventObject;
 import javax.swing.*;
 
 
-/** 
+/**
  * An event that characterizes a change in selection. The change is limited to a
  * a single inclusive interval. The selection of at least one index within the
  * range will have changed. A decent {@code ListSelectionModel} implementation
@@ -24,11 +42,10 @@ import javax.swing.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Hans Muller
  * @author Ray Ryan
  * @see ListSelectionModel
@@ -39,29 +56,29 @@ public class ListSelectionEvent extends EventObject
     private int lastIndex;
     private boolean isAdjusting;
 
-    /** 
+    /**
      * Represents a change in selection status between {@code firstIndex} and
      * {@code lastIndex}, inclusive. {@code firstIndex} is less than or equal to
      * {@code lastIndex}. The selection of at least one index within the range will
-     * have changed. 
-     * 
+     * have changed.
+     *
      * @param firstIndex the first index in the range, &lt;= lastIndex
      * @param lastIndex the last index in the range, &gt;= firstIndex
      * @param isAdjusting whether or not this is one in a series of
      *        multiple events, where changes are still being made
      */
     public ListSelectionEvent(Object source, int firstIndex, int lastIndex,
-			      boolean isAdjusting)
+                              boolean isAdjusting)
     {
-	super(source);
-	this.firstIndex = firstIndex;
-	this.lastIndex = lastIndex;
-	this.isAdjusting = isAdjusting;
+        super(source);
+        this.firstIndex = firstIndex;
+        this.lastIndex = lastIndex;
+        this.isAdjusting = isAdjusting;
     }
 
     /**
      * Returns the index of the first row whose selection may have changed.
-     * {@code getFirstIndex() &lt;= getLastIndex()}
+     * {@code getFirstIndex() <= getLastIndex()}
      *
      * @return the first row whose selection value may have changed,
      *         where zero is the first row
@@ -70,7 +87,7 @@ public class ListSelectionEvent extends EventObject
 
     /**
      * Returns the index of the last row whose selection may have changed.
-     * {@code getLastIndex() &gt;= getFirstIndex()}
+     * {@code getLastIndex() >= getFirstIndex()}
      *
      * @return the last row whose selection value may have changed,
      *         where zero is the first row
@@ -95,13 +112,12 @@ public class ListSelectionEvent extends EventObject
      * @return a String representation of this object
      */
     public String toString() {
-	String properties = 
-	    " source=" + getSource() +  
-            " firstIndex= " + firstIndex + 
-            " lastIndex= " + lastIndex + 
-	    " isAdjusting= " + isAdjusting +
+        String properties =
+            " source=" + getSource() +
+            " firstIndex= " + firstIndex +
+            " lastIndex= " + lastIndex +
+            " isAdjusting= " + isAdjusting +
             " ";
         return getClass().getName() + "[" + properties + "]";
     }
 }
-

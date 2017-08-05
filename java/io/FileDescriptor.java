@@ -1,13 +1,32 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Instances of the file descriptor class serve as an opaque handle
@@ -20,34 +39,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Applications should not create their own file descriptors.
  *
  * @author  Pavani Diwanji
- * @version %I%, %G%
- * @see	    java.io.FileInputStream
- * @see	    java.io.FileOutputStream
+ * @see     java.io.FileInputStream
+ * @see     java.io.FileOutputStream
  * @since   JDK1.0
  */
 public final class FileDescriptor {
 
     private int fd;
 
-    /**
-     * A counter for tracking the FIS/FOS/RAF instances that
-     * use this FileDescriptor. The FIS/FOS.finalize() will not release
-     * the FileDescriptor if it is still under user by a stream.
-     */
-    private AtomicInteger useCount;
+    private Closeable parent;
+    private List<Closeable> otherParents;
+    private boolean closed;
 
     /**
      * Constructs an (invalid) FileDescriptor
      * object.
      */
     public /**/ FileDescriptor() {
-	fd = -1;
-        useCount = new AtomicInteger();
+        fd = -1;
     }
 
     private /* */ FileDescriptor(int fd) {
-	this.fd = fd;
-        useCount = new AtomicInteger();
+        this.fd = fd;
     }
 
     /**
@@ -84,7 +97,7 @@ public final class FileDescriptor {
      *          <code>false</code> otherwise.
      */
     public boolean valid() {
-	return fd != -1;
+        return fd != -1;
     }
 
     /**
@@ -110,9 +123,9 @@ public final class FileDescriptor {
      * OutputStream.flush) before that data will be affected by sync.
      *
      * @exception SyncFailedException
-     *	      Thrown when the buffers cannot be flushed,
-     *	      or because the system cannot guarantee that all the
-     *	      buffers have been synchronized with physical media.
+     *        Thrown when the buffers cannot be flushed,
+     *        or because the system cannot guarantee that all the
+     *        buffers have been synchronized with physical media.
      * @since     JDK1.1
      */
     public native void sync() throws SyncFailedException;
@@ -121,7 +134,7 @@ public final class FileDescriptor {
     private static native void initIDs();
 
     static {
-	initIDs();
+        initIDs();
     }
 
     // Set up JavaIOFileDescriptorAccess in SharedSecrets
@@ -147,14 +160,67 @@ public final class FileDescriptor {
         );
     }
 
-    // package private methods used by FIS, FOS and RAF
+    /*
+     * Package private methods to track referents.
+     * If multiple streams point to the same FileDescriptor, we cycle
+     * through the list of all referents and call close()
+     */
 
-    int incrementAndGetUseCount() {
-        return useCount.incrementAndGet();
+    /**
+     * Attach a Closeable to this FD for tracking.
+     * parent reference is added to otherParents when
+     * needed to make closeAll simpler.
+     */
+    synchronized void attach(Closeable c) {
+        if (parent == null) {
+            // first caller gets to do this
+            parent = c;
+        } else if (otherParents == null) {
+            otherParents = new ArrayList<>();
+            otherParents.add(parent);
+            otherParents.add(c);
+        } else {
+            otherParents.add(c);
+        }
     }
 
-    int decrementAndGetUseCount() {
-        return useCount.decrementAndGet();
+    /**
+     * Cycle through all Closeables sharing this FD and call
+     * close() on each one.
+     *
+     * The caller closeable gets to call close0().
+     */
+    @SuppressWarnings("try")
+    synchronized void closeAll(Closeable releaser) throws IOException {
+        if (!closed) {
+            closed = true;
+            IOException ioe = null;
+            try (Closeable c = releaser) {
+                if (otherParents != null) {
+                    for (Closeable referent : otherParents) {
+                        try {
+                            referent.close();
+                        } catch(IOException x) {
+                            if (ioe == null) {
+                                ioe = x;
+                            } else {
+                                ioe.addSuppressed(x);
+                            }
+                        }
+                    }
+                }
+            } catch(IOException ex) {
+                /*
+                 * If releaser close() throws IOException
+                 * add other exceptions as suppressed.
+                 */
+                if (ioe != null)
+                    ex.addSuppressed(ioe);
+                ioe = ex;
+            } finally {
+                if (ioe != null)
+                    throw ioe;
+            }
+        }
     }
-
 }

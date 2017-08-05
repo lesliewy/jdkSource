@@ -1,19 +1,36 @@
 /*
- * %W% %E%
- * 
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.management;
 
 import java.io.IOException;
-import java.io.StreamCorruptedException;
-import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
-
-import javax.management.modelmbean.DescriptorSupport;
+import java.io.StreamCorruptedException;
+import java.util.Objects;
 
 /**
  * <p>Provides general information for an MBean descriptor object.
@@ -24,8 +41,8 @@ import javax.management.modelmbean.DescriptorSupport;
  *
  * @since 1.5
  */
-public class MBeanFeatureInfo implements Serializable, DescriptorRead { 
-     
+public class MBeanFeatureInfo implements Serializable, DescriptorRead {
+
 
     /* Serial version */
     static final long serialVersionUID = 3952882688968447265L;
@@ -35,10 +52,10 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * {@link #getName} rather than reading this field, and that they
      * not change it.
      *
-     * @serial The name of the feature.  
+     * @serial The name of the feature.
      */
     protected String name;
-    
+
     /**
      * The human-readable description of the feature.  It is
      * recommended that subclasses call {@link #getDescription} rather
@@ -47,13 +64,13 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * @serial The human-readable description of the feature.
      */
     protected String description;
-    
+
     /**
      * @serial The Descriptor for this MBeanFeatureInfo.  This field
      * can be null, which is equivalent to an empty Descriptor.
      */
     private transient Descriptor descriptor;
-    
+
 
     /**
      * Constructs an <CODE>MBeanFeatureInfo</CODE> object.  This
@@ -61,8 +78,8 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * description, (Descriptor) null}.
      *
      * @param name The name of the feature.
-     * @param description A human readable description of the feature. 
-     */    
+     * @param description A human readable description of the feature.
+     */
     public MBeanFeatureInfo(String name, String description) {
         this(name, description, null);
     }
@@ -76,7 +93,7 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * which is equivalent to an empty descriptor.
      *
      * @since 1.6
-     */    
+     */
     public MBeanFeatureInfo(String name, String description,
                             Descriptor descriptor) {
         this.name = name;
@@ -85,23 +102,23 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
     }
 
     /**
-     * Returns the name of the feature.  
+     * Returns the name of the feature.
      *
      * @return the name of the feature.
      */
     public String getName() {
-	return name;
+        return name;
     }
-    
+
     /**
      * Returns the human-readable description of the feature.
      *
      * @return the human-readable description of the feature.
      */
     public String getDescription() {
-	return description;
+        return description;
     }
-    
+
     /**
      * Returns the descriptor for the feature.  Changing the returned value
      * will have no affect on the original descriptor.
@@ -126,18 +143,18 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * MBeanFeatureInfo.
      */
     public boolean equals(Object o) {
-	if (o == this)
-	    return true;
-	if (!(o instanceof MBeanFeatureInfo))
-	    return false;
-	MBeanFeatureInfo p = (MBeanFeatureInfo) o;
-	return (p.getName().equals(getName()) &&
-		p.getDescription().equals(getDescription()) &&
-                p.getDescriptor().equals(getDescriptor()));
+        if (o == this)
+            return true;
+        if (!(o instanceof MBeanFeatureInfo))
+            return false;
+        MBeanFeatureInfo p = (MBeanFeatureInfo) o;
+        return (Objects.equals(p.getName(), getName()) &&
+                Objects.equals(p.getDescription(), getDescription()) &&
+                Objects.equals(p.getDescriptor(), getDescriptor()));
     }
 
     public int hashCode() {
-	return getName().hashCode() ^ getDescription().hashCode() ^
+        return getName().hashCode() ^ getDescription().hashCode() ^
                getDescriptor().hashCode();
     }
 
@@ -145,7 +162,7 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * Serializes an {@link MBeanFeatureInfo} to an {@link ObjectOutputStream}.
      * @serialData
      * For compatibility reasons, an object of this class is serialized as follows.
-     * <ul>
+     * <p>
      * The method {@link ObjectOutputStream#defaultWriteObject defaultWriteObject()}
      * is called first to serialize the object except the field {@code descriptor}
      * which is declared as transient. The field {@code descriptor} is serialized
@@ -163,33 +180,33 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      * {@link ObjectOutputStream#writeObject writeObject(Object obj)} is called
      * to serialize directly the field {@code descriptor}.
      *     </ul>
-     * </ul>
+     *
      * @since 1.6
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
 
-	if (descriptor != null &&
-	    descriptor.getClass() == ImmutableDescriptor.class) {
-	    
-	    out.write(1);
+        if (descriptor != null &&
+            descriptor.getClass() == ImmutableDescriptor.class) {
 
-	    final String[] names = descriptor.getFieldNames();
+            out.write(1);
 
-	    out.writeObject(names);
-	    out.writeObject(descriptor.getFieldValues(names));
-	} else {
-	    out.write(0);
+            final String[] names = descriptor.getFieldNames();
 
-	    out.writeObject(descriptor);
-	}
+            out.writeObject(names);
+            out.writeObject(descriptor.getFieldValues(names));
+        } else {
+            out.write(0);
+
+            out.writeObject(descriptor);
+        }
     }
 
     /**
      * Deserializes an {@link MBeanFeatureInfo} from an {@link ObjectInputStream}.
      * @serialData
      * For compatibility reasons, an object of this class is deserialized as follows.
-     * <ul>
+     * <p>
      * The method {@link ObjectInputStream#defaultReadObject defaultReadObject()}
      * is called first to deserialize the object except the field
      * {@code descriptor}, which is not serialized in the default way. Then the method
@@ -211,40 +228,38 @@ public class MBeanFeatureInfo implements Serializable, DescriptorRead {
      *       to {@link ImmutableDescriptor#EMPTY_DESCRIPTOR EMPTY_DESCRIPTOR}</li>
      *    <li>Any other value. A {@link StreamCorruptedException} is thrown.</li>
      *    </ul>
-     * </ul>
+     *
      * @since 1.6
      */
     private void readObject(ObjectInputStream in)
-	throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
 
-	in.defaultReadObject();
+        in.defaultReadObject();
 
-	switch (in.read()) {
-	case 1:
-	    final String[] names = (String[])in.readObject();
+        switch (in.read()) {
+        case 1:
+            final String[] names = (String[])in.readObject();
 
-	    if (names.length == 0) {
-		descriptor = ImmutableDescriptor.EMPTY_DESCRIPTOR;
-	    } else {
-		final Object[] values = (Object[])in.readObject();
-		descriptor = new ImmutableDescriptor(names, values);
-	    }
+            final Object[] values = (Object[]) in.readObject();
+            descriptor = (names.length == 0) ?
+                ImmutableDescriptor.EMPTY_DESCRIPTOR :
+                new ImmutableDescriptor(names, values);
 
-	    break;
-	case 0:
-	    descriptor = (Descriptor)in.readObject();
+            break;
+        case 0:
+            descriptor = (Descriptor)in.readObject();
 
-	    if (descriptor == null) {
-		descriptor = ImmutableDescriptor.EMPTY_DESCRIPTOR;
-	    }
+            if (descriptor == null) {
+                descriptor = ImmutableDescriptor.EMPTY_DESCRIPTOR;
+            }
 
-	    break;
-	case -1: // from an earlier version of the JMX API
-	    descriptor = ImmutableDescriptor.EMPTY_DESCRIPTOR;
+            break;
+        case -1: // from an earlier version of the JMX API
+            descriptor = ImmutableDescriptor.EMPTY_DESCRIPTOR;
 
-	    break;
-	default:
-	    throw new StreamCorruptedException("Got unexpected byte.");
-	}
+            break;
+        default:
+            throw new StreamCorruptedException("Got unexpected byte.");
+        }
     }
 }

@@ -1,15 +1,32 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.stream;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.UTFDataFormatException;
 
 /**
  * A seekable output stream interface for use by
@@ -24,17 +41,16 @@ import java.io.UTFDataFormatException;
  * seek and flush positions apply to both reading and writing, although
  * the semantics for dealing with a non-zero bit offset before a byte-aligned
  * write are necessarily different from the semantics for dealing with
- * a non-zero bit offset before a byte-aligned read.  When reading bytes, 
+ * a non-zero bit offset before a byte-aligned read.  When reading bytes,
  * any bit offset is set to 0 before the read; when writing bytes, a
  * non-zero bit offset causes the remaining bits in the byte to be written
  * as 0s.  The byte-aligned write then starts at the next byte position.
  *
  * @see ImageInputStream
  *
- * @version 0.5
  */
 public interface ImageOutputStream extends ImageInputStream, DataOutput {
-    
+
     /**
      * Writes a single byte to the stream at the current position.
      * The 24 high-order bits of <code>b</code> are ignored.
@@ -42,10 +58,10 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
      * <p> If the bit offset within the stream is non-zero, the
      * remainder of the current byte is padded with 0s
      * and written out first.  The bit offset will be 0 after the
-     * write.  Implementers can use the 
-     * {@link ImageOutputStreamImpl#flushBits <code>flushBits</code>}
-     * method of {@link ImageOutputStreamImpl 
-     * <code>ImageOutputStreamImpl</code>} to guarantee this.
+     * write.  Implementers can use the
+     * {@link ImageOutputStreamImpl#flushBits flushBits}
+     * method of {@link ImageOutputStreamImpl ImageOutputStreamImpl}
+     * to guarantee this.
      *
      * @param b an <code>int</code> whose lower 8 bits are to be
      * written.
@@ -82,10 +98,10 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
      * <p> If the bit offset within the stream is non-zero, the
      * remainder of the current byte is padded with 0s
      * and written out first.  The bit offset will be 0 after the
-     * write.  Implementers can use the 
-     * {@link ImageOutputStreamImpl#flushBits <code>flushBits</code>}
-     * method of {@link ImageOutputStreamImpl 
-     * <code>ImageOutputStreamImpl</code>} to guarantee this.
+     * write.  Implementers can use the
+     * {@link ImageOutputStreamImpl#flushBits flushBits}
+     * method of {@link ImageOutputStreamImpl ImageOutputStreamImpl}
+     * to guarantee this.
      *
      * @param b an array of <code>byte</code>s to be written.
      * @param off the start offset in the data.
@@ -166,8 +182,7 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
     void writeShort(int v) throws IOException;
 
     /**
-     * This method is a synonym for 
-     * {@link #writeShort <code>writeShort</code>}.
+     * This method is a synonym for {@link #writeShort writeShort}.
      *
      * @param v an <code>int</code> containing the char (unsigned
      * short) value to be written.
@@ -414,7 +429,7 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
      *
      * @exception NullPointerException if <code>s</code> is
      * <code>null</code>.
-     * @exception UTFDataFormatException if the modified UTF-8
+     * @exception java.io.UTFDataFormatException if the modified UTF-8
      * representation of <code>s</code> requires more than 65536 bytes.
      * @exception IOException if an I/O error occurs.
      */
@@ -619,7 +634,7 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
      * @param bits a <code>long</code> containing the bits to be
      * written, starting with the bit in position <code>numBits -
      * 1</code> down to the least significant bit.
-     * 
+     *
      * @param numBits an <code>int</code> between 0 and 64, inclusive.
      *
      * @exception IllegalArgumentException if <code>numBits</code> is

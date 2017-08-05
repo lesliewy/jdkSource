@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -13,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * <code>RowFilter</code> is used to filter out entries from the
@@ -72,7 +91,6 @@ import java.util.regex.Pattern;
  * @param <M> the type of the model; for example <code>PersonModel</code>
  * @param <I> the type of the identifier; when using
  *            <code>TableRowSorter</code> this will be <code>Integer</code>
- * @version %I% %G%
  * @see javax.swing.table.TableRowSorter
  * @since 1.6
  */
@@ -112,7 +130,7 @@ public abstract class RowFilter<M,I> {
 
     /**
      * Throws an IllegalArgumentException if any of the values in
-     * columns are < 0.
+     * columns are {@literal <} 0.
      */
     private static void checkIndices(int[] columns) {
         for (int i = columns.length - 1; i >= 0; i--) {
@@ -340,7 +358,7 @@ public abstract class RowFilter<M,I> {
          *
          * @param index the index of the value to get
          * @return value at the specified index
-         * @throws <code>IndexOutOfBoundsException</code> if index &lt; 0 or
+         * @throws IndexOutOfBoundsException if index &lt; 0 or
          *         &gt;= getValueCount
          */
         public abstract Object getValue(int index);
@@ -359,7 +377,7 @@ public abstract class RowFilter<M,I> {
          *
          * @param index the index of the value to get
          * @return {@code non-null} string at the specified index
-         * @throws <code>IndexOutOfBoundsException</code> if index &lt; 0 ||
+         * @throws IndexOutOfBoundsException if index &lt; 0 ||
          *         &gt;= getValueCount
          */
         public String getStringValue(int index) {

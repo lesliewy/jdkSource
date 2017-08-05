@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.lang.model.type;
@@ -31,18 +49,9 @@ import javax.lang.model.util.Types;
  * Types#directSupertypes(TypeMirror)} method.  This returns the
  * supertypes with any type arguments substituted in.
  *
- * <p> This interface is also used to represent intersection types.
- * An intersection type is implicit in a program rather than being
- * explictly declared.  For example, the bound of the type parameter
- * {@code <T extends Number & Runnable>}
- * is an intersection type.  It is represented by a {@code DeclaredType}
- * with {@code Number} as its superclass and {@code Runnable} as its
- * lone superinterface.
- *
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
  * @see TypeElement
  * @since 1.6
  */
@@ -62,8 +71,8 @@ public interface DeclaredType extends ReferenceType {
      * enclosing instance.
      *
      * @return a type mirror for the enclosing type
-     * @jls3 8.1.3 Inner Classes and Enclosing Instances
-     * @jls3 15.9.2 Determining Enclosing Instances
+     * @jls 8.1.3 Inner Classes and Enclosing Instances
+     * @jls 15.9.2 Determining Enclosing Instances
      */
     TypeMirror getEnclosingType();
 
@@ -74,7 +83,7 @@ public interface DeclaredType extends ReferenceType {
      * arguments of the innermost type are included.
      *
      * @return the actual type arguments of this type, or an empty list
-     *		 if none
+     *           if none
      */
     List<? extends TypeMirror> getTypeArguments();
 }

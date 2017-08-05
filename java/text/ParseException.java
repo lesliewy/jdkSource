@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -26,16 +44,18 @@ package java.text;
  * @see java.lang.Exception
  * @see java.text.Format
  * @see java.text.FieldPosition
- * @version     %I%, %G%
  * @author      Mark Davis
  */
 public
 class ParseException extends Exception {
 
+    private static final long serialVersionUID = 2703218443322787634L;
+
     /**
      * Constructs a ParseException with the specified detail message and
      * offset.
      * A detail message is a String that describes this particular exception.
+     *
      * @param s the detail message
      * @param errorOffset the position where the error is found while parsing.
      */
@@ -46,6 +66,8 @@ class ParseException extends Exception {
 
     /**
      * Returns the position where the error was found.
+     *
+     * @return the position where the error was found
      */
     public int getErrorOffset () {
         return errorOffset;

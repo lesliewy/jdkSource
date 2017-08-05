@@ -1,13 +1,32 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2008, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.plaf.synth;
 
-import javax.swing.*;
-import java.util.*;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import javax.swing.JComponent;
 
 /**
  * An immutable transient object containing contextual information about
@@ -17,64 +36,35 @@ import java.util.*;
  * a <code>SynthContext</code> that is passed to you and expect it to
  * remain valid.
  *
- * @version %I%, %G%
  * @since 1.5
  * @author Scott Violet
  */
 public class SynthContext {
-    private static final Map contextMap;
+    private static final Queue<SynthContext> queue = new ConcurrentLinkedQueue<>();
 
     private JComponent component;
     private Region region;
     private SynthStyle style;
     private int state;
 
-
-    static {
-        contextMap = new HashMap();
+    static SynthContext getContext(JComponent c, SynthStyle style, int state) {
+        return getContext(c, SynthLookAndFeel.getRegion(c), style, state);
     }
 
-
-    static SynthContext getContext(Class type, JComponent component,
+    static SynthContext getContext(JComponent component,
                                    Region region, SynthStyle style,
                                    int state) {
-        SynthContext context = null;
-
-        synchronized(contextMap) {
-            java.util.List instances = (java.util.List)contextMap.get(type);
-
-            if (instances != null) {
-                int size = instances.size();
-
-                if (size > 0) {
-                    context = (SynthContext)instances.remove(size - 1);
-                }
-            }
-        }
+        SynthContext context = queue.poll();
         if (context == null) {
-            try {
-                context = (SynthContext)type.newInstance();
-            } catch (IllegalAccessException iae) {
-            } catch (InstantiationException ie) {
-            }
+            context = new SynthContext();
         }
         context.reset(component, region, style, state);
         return context;
     }
 
     static void releaseContext(SynthContext context) {
-        synchronized(contextMap) {
-            java.util.List instances = (java.util.List)contextMap.get(
-                                       context.getClass());
-
-            if (instances == null) {
-                instances = new ArrayList(5);
-                contextMap.put(context.getClass(), instances);
-            }
-            instances.add(context);
-        }
+        queue.offer(context);
     }
-
 
     SynthContext() {
     }
@@ -103,7 +93,7 @@ public class SynthContext {
     /**
      * Returns the hosting component containing the region.
      *
-     * @return Hosting Component 
+     * @return Hosting Component
      */
     public JComponent getComponent() {
         return component;

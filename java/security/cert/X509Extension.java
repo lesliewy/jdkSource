@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.cert;
@@ -41,22 +59,21 @@ import java.util.Set;
  *                   -- the extnId object identifier value
  * }
  * </pre>
- * Since not all extensions are known, the <code>getExtensionValue</code>
+ * Since not all extensions are known, the {@code getExtensionValue}
  * method returns the DER-encoded OCTET STRING of the
- * extension value (i.e., the <code>extnValue</code>). This can then
+ * extension value (i.e., the {@code extnValue}). This can then
  * be handled by a <em>Class</em> that understands the extension.
  *
  * @author Hemma Prafullchandra
- * @version %I% %E%
  */
 
 public interface X509Extension {
 
     /**
      * Check if there is a critical extension that is not supported.
-     * 
-     * @return <tt>true</tt> if a critical extension is found that is
-     * not supported, otherwise <tt>false</tt>.
+     *
+     * @return {@code true} if a critical extension is found that is
+     * not supported, otherwise {@code false}.
      */
     public boolean hasUnsupportedCriticalExtension();
 
@@ -67,21 +84,21 @@ public interface X509Extension {
      *
      * Here is sample code to get a Set of critical extensions from an
      * X509Certificate and print the OIDs:
-     * <pre><code>
-     * InputStream inStrm = new FileInputStream("DER-encoded-Cert");
-     * CertificateFactory cf = CertificateFactory.getInstance("X.509");
-     * X509Certificate cert = (X509Certificate)cf.generateCertificate(inStrm);
-     * inStrm.close();<p>
+     * <pre>{@code
+     * X509Certificate cert = null;
+     * try (InputStream inStrm = new FileInputStream("DER-encoded-Cert")) {
+     *     CertificateFactory cf = CertificateFactory.getInstance("X.509");
+     *     cert = (X509Certificate)cf.generateCertificate(inStrm);
+     * }
      *
-     * Set critSet = cert.getCriticalExtensionOIDs();
+     * Set<String> critSet = cert.getCriticalExtensionOIDs();
      * if (critSet != null && !critSet.isEmpty()) {
      *     System.out.println("Set of critical extensions:");
-     *     for (Iterator i = critSet.iterator(); i.hasNext();) {
-     *         String oid = (String)i.next();
+     *     for (String oid : critSet) {
      *         System.out.println(oid);
      *     }
      * }
-     * </code></pre>
+     * }</pre>
      * @return a Set (or an empty Set if none are marked critical) of
      * the extension OID strings for extensions that are marked critical.
      * If there are no extensions present at all, then this method returns
@@ -96,28 +113,28 @@ public interface X509Extension {
      *
      * Here is sample code to get a Set of non-critical extensions from an
      * X509CRL revoked certificate entry and print the OIDs:
-     * <pre><code>
-     * InputStream inStrm = new FileInputStream("DER-encoded-CRL");
-     * CertificateFactory cf = CertificateFactory.getInstance("X.509");
-     * X509CRL crl = (X509CRL)cf.generateCRL(inStrm);
-     * inStrm.close();<p>
+     * <pre>{@code
+     * CertificateFactory cf = null;
+     * X509CRL crl = null;
+     * try (InputStream inStrm = new FileInputStream("DER-encoded-CRL")) {
+     *     cf = CertificateFactory.getInstance("X.509");
+     *     crl = (X509CRL)cf.generateCRL(inStrm);
+     * }
      *
-     * byte[] certData = &lt;DER-encoded certificate data&gt;
+     * byte[] certData = <DER-encoded certificate data>
      * ByteArrayInputStream bais = new ByteArrayInputStream(certData);
      * X509Certificate cert = (X509Certificate)cf.generateCertificate(bais);
-     * bais.close();
      * X509CRLEntry badCert =
-     *              crl.getRevokedCertificate(cert.getSerialNumber());<p>
+     *              crl.getRevokedCertificate(cert.getSerialNumber());
      *
      * if (badCert != null) {
-     *     Set nonCritSet = badCert.getNonCriticalExtensionOIDs();<p>
+     *     Set<String> nonCritSet = badCert.getNonCriticalExtensionOIDs();
      *     if (nonCritSet != null)
-     *         for (Iterator i = nonCritSet.iterator(); i.hasNext();) {
-     *             String oid = (String)i.next();
+     *         for (String oid : nonCritSet) {
      *             System.out.println(oid);
      *         }
      * }
-     * </code></pre>
+     * }</pre>
      *
      * @return a Set (or an empty Set if none are marked non-critical) of
      * the extension OID strings for extensions that are marked non-critical.
@@ -128,9 +145,9 @@ public interface X509Extension {
 
     /**
      * Gets the DER-encoded OCTET string for the extension value
-     * (<em>extnValue</em>) identified by the passed-in <code>oid</code>
+     * (<em>extnValue</em>) identified by the passed-in {@code oid}
      * String.
-     * The <code>oid</code> string is
+     * The {@code oid} string is
      * represented by a set of nonnegative whole numbers separated
      * by periods.
      *

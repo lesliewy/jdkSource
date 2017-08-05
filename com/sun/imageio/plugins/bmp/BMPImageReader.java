@@ -1,8 +1,26 @@
 /*
- * %W% %E% %U%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.imageio.plugins.bmp;
@@ -169,15 +187,24 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         return 1;
     }
 
+    @Override
     public int getWidth(int imageIndex) throws IOException {
         checkIndex(imageIndex);
-        readHeader();
+        try {
+            readHeader();
+        } catch (IllegalArgumentException e) {
+            throw new IIOException(I18N.getString("BMPImageReader6"), e);
+        }
         return width;
     }
 
     public int getHeight(int imageIndex) throws IOException {
         checkIndex(imageIndex);
-        readHeader();
+        try {
+            readHeader();
+        } catch (IllegalArgumentException e) {
+            throw new IIOException(I18N.getString("BMPImageReader6"), e);
+        }
         return height;
     }
 
@@ -187,7 +214,18 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         }
     }
 
-    public void readHeader() throws IOException {
+    /**
+     * Process the image header.
+     *
+     * @exception IllegalStateException if source stream is not set.
+     *
+     * @exception IOException if image stream is corrupted.
+     *
+     * @exception IllegalArgumentException if the image stream does not contain
+     *             a BMP image, or if a sample model instance to describe the
+     *             image can not be created.
+     */
+    protected void readHeader() throws IOException, IllegalArgumentException {
         if (gotHeader)
             return;
 
@@ -289,6 +327,9 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                 case BI_RLE4:  // 4-bit RLE compression
 
                     // Read in the palette
+                    if (bitmapOffset < (size + 14)) {
+                        throw new IIOException(I18N.getString("BMPImageReader7"));
+                    }
                     int numberOfEntries = (int)((bitmapOffset-14-size) / 4);
                     int sizeOfPalette = numberOfEntries * 4;
                     palette = new byte[sizeOfPalette];
@@ -307,7 +348,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                         imageType = VERSION_3_24_BIT;
                     } else if (bitsPerPixel == 16) {
                         imageType = VERSION_3_NT_16_BIT;
-			    
+
                         redMask = 0x7C00;
                         greenMask = 0x3E0;
                         blueMask =  (1 << 5) - 1;// 0x1F;
@@ -357,7 +398,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                     break;
                 default:
                     throw new
-                        RuntimeException(I18N.getString("BMPImageReader2"));
+                        IIOException(I18N.getString("BMPImageReader2"));
                 }
             } else if (size == 108 || size == 124) {
                 // Windows 4.x BMP
@@ -452,7 +493,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                             blueMask  = 0x000000FF;
                         }
                     }
-                    
+
                     metadata.redMask = redMask;
                     metadata.greenMask = greenMask;
                     metadata.blueMask = blueMask;
@@ -460,7 +501,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                 }
             } else {
                 throw new
-                    RuntimeException(I18N.getString("BMPImageReader3"));
+                    IIOException(I18N.getString("BMPImageReader3"));
             }
         }
 
@@ -591,7 +632,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                 new DirectColorModel(colorSpace,
                                      16, redMask, greenMask, blueMask, 0,
                                      false, DataBuffer.TYPE_USHORT);
-		   
+
         } else if (bitsPerPixel == 32) {
             numBands = alphaMask == 0 ? 3 : 4;
 
@@ -636,13 +677,17 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         //start of image data
         iis.reset();
         iis.skipBytes(bitmapOffset);
-        gotHeader = true;       
+        gotHeader = true;
     }
 
     public Iterator getImageTypes(int imageIndex)
       throws IOException {
         checkIndex(imageIndex);
-        readHeader();
+        try {
+            readHeader();
+        } catch (IllegalArgumentException e) {
+            throw new IIOException(I18N.getString("BMPImageReader6"), e);
+        }
         ArrayList list = new ArrayList(1);
         list.add(new ImageTypeSpecifier(originalColorModel,
                                         originalSampleModel));
@@ -657,7 +702,11 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
       throws IOException {
         checkIndex(imageIndex);
         if (metadata == null) {
-            readHeader();
+            try {
+                readHeader();
+            } catch (IllegalArgumentException e) {
+                throw new IIOException(I18N.getString("BMPImageReader6"), e);
+            }
         }
         return metadata;
     }
@@ -668,7 +717,11 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
     public boolean isRandomAccessEasy(int imageIndex) throws IOException {
         checkIndex(imageIndex);
-        readHeader();
+        try {
+            readHeader();
+        } catch (IllegalArgumentException e) {
+            throw new IIOException(I18N.getString("BMPImageReader6"), e);
+        }
         return metadata.compression == BI_RGB;
     }
 
@@ -687,7 +740,11 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
             param = getDefaultReadParam();
 
         //read header
-        readHeader();
+        try {
+            readHeader();
+        } catch (IllegalArgumentException e) {
+            throw new IIOException(I18N.getString("BMPImageReader6"), e);
+        }
 
         sourceRegion = new Rectangle(0, 0, 0, 0);
         destinationRegion = new Rectangle(0, 0, 0, 0);
@@ -799,7 +856,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
             default:
                 throw new
-                    RuntimeException(I18N.getString("BMPImageReader1"));
+                    IIOException(I18N.getString("BMPImageReader1"));
             }
             break;
 
@@ -815,7 +872,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
             default:
                 throw new
-                    RuntimeException(I18N.getString("BMPImageReader1"));
+                    IIOException(I18N.getString("BMPImageReader1"));
             }
 
             break;
@@ -856,7 +913,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
             default:
                 throw new
-                    RuntimeException(I18N.getString("BMPImageReader1"));
+                    IIOException(I18N.getString("BMPImageReader1"));
             }
 
         case VERSION_4_8_BIT:
@@ -872,7 +929,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
             default:
                 throw new
-                    RuntimeException(I18N.getString("BMPImageReader1"));
+                    IIOException(I18N.getString("BMPImageReader1"));
             }
             break;
 
@@ -1222,12 +1279,12 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         // Padding bytes at the end of each scanline
         // width * bitsPerPixel should be divisible by 32
         int padding = width * 2 % 4;
-        
+
         if ( padding != 0)
             padding = 4 - padding;
-        
+
         int lineLength = width + padding / 2;
-        
+
         if (noTransform) {
             int j = isBottomUp ? (height -1) * width : 0;
             for (int i=0; i<height; i++) {
@@ -1237,7 +1294,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
                 iis.readFully(sdata, j, width);
                 iis.skipBytes(padding);
-                
+
                 j += isBottomUp ? -width : width;
                 processImageUpdate(bi, 0, i,
                                    destinationRegion.width, 1, 1, 1,
@@ -1248,24 +1305,24 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
             short[] buf = new short[lineLength];
             int lineStride =
                 ((SinglePixelPackedSampleModel)sampleModel).getScanlineStride();
-            
+
             if (isBottomUp) {
                 int lastLine =
                     sourceRegion.y + (destinationRegion.height - 1) * scaleY;
                 iis.skipBytes(lineLength * (height - 1 - lastLine) << 1);
             } else
                 iis.skipBytes(lineLength * sourceRegion.y << 1);
-            
+
             int skipLength = lineLength * (scaleY - 1) << 1;
-            
+
             int k = destinationRegion.y * lineStride;
             if (isBottomUp)
                 k += (destinationRegion.height - 1) * lineStride;
             k += destinationRegion.x;
-            
+
             for (int j = 0, y = sourceRegion.y;
                  j < destinationRegion.height; j++, y+=scaleY) {
-                
+
                 if (abortRequested())
                     break;
                 iis.readFully(buf, 0, lineLength);
@@ -1468,7 +1525,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         if (imSize == 0) {
             imSize = (int)(bitmapFileSize - bitmapOffset);
         }
-        
+
         int padding = 0;
         // If width is not 32 byte aligned, then while uncompressing each
         // scanline will have padding bytes, calculate the amount of padding
@@ -1476,7 +1533,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         if (remainder != 0) {
             padding = 4 - remainder;
         }
-        
+
         // Read till we have the whole image
         byte[] values = new byte[imSize];
         iis.readFully(values, 0, imSize);
@@ -1497,16 +1554,16 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
         int lineStride =
             ((MultiPixelPackedSampleModel)sampleModel).getScanlineStride();
         int finished = 0;
-        
+
         while (count != imSize) {
-            
+
             value = values[count++] & 0xFF;
             if (value == 0) {
-                
-                
+
+
                 // Absolute mode
                 switch(values[count++] & 0xFF) {
-                    
+
                 case 0:
                     // End-of-scanline marker
                     // End-of-scanline marker
@@ -1651,53 +1708,53 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
 
         reader.addIIOReadProgressListener(new EmbeddedProgressAdapter() {
                 public void imageProgress(ImageReader source,
-                                          float percentageDone) 
-                {            
+                                          float percentageDone)
+                {
                     processImageProgress(percentageDone);
                 }
             });
 
         reader.addIIOReadUpdateListener(new IIOReadUpdateListener() {
-                public void imageUpdate(ImageReader source, 
-                                        BufferedImage theImage, 
-                                        int minX, int minY, 
-                                        int width, int height, 
-                                        int periodX, int periodY, 
-                                        int[] bands) 
+                public void imageUpdate(ImageReader source,
+                                        BufferedImage theImage,
+                                        int minX, int minY,
+                                        int width, int height,
+                                        int periodX, int periodY,
+                                        int[] bands)
                 {
-                    processImageUpdate(theImage, minX, minY, 
-                                       width, height, 
+                    processImageUpdate(theImage, minX, minY,
+                                       width, height,
                                        periodX, periodY, bands);
                 }
-                public void passComplete(ImageReader source, 
-                                         BufferedImage theImage) 
+                public void passComplete(ImageReader source,
+                                         BufferedImage theImage)
                 {
                     processPassComplete(theImage);
                 }
-                public void passStarted(ImageReader source, 
-                                        BufferedImage theImage, 
-                                        int pass, 
-                                        int minPass, int maxPass, 
-                                        int minX, int minY, 
-                                        int periodX, int periodY, 
-                                        int[] bands) 
+                public void passStarted(ImageReader source,
+                                        BufferedImage theImage,
+                                        int pass,
+                                        int minPass, int maxPass,
+                                        int minX, int minY,
+                                        int periodX, int periodY,
+                                        int[] bands)
                 {
-                    processPassStarted(theImage, pass, minPass, maxPass, 
-                                       minX, minY, periodX, periodY, 
+                    processPassStarted(theImage, pass, minPass, maxPass,
+                                       minX, minY, periodX, periodY,
                                        bands);
                 }
-                public void thumbnailPassComplete(ImageReader source, 
+                public void thumbnailPassComplete(ImageReader source,
                                                   BufferedImage thumb) {}
-                public void thumbnailPassStarted(ImageReader source, 
-                                                 BufferedImage thumb, 
-                                                 int pass, 
+                public void thumbnailPassStarted(ImageReader source,
+                                                 BufferedImage thumb,
+                                                 int pass,
                                                  int minPass, int maxPass,
                                                  int minX, int minY,
                                                  int periodX, int periodY,
                                                  int[] bands) {}
-                public void thumbnailUpdate(ImageReader source, 
+                public void thumbnailUpdate(ImageReader source,
                                             BufferedImage theThumbnail,
-                                            int minX, int minY, 
+                                            int minX, int minY,
                                             int width, int height,
                                             int periodX, int periodY,
                                             int[] bands) {}
@@ -1709,7 +1766,7 @@ public class BMPImageReader extends ImageReader implements BMPConstants {
                     processWarningOccurred(warning);
                 }
             });
- 
+
         ImageReadParam param = reader.getDefaultReadParam();
         param.setDestination(bi);
         param.setDestinationBands(bmpParam.getDestinationBands());

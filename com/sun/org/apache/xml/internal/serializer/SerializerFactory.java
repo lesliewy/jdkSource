@@ -1,9 +1,13 @@
 /*
- * Copyright 1999-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,37 +22,34 @@
  */
 package com.sun.org.apache.xml.internal.serializer;
 
-import java.util.Hashtable;
-import java.util.Properties;
-
-import javax.xml.transform.OutputKeys;
-
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 import com.sun.org.apache.xml.internal.serializer.utils.MsgKey;
 import com.sun.org.apache.xml.internal.serializer.utils.Utils;
-import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import java.util.Properties;
+import javax.xml.transform.OutputKeys;
 import org.xml.sax.ContentHandler;
 
 /**
  * This class is a public API, it is a factory for creating serializers.
-   * 
+   *
    * The properties object passed to the getSerializer() method should be created by
    * the OutputPropertiesFactory. Although the properties object
-   * used to create a serializer does not need to be obtained 
+   * used to create a serializer does not need to be obtained
    * from OutputPropertiesFactory,
    * using this factory ensures that the default key/value properties
    * are set for the given output "method".
-   * 
+   *
    * <p>
    * The standard property keys supported are: "method", "version", "encoding",
    * "omit-xml-declaration", "standalone", doctype-public",
-   * "doctype-system", "cdata-section-elements", "indent", "media-type". 
+   * "doctype-system", "cdata-section-elements", "indent", "media-type".
    * These property keys and their values are described in the XSLT recommendation,
    * see {@link <a href="http://www.w3.org/TR/1999/REC-xslt-19991116"> XSLT 1.0 recommendation</a>}
-   * 
+   *
    * <p>
    * The value of the "cdata-section-elements" property key is a whitespace
-   * separated list of elements. If the element is in a namespace then 
-   * value is passed in this format: {uri}localName 
+   * separated list of elements. If the element is in a namespace then
+   * value is passed in this format: {uri}localName
    *
    * <p>
    * The non-standard property keys supported are defined in {@link OutputPropertiesFactory}.
@@ -64,12 +65,8 @@ public final class SerializerFactory
    */
 
   private SerializerFactory() {
- 
+
   }
-  /**
-   * Associates output methods to default output formats.
-   */
-  private static Hashtable m_formats = new Hashtable();
 
   /**
    * Returns a serializer for the specified output method. The output method
@@ -110,7 +107,7 @@ public final class SerializerFactory
             // Missing Content Handler property, load default using OutputPropertiesFactory
             Properties methodDefaults =
                 OutputPropertiesFactory.getDefaultMethodProperties(method);
-            className = 
+            className =
             methodDefaults.getProperty(OutputPropertiesFactory.S_KEY_CONTENT_HANDLER);
             if (null == className) {
                 String msg = Utils.messages.createMessage(

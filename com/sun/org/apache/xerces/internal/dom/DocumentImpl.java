@@ -1,12 +1,16 @@
 /*
- * Copyright 2001,2002,2004,2005 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,13 +20,19 @@
 
 package com.sun.org.apache.xerces.internal.dom;
 
-import java.io.Serializable;
-import java.util.Hashtable;
-import java.util.Vector;
-
 import com.sun.org.apache.xerces.internal.dom.events.EventImpl;
 import com.sun.org.apache.xerces.internal.dom.events.MutationEventImpl;
-import org.w3c.dom.UserDataHandler;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamField;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
@@ -30,6 +40,7 @@ import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.UserDataHandler;
 import org.w3c.dom.events.DocumentEvent;
 import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventException;
@@ -65,14 +76,14 @@ import org.w3c.dom.traversal.TreeWalker;
  * <p>
  * <b>Note:</b> When any node in the document is serialized, the
  * entire document is serialized along with it.
- * 
+ *
  * @xerces.internal
  *
  * @author Arnaud  Le Hors, IBM
  * @author Joe Kesselman, IBM
  * @author Andy Clark, IBM
  * @author Ralf Pfeiffer, IBM
- * @version $Id: DocumentImpl.java,v 1.4 2007/07/19 04:38:19 ofung Exp $
+ * @version $Id: DocumentImpl.java,v 1.6 2010/07/20 20:25:24 joehw Exp $
  * @since  PR-DOM-Level-1-19980818.
  */
 public class DocumentImpl
@@ -92,17 +103,32 @@ public class DocumentImpl
 
     /** Iterators */
     // REVISIT: Should this be transient? -Ac
-    protected Vector iterators;
+    protected List<NodeIterator> iterators;
 
      /** Ranges */
     // REVISIT: Should this be transient? -Ac
-    protected Vector ranges;
+    protected List<Range> ranges;
 
     /** Table for event listeners registered to this document nodes. */
-    protected Hashtable eventListeners;
+    protected Map<NodeImpl, List<LEntry>> eventListeners;
 
     /** Bypass mutation events firing. */
     protected boolean mutationEvents = false;
+
+
+    /**
+     * @serialField iterators Vector Node iterators
+     * @serialField ranges Vector ranges
+     * @serialField eventListeners Hashtable Event listeners
+     * @serialField mutationEvents boolean Bypass mutation events firing
+     */
+    private static final ObjectStreamField[] serialPersistentFields =
+        new ObjectStreamField[] {
+            new ObjectStreamField("iterators", Vector.class),
+            new ObjectStreamField("ranges", Vector.class),
+            new ObjectStreamField("eventListeners", Hashtable.class),
+            new ObjectStreamField("mutationEvents", boolean.class),
+        };
 
     //
     // Constructors
@@ -157,7 +183,7 @@ public class DocumentImpl
         // experimental
         newdoc.mutationEvents = mutationEvents;
 
-    	return newdoc;
+        return newdoc;
 
     } // cloneNode(boolean):Node
 
@@ -211,7 +237,7 @@ public class DocumentImpl
                                            NodeFilter filter,
                                            boolean entityReferenceExpansion)
     {
-        
+
         if (root == null) {
                   String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
                   throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
@@ -223,10 +249,10 @@ public class DocumentImpl
                                                      filter,
                                                      entityReferenceExpansion);
         if (iterators == null) {
-            iterators = new Vector();
+            iterators = new ArrayList<>();
         }
 
-        iterators.addElement(iterator);
+        iterators.add(iterator);
 
         return iterator;
     }
@@ -260,7 +286,7 @@ public class DocumentImpl
                                        NodeFilter filter,
                                        boolean entityReferenceExpansion)
     {
-    	if (root == null) {
+        if (root == null) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
             throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
         }
@@ -283,7 +309,7 @@ public class DocumentImpl
         if (nodeIterator == null) return;
         if (iterators == null) return;
 
-        iterators.removeElement(nodeIterator);
+        iterators.remove(nodeIterator);
     }
 
     //
@@ -294,12 +320,11 @@ public class DocumentImpl
     public Range createRange() {
 
         if (ranges == null) {
-            ranges = new Vector();
+            ranges = new ArrayList<>();
         }
 
         Range range = new RangeImpl(this);
-
-        ranges.addElement(range);
+        ranges.add(range);
 
         return range;
 
@@ -314,7 +339,7 @@ public class DocumentImpl
         if (range == null) return;
         if (ranges == null) return;
 
-        ranges.removeElement(range);
+        ranges.remove(range);
     }
 
     /**
@@ -326,7 +351,7 @@ public class DocumentImpl
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).receiveReplacedText(node);
+                ((RangeImpl)ranges.get(i)).receiveReplacedText(node);
             }
         }
     }
@@ -340,7 +365,7 @@ public class DocumentImpl
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).receiveDeletedText(node,
+                ((RangeImpl)ranges.get(i)).receiveDeletedText(node,
                                                                 offset, count);
             }
         }
@@ -355,7 +380,7 @@ public class DocumentImpl
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).receiveInsertedText(node,
+                ((RangeImpl)ranges.get(i)).receiveInsertedText(node,
                                                                 offset, count);
             }
         }
@@ -370,7 +395,7 @@ public class DocumentImpl
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).receiveSplitData(node,
+                ((RangeImpl)ranges.get(i)).receiveSplitData(node,
                                                               newNode, offset);
             }
         }
@@ -400,17 +425,17 @@ public class DocumentImpl
      * @since WD-DOM-Level-2-19990923
      */
     public Event createEvent(String type)
-	throws DOMException {
-	    if (type.equalsIgnoreCase("Events") || "Event".equals(type))
-	        return new EventImpl();
-	    if (type.equalsIgnoreCase("MutationEvents") ||
+        throws DOMException {
+            if (type.equalsIgnoreCase("Events") || "Event".equals(type))
+                return new EventImpl();
+            if (type.equalsIgnoreCase("MutationEvents") ||
                 "MutationEvent".equals(type))
-	        return new MutationEventImpl();
-	    else {
+                return new MutationEventImpl();
+            else {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
-	        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
         }
-	}
+        }
 
     /**
      * Sets whether the DOM implementation generates mutation events
@@ -433,9 +458,9 @@ public class DocumentImpl
      * node here won't be GC'ed as long as some listener is registered on it,
      * since the eventsListeners table will have a reference to the node.
      */
-    protected void setEventListeners(NodeImpl n, Vector listeners) {
+    private void setEventListeners(NodeImpl n, List<LEntry> listeners) {
         if (eventListeners == null) {
-            eventListeners = new Hashtable();
+            eventListeners = new HashMap<>();
         }
         if (listeners == null) {
             eventListeners.remove(n);
@@ -453,11 +478,11 @@ public class DocumentImpl
     /**
      * Retreive event listener registered on a given node
      */
-    protected Vector getEventListeners(NodeImpl n) {
+    private List<LEntry> getEventListeners(NodeImpl n) {
         if (eventListeners == null) {
             return null;
         }
-        return (Vector) eventListeners.get(n);
+        return eventListeners.get(n);
     }
 
     //
@@ -474,18 +499,18 @@ public class DocumentImpl
      * are hung from the nodeListeners Vector.
      * <p>
      * I considered using two vectors -- one for capture,
-     * one for bubble -- but decided that since the list of listeners 
+     * one for bubble -- but decided that since the list of listeners
      * is probably short in most cases, it might not be worth spending
      * the space. ***** REVISIT WHEN WE HAVE MORE EXPERIENCE.
      */
     class LEntry implements Serializable {
 
-        private static final long serialVersionUID = 3258416144514626360L;
+        private static final long serialVersionUID = -8426757059492421631L;
         String type;
         EventListener listener;
         boolean useCapture;
-	    
-        /** NON-DOM INTERNAL: Constructor for Listener list Entry 
+
+        /** NON-DOM INTERNAL: Constructor for Listener list Entry
          * @param type Event name (NOT event group!) to listen for.
          * @param listener Who gets called when event is dispatched
          * @param useCaptue True iff listener is registered on
@@ -499,7 +524,7 @@ public class DocumentImpl
         }
 
     } // LEntry
-	
+
     /**
      * Introduced in DOM Level 2. <p> Register an event listener with this
      * Node. A listener may be independently registered as both Capturing and
@@ -511,6 +536,7 @@ public class DocumentImpl
      * @param useCapture True iff listener is registered on
      *  capturing phase rather than at-target or bubbling
      */
+    @Override
     protected void addEventListener(NodeImpl node, String type,
                                     EventListener listener, boolean useCapture)
     {
@@ -518,18 +544,18 @@ public class DocumentImpl
         // a listener to dispatch to
         if (type == null || type.equals("") || listener == null)
             return;
-      
+
         // Each listener may be registered only once per type per phase.
         // Simplest way to code that is to zap the previous entry, if any.
         removeEventListener(node, type, listener, useCapture);
-	    
-        Vector nodeListeners = getEventListeners(node);
+
+        List<LEntry> nodeListeners = getEventListeners(node);
         if(nodeListeners == null) {
-            nodeListeners = new Vector();
+            nodeListeners = new ArrayList<>();
             setEventListeners(node, nodeListeners);
         }
-        nodeListeners.addElement(new LEntry(type, listener, useCapture));
-	    
+        nodeListeners.add(new LEntry(type, listener, useCapture));
+
         // Record active listener
         LCount lc = LCount.lookup(type);
         if (useCapture) {
@@ -542,7 +568,7 @@ public class DocumentImpl
         }
 
     } // addEventListener(NodeImpl,String,EventListener,boolean) :void
-	
+
     /**
      * Introduced in DOM Level 2. <p> Deregister an event listener previously
      * registered with this Node.  A listener must be independently removed
@@ -554,6 +580,7 @@ public class DocumentImpl
      * @param useCapture True iff listener is registered on
      *  capturing phase rather than at-target or bubbling
      */
+    @Override
     protected void removeEventListener(NodeImpl node, String type,
                                        EventListener listener,
                                        boolean useCapture)
@@ -561,20 +588,20 @@ public class DocumentImpl
         // If this couldn't be a valid listener registration, ignore request
         if (type == null || type.equals("") || listener == null)
             return;
-        Vector nodeListeners = getEventListeners(node);
+        List<LEntry> nodeListeners = getEventListeners(node);
         if (nodeListeners == null)
             return;
 
-        // Note that addListener has previously ensured that 
+        // Note that addListener has previously ensured that
         // each listener may be registered only once per type per phase.
         // count-down is OK for deletions!
         for (int i = nodeListeners.size() - 1; i >= 0; --i) {
-            LEntry le = (LEntry) nodeListeners.elementAt(i);
-            if (le.useCapture == useCapture && le.listener == listener && 
+            LEntry le = nodeListeners.get(i);
+            if (le.useCapture == useCapture && le.listener == listener &&
                 le.type.equals(type)) {
-                nodeListeners.removeElementAt(i);
+                nodeListeners.remove(i);
                 // Storage management: Discard empty listener lists
-                if (nodeListeners.size() == 0)
+                if (nodeListeners.isEmpty())
                     setEventListeners(node, null);
 
                 // Remove active listener
@@ -593,37 +620,38 @@ public class DocumentImpl
         }
     } // removeEventListener(NodeImpl,String,EventListener,boolean) :void
 
+    @Override
     protected void copyEventListeners(NodeImpl src, NodeImpl tgt) {
-        Vector nodeListeners = getEventListeners(src);
-	if (nodeListeners == null) {
-	    return;
-	}
-	setEventListeners(tgt, (Vector) nodeListeners.clone());
+        List<LEntry> nodeListeners = getEventListeners(src);
+        if (nodeListeners == null) {
+            return;
+        }
+        setEventListeners(tgt, new ArrayList<>(nodeListeners));
     }
 
     /**
      * Introduced in DOM Level 2. <p>
-     * Distribution engine for DOM Level 2 Events. 
+     * Distribution engine for DOM Level 2 Events.
      * <p>
      * Event propagation runs as follows:
      * <ol>
      * <li>Event is dispatched to a particular target node, which invokes
      *   this code. Note that the event's stopPropagation flag is
-     *   cleared when dispatch begins; thereafter, if it has 
+     *   cleared when dispatch begins; thereafter, if it has
      *   been set before processing of a node commences, we instead
      *   immediately advance to the DEFAULT phase.
      * <li>The node's ancestors are established as destinations for events.
-     *   For capture and bubble purposes, node ancestry is determined at 
-     *   the time dispatch starts. If an event handler alters the document 
-     *   tree, that does not change which nodes will be informed of the event. 
-     * <li>CAPTURING_PHASE: Ancestors are scanned, root to target, for 
-     *   Capturing listeners. If found, they are invoked (see below). 
-     * <li>AT_TARGET: 
+     *   For capture and bubble purposes, node ancestry is determined at
+     *   the time dispatch starts. If an event handler alters the document
+     *   tree, that does not change which nodes will be informed of the event.
+     * <li>CAPTURING_PHASE: Ancestors are scanned, root to target, for
+     *   Capturing listeners. If found, they are invoked (see below).
+     * <li>AT_TARGET:
      *   Event is dispatched to NON-CAPTURING listeners on the
      *   target node. Note that capturing listeners on this node are _not_
      *   invoked.
      * <li>BUBBLING_PHASE: Ancestors are scanned, target to root, for
-     *   non-capturing listeners. 
+     *   non-capturing listeners.
      * <li>Default processing: Some DOMs have default behaviors bound to
      *   specific nodes. If this DOM does, and if the event's preventDefault
      *   flag has not been set, we now return to the target node and process
@@ -637,7 +665,7 @@ public class DocumentImpl
      * <p>
      * If an event handler itself causes events to be dispatched, they are
      * processed synchronously, before processing resumes
-     * on the event which triggered them. Please be aware that this may 
+     * on the event which triggered them. Please be aware that this may
      * result in events arriving at listeners "out of order" relative
      * to the actual sequence of requests.
      * <p>
@@ -646,14 +674,15 @@ public class DocumentImpl
      * I believe the DOM's intent is that event objects be redispatchable,
      * though it isn't stated in those terms.
      * @param node node to dispatch to
-     * @param event the event object to be dispatched to 
+     * @param event the event object to be dispatched to
      *              registered EventListeners
      * @return true if the event's <code>preventDefault()</code>
      *              method was invoked by an EventListener; otherwise false.
     */
+    @Override
     protected boolean dispatchEvent(NodeImpl node, Event event) {
         if (event == null) return false;
-        
+
         // Can't use anyone else's implementation, since there's no public
         // API for setting the event's processing-state fields.
         EventImpl evt = (EventImpl)event;
@@ -664,7 +693,7 @@ public class DocumentImpl
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "UNSPECIFIED_EVENT_TYPE_ERR", null);
             throw new EventException(EventException.UNSPECIFIED_EVENT_TYPE_ERR, msg);
         }
-        
+
         // If nobody is listening for this event, discard immediately
         LCount lc = LCount.lookup(evt.getType());
         if (lc.total == 0)
@@ -677,44 +706,44 @@ public class DocumentImpl
         evt.target = node;
         evt.stopPropagation = false;
         evt.preventDefault = false;
-        
+
         // Capture pre-event parentage chain, not including target;
         // use pre-event-dispatch ancestors even if event handlers mutate
         // document and change the target's context.
         // Note that this is parents ONLY; events do not
-        // cross the Attr/Element "blood/brain barrier". 
+        // cross the Attr/Element "blood/brain barrier".
         // DOMAttrModified. which looks like an exception,
         // is issued to the Element rather than the Attr
         // and causes a _second_ DOMSubtreeModified in the Element's
         // tree.
-        Vector pv = new Vector(10,10);
+        List<Node> pv = new ArrayList<>(10);
         Node p = node;
         Node n = p.getParentNode();
         while (n != null) {
-            pv.addElement(n);
+            pv.add(n);
             p = n;
             n = n.getParentNode();
         }
-        
+
         // CAPTURING_PHASE:
         if (lc.captures > 0) {
             evt.eventPhase = Event.CAPTURING_PHASE;
-            // Ancestors are scanned, root to target, for 
+            // Ancestors are scanned, root to target, for
             // Capturing listeners.
             for (int j = pv.size() - 1; j >= 0; --j) {
                 if (evt.stopPropagation)
                     break;  // Someone set the flag. Phase ends.
 
                 // Handle all capturing listeners on this node
-                NodeImpl nn = (NodeImpl) pv.elementAt(j);
+                NodeImpl nn = (NodeImpl) pv.get(j);
                 evt.currentTarget = nn;
-                Vector nodeListeners = getEventListeners(nn);
+                List<LEntry> nodeListeners = getEventListeners(nn);
                 if (nodeListeners != null) {
-                    Vector nl = (Vector) nodeListeners.clone();
+                    List<LEntry> nl = (List)((ArrayList)nodeListeners).clone();
                     // call listeners in the order in which they got registered
                     int nlsize = nl.size();
                     for (int i = 0; i < nlsize; i++) {
-                        LEntry le = (LEntry) nl.elementAt(i);
+                        LEntry le = nl.get(i);
                         if (le.useCapture && le.type.equals(evt.type) &&
                             nodeListeners.contains(le)) {
                             try {
@@ -728,8 +757,8 @@ public class DocumentImpl
                 }
             }
         }
-        
-        
+
+
         // Both AT_TARGET and BUBBLE use non-capturing listeners.
         if (lc.bubbles > 0) {
             // AT_TARGET PHASE: Event is dispatched to NON-CAPTURING listeners
@@ -737,13 +766,13 @@ public class DocumentImpl
             // node are _not_ invoked, even during the capture phase.
             evt.eventPhase = Event.AT_TARGET;
             evt.currentTarget = node;
-            Vector nodeListeners = getEventListeners(node);
+            List<LEntry> nodeListeners = getEventListeners(node);
             if (!evt.stopPropagation && nodeListeners != null) {
-                Vector nl = (Vector) nodeListeners.clone();
+                List<LEntry> nl = (List)((ArrayList)nodeListeners).clone();
                 // call listeners in the order in which they got registered
                 int nlsize = nl.size();
                 for (int i = 0; i < nlsize; i++) {
-                    LEntry le = (LEntry) nl.elementAt(i);
+                    LEntry le = (LEntry) nl.get(i);
                     if (!le.useCapture && le.type.equals(evt.type) &&
                         nodeListeners.contains(le)) {
                         try {
@@ -768,16 +797,16 @@ public class DocumentImpl
                         break;  // Someone set the flag. Phase ends.
 
                     // Handle all bubbling listeners on this node
-                    NodeImpl nn = (NodeImpl) pv.elementAt(j);
+                    NodeImpl nn = (NodeImpl) pv.get(j);
                     evt.currentTarget = nn;
                     nodeListeners = getEventListeners(nn);
                     if (nodeListeners != null) {
-                        Vector nl = (Vector) nodeListeners.clone();
+                        List<LEntry> nl = (List)((ArrayList)nodeListeners).clone();
                         // call listeners in the order in which they got
                         // registered
                         int nlsize = nl.size();
                         for (int i = 0; i < nlsize; i++) {
-                            LEntry le = (LEntry) nl.elementAt(i);
+                            LEntry le = nl.get(i);
                             if (!le.useCapture && le.type.equals(evt.type) &&
                                 nodeListeners.contains(le)) {
                                 try {
@@ -792,7 +821,7 @@ public class DocumentImpl
                 }
             }
         }
-        
+
         // DEFAULT PHASE: Some DOMs have default behaviors bound to specific
         // nodes. If this DOM does, and if the event's preventDefault flag has
         // not been set, we now return to the target node and process its
@@ -804,7 +833,7 @@ public class DocumentImpl
             // DO_DEFAULT_OPERATION
         }
 
-        return evt.preventDefault;        
+        return evt.preventDefault;
     } // dispatchEvent(NodeImpl,Event) :boolean
 
     /**
@@ -814,7 +843,7 @@ public class DocumentImpl
      * <p>
      * Similar to code in dispatchingEventToSubtree however this method
      * is only used on the target node and does not start a dispatching chain
-     * on the sibling of the target node as this is not part of the subtree 
+     * on the sibling of the target node as this is not part of the subtree
      * ***** At the moment I'm being sloppy and using the normal
      * capture dispatcher on every node. This could be optimized hugely
      * by writing a capture engine that tracks our position in the tree to
@@ -823,7 +852,7 @@ public class DocumentImpl
      * @param e event to be sent to that node and its subtree
      */
     protected void dispatchEventToSubtree(Node n, Event e) {
-        
+
         ((NodeImpl) n).dispatchEvent(e);
         if (n.getNodeType() == Node.ELEMENT_NODE) {
             NamedNodeMap a = n.getAttributes();
@@ -831,40 +860,40 @@ public class DocumentImpl
                 dispatchingEventToSubtree(a.item(i), e);
         }
         dispatchingEventToSubtree(n.getFirstChild(), e);
-        
+
     } // dispatchEventToSubtree(NodeImpl,Node,Event) :void
 
 
     /**
      * Dispatches event to the target node's descendents recursively
-     * 
+     *
      * @param n node to dispatch to
      * @param e event to be sent to that node and its subtree
      */
     protected void dispatchingEventToSubtree(Node n, Event e) {
-    	if (n==null) 
-    		return;
-    	
-    	// ***** Recursive implementation. This is excessively expensive,
+        if (n==null)
+                return;
+
+        // ***** Recursive implementation. This is excessively expensive,
         // and should be replaced in conjunction with optimization
         // mentioned above.
-    	((NodeImpl) n).dispatchEvent(e);
+        ((NodeImpl) n).dispatchEvent(e);
         if (n.getNodeType() == Node.ELEMENT_NODE) {
             NamedNodeMap a = n.getAttributes();
             for (int i = a.getLength() - 1; i >= 0; --i)
                 dispatchingEventToSubtree(a.item(i), e);
         }
-        dispatchingEventToSubtree(n.getFirstChild(), e);   
+        dispatchingEventToSubtree(n.getFirstChild(), e);
         dispatchingEventToSubtree(n.getNextSibling(), e);
     }
-    
+
     /**
      * NON-DOM INTERNAL: Return object for getEnclosingAttr. Carries
-     * (two values, the Attr node affected (if any) and its previous 
+     * (two values, the Attr node affected (if any) and its previous
      * string value. Simple struct, no methods.
      */
     class EnclosingAttr implements Serializable {
-        private static final long serialVersionUID = 3257001077260759859L;
+        private static final long serialVersionUID = 5208387723391647216L;
         AttrImpl node;
         String oldvalue;
     }
@@ -884,7 +913,7 @@ public class DocumentImpl
                                     MutationEvent.MODIFICATION);
         else
             dispatchAggregateEvents(node, null, null, (short) 0);
-	        
+
     } // dispatchAggregateEvents(NodeImpl,EnclosingAttr) :void
 
     /**
@@ -894,10 +923,10 @@ public class DocumentImpl
      * mutation operation, even if that involves multiple changes to
      * the DOM.
      * For example, if a DOM operation makes multiple changes to a single
-     * Attr before returning, it would be nice to generate only one 
+     * Attr before returning, it would be nice to generate only one
      * DOMAttrModified, and multiple changes over larger scope but within
-     * a recognizable single subtree might want to generate only one 
-     * DOMSubtreeModified, sent to their lowest common ancestor. 
+     * a recognizable single subtree might want to generate only one
+     * DOMSubtreeModified, sent to their lowest common ancestor.
      * <p>
      * To manage this, use the "internal" versions of insert and remove
      * with MUTATION_LOCAL, then make an explicit call to this routine
@@ -933,7 +962,7 @@ public class DocumentImpl
             }
         }
         // DOMSubtreeModified gets sent to the lowest common root of a
-        // set of changes. 
+        // set of changes.
         // "This event is dispatched after all other events caused by the
         // mutation have been fired."
         LCount lc = LCount.lookup(MutationEventImpl.DOM_SUBTREE_MODIFIED);
@@ -961,12 +990,12 @@ public class DocumentImpl
      * preparation for later generating DOMAttrModified events.
      * Determines whether this node is within an Attr
      * @param node node to get enclosing attribute for
-     * @return either a description of that Attr, or null if none such. 
+     * @return either a description of that Attr, or null if none such.
      */
     protected void saveEnclosingAttr(NodeImpl node) {
         savedEnclosingAttr = null;
         // MUTATION PREPROCESSING AND PRE-EVENTS:
-        // If we're within the scope of an Attr and DOMAttrModified 
+        // If we're within the scope of an Attr and DOMAttrModified
         // was requested, we need to preserve its previous value for
         // that event.
         LCount lc = LCount.lookup(MutationEventImpl.DOM_ATTR_MODIFIED);
@@ -999,9 +1028,9 @@ public class DocumentImpl
      */
     void modifyingCharacterData(NodeImpl node, boolean replace) {
         if (mutationEvents) {
-        	if (!replace) {
-        		saveEnclosingAttr(node);
-        	}
+                if (!replace) {
+                        saveEnclosingAttr(node);
+                }
         }
     }
 
@@ -1010,38 +1039,38 @@ public class DocumentImpl
      */
     void modifiedCharacterData(NodeImpl node, String oldvalue, String value, boolean replace) {
         if (mutationEvents) {
-        	if (!replace) {
-        		// MUTATION POST-EVENTS:
-        		LCount lc =
-        			LCount.lookup(MutationEventImpl.DOM_CHARACTER_DATA_MODIFIED);
-        		if (lc.total > 0) {
-        			MutationEvent me = new MutationEventImpl();
-        			me.initMutationEvent(
-                                 	MutationEventImpl.DOM_CHARACTER_DATA_MODIFIED,
-                                     	true, false, null,
-										oldvalue, value, null, (short) 0);
-        			dispatchEvent(node, me);
-        		}
-            
-        		// Subroutine: Transmit DOMAttrModified and DOMSubtreeModified,
-        		// if required. (Common to most kinds of mutation)
-        		dispatchAggregateEvents(node, savedEnclosingAttr);
-        	} // End mutation postprocessing
+                if (!replace) {
+                        // MUTATION POST-EVENTS:
+                        LCount lc =
+                                LCount.lookup(MutationEventImpl.DOM_CHARACTER_DATA_MODIFIED);
+                        if (lc.total > 0) {
+                                MutationEvent me = new MutationEventImpl();
+                                me.initMutationEvent(
+                                        MutationEventImpl.DOM_CHARACTER_DATA_MODIFIED,
+                                        true, false, null,
+                                                                                oldvalue, value, null, (short) 0);
+                                dispatchEvent(node, me);
+                        }
+
+                        // Subroutine: Transmit DOMAttrModified and DOMSubtreeModified,
+                        // if required. (Common to most kinds of mutation)
+                        dispatchAggregateEvents(node, savedEnclosingAttr);
+                } // End mutation postprocessing
         }
     }
-    
+
     /**
      * A method to be called when a character data node has been replaced
      */
     void replacedCharacterData(NodeImpl node, String oldvalue, String value) {
-    	//now that we have finished replacing data, we need to perform the same actions
-    	//that are required after a character data node has been modified
-    	//send the value of false for replace parameter so that mutation
-    	//events if appropriate will be initiated
-    	modifiedCharacterData(node, oldvalue, value, false);
+        //now that we have finished replacing data, we need to perform the same actions
+        //that are required after a character data node has been modified
+        //send the value of false for replace parameter so that mutation
+        //events if appropriate will be initiated
+        modifiedCharacterData(node, oldvalue, value, false);
     }
-    
-    
+
+
 
     /**
      * A method to be called when a node is about to be inserted in the tree.
@@ -1109,14 +1138,14 @@ public class DocumentImpl
                 dispatchAggregateEvents(node, savedEnclosingAttr);
             }
         }
-        
+
         // notify the range of insertions
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).insertedNodeFromDOM(newInternal);
+                ((RangeImpl)ranges.get(i)).insertedNodeFromDOM(newInternal);
             }
-        }        
+        }
     }
 
     /**
@@ -1128,7 +1157,7 @@ public class DocumentImpl
         if (iterators != null) {
             int size = iterators.size();
             for (int i = 0; i != size; i++) {
-               ((NodeIteratorImpl)iterators.elementAt(i)).removeNode(oldChild);
+               ((NodeIteratorImpl)iterators.get(i)).removeNode(oldChild);
             }
         }
 
@@ -1136,14 +1165,14 @@ public class DocumentImpl
         if (ranges != null) {
             int size = ranges.size();
             for (int i = 0; i != size; i++) {
-                ((RangeImpl)ranges.elementAt(i)).removeNode(oldChild);
+                ((RangeImpl)ranges.get(i)).removeNode(oldChild);
             }
         }
 
         // mutation events
         if (mutationEvents) {
             // MUTATION PREPROCESSING AND PRE-EVENTS:
-            // If we're within the scope of an Attr and DOMAttrModified 
+            // If we're within the scope of an Attr and DOMAttrModified
             // was requested, we need to preserve its previous value for
             // that event.
             if (!replace) {
@@ -1208,14 +1237,14 @@ public class DocumentImpl
             saveEnclosingAttr(node);
         }
     }
-    
+
     /**
      * A method to be called when character data is about to be replaced in the tree.
      */
     void replacingData (NodeImpl node) {
-    	if (mutationEvents) {
-    			saveEnclosingAttr(node);
-    	}
+        if (mutationEvents) {
+                        saveEnclosingAttr(node);
+        }
     }
 
     /**
@@ -1264,7 +1293,7 @@ public class DocumentImpl
         // that the Attr is still attached to an owner. This code is
         // similar but dispatches to the previous owner, "element".
         if (mutationEvents) {
-    	    // If we have to send DOMAttrModified (determined earlier),
+            // If we have to send DOMAttrModified (determined earlier),
             // do so.
             LCount lc = LCount.lookup(MutationEventImpl.DOM_ATTR_MODIFIED);
             if (lc.total > 0) {
@@ -1282,20 +1311,69 @@ public class DocumentImpl
             dispatchAggregateEvents(oldOwner, null, null, (short) 0);
         }
     }
-    
+
 
     /**
      * A method to be called when an attribute node has been renamed
      */
     void renamedAttrNode(Attr oldAt, Attr newAt) {
-	// REVISIT: To be implemented!!!
+        // REVISIT: To be implemented!!!
     }
 
     /**
      * A method to be called when an element has been renamed
      */
     void renamedElement(Element oldEl, Element newEl) {
-	// REVISIT: To be implemented!!!
+        // REVISIT: To be implemented!!!
     }
 
+
+    /**
+     * @serialData Serialized fields. Convert Maps to Hashtables and Lists
+     * to Vectors for backward compatibility.
+     */
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        // Convert Maps to Hashtables, Lists to Vectors
+        Vector<NodeIterator> it = (iterators == null)? null : new Vector<>(iterators);
+        Vector<Range> r = (ranges == null)? null : new Vector<>(ranges);
+
+        Hashtable<NodeImpl, Vector<LEntry>> el = null;
+        if (eventListeners != null) {
+            el = new Hashtable<>();
+            for (Map.Entry<NodeImpl, List<LEntry>> e : eventListeners.entrySet()) {
+                 el.put(e.getKey(), new Vector<>(e.getValue()));
+            }
+        }
+
+        // Write serialized fields
+        ObjectOutputStream.PutField pf = out.putFields();
+        pf.put("iterators", it);
+        pf.put("ranges", r);
+        pf.put("eventListeners", el);
+        pf.put("mutationEvents", mutationEvents);
+        out.writeFields();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(ObjectInputStream in)
+                        throws IOException, ClassNotFoundException {
+        // We have to read serialized fields first.
+        ObjectInputStream.GetField gf = in.readFields();
+        Vector<NodeIterator> it = (Vector<NodeIterator>)gf.get("iterators", null);
+        Vector<Range> r = (Vector<Range>)gf.get("ranges", null);
+        Hashtable<NodeImpl, Vector<LEntry>> el =
+                (Hashtable<NodeImpl, Vector<LEntry>>)gf.get("eventListeners", null);
+
+        mutationEvents = gf.get("mutationEvents", false);
+
+        //convert Hashtables back to HashMaps and Vectors to Lists
+        if (it != null) iterators = new ArrayList<>(it);
+        if (r != null) ranges = new ArrayList<>(r);
+        if (el != null) {
+            eventListeners = new HashMap<>();
+            for (Map.Entry<NodeImpl, Vector<LEntry>> e : el.entrySet()) {
+                 eventListeners.put(e.getKey(), new ArrayList<>(e.getValue()));
+            }
+        }
+    }
 } // class DocumentImpl

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.im;
@@ -33,18 +51,17 @@ import java.util.Map;
 * mappings from abstract to concrete styles. Currently defined state values
 * are raw (unconverted) and converted.
 * These state values are recommended for use before and after the
-* main conversion step of text composition, say, before and after kana->kanji
-* or pinyin->hanzi conversion.
+* main conversion step of text composition, say, before and after kana-&gt;kanji
+* or pinyin-&gt;hanzi conversion.
 * The <code>variation</code> field allows input methods to express additional
-* information about the conversion results. 
+* information about the conversion results.
 * <p>
-* 
+*
 * InputMethodHighlight instances are typically used as attribute values
 * returned from AttributedCharacterIterator for the INPUT_METHOD_HIGHLIGHT
 * attribute. They may be wrapped into {@link java.text.Annotation Annotation}
 * instances to indicate separate text segments.
 *
-* @version 	%I%, %G%
 * @see java.text.AttributedCharacterIterator
 * @since 1.2
 */
@@ -127,7 +144,7 @@ public class InputMethodHighlight {
      * @since 1.3
      */
     public InputMethodHighlight(boolean selected, int state, int variation,
-				Map<TextAttribute,?> style)
+                                Map<TextAttribute,?> style)
     {
         this.selected = selected;
         if (!(state == RAW_TEXT || state == CONVERTED_TEXT)) {
@@ -144,7 +161,7 @@ public class InputMethodHighlight {
     public boolean isSelected() {
         return selected;
     }
-    
+
     /**
      * Returns the conversion state of the text range.
      * @return The conversion state for the text range - RAW_TEXT or CONVERTED_TEXT.
@@ -161,7 +178,7 @@ public class InputMethodHighlight {
     public int getVariation() {
         return variation;
     }
-    
+
     /**
      * Returns the rendering style attributes for the text range, or null.
      * @since 1.3
@@ -173,6 +190,6 @@ public class InputMethodHighlight {
     private boolean selected;
     private int state;
     private int variation;
-    private Map style;
+    private Map<TextAttribute, ?> style;
 
 };

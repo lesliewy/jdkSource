@@ -1,8 +1,26 @@
 /*
- * %W% %E% %U%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.imageio.plugins.bmp;
@@ -201,7 +219,7 @@ public class BMPMetadata extends IIOMetadata implements BMPConstants {
 
         // CompressionTypeName
         IIOMetadataNode subNode = new IIOMetadataNode("CompressionTypeName");
-        subNode.setAttribute("value", compressionTypeNames[compression]);
+        subNode.setAttribute("value", BMPCompressionTypes.getName(compression));
         node.appendChild(subNode);
         return node;
     }
@@ -231,11 +249,11 @@ public class BMPMetadata extends IIOMetadata implements BMPConstants {
             IIOMetadataNode subNode = new IIOMetadataNode("PixelAspectRatio");
             subNode.setAttribute("value", "" + ratio);
             node.appendChild(subNode);
-            
+
             subNode = new IIOMetadataNode("HorizontalPhysicalPixelSpacing");
             subNode.setAttribute("value", "" + (1 / xPixelsPerMeter * 1000));
             node.appendChild(subNode);
-            
+
             subNode = new IIOMetadataNode("VerticalPhysicalPixelSpacing");
             subNode.setAttribute("value", "" + (1 / yPixelsPerMeter * 1000));
             node.appendChild(subNode);

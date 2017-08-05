@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -10,30 +28,30 @@ import java.awt.event.*;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.io.Serializable;
- 
+
 /**
  * This class is used to create a multiple-exclusion scope for
  * a set of buttons. Creating a set of buttons with the
  * same <code>ButtonGroup</code> object means that
- * turning "on" one of those buttons 
+ * turning "on" one of those buttons
  * turns off all other buttons in the group.
  * <p>
  * A <code>ButtonGroup</code> can be used with
  * any set of objects that inherit from <code>AbstractButton</code>.
- * Typically a button group contains instances of 
+ * Typically a button group contains instances of
  * <code>JRadioButton</code>,
  * <code>JRadioButtonMenuItem</code>,
  * or <code>JToggleButton</code>.
- * It wouldn't make sense to put an instance of 
+ * It wouldn't make sense to put an instance of
  * <code>JButton</code> or <code>JMenuItem</code>
  * in a button group
  * because <code>JButton</code> and <code>JMenuItem</code>
  * don't implement the selected state.
  * <p>
- * Initially, all buttons in the group are unselected. 
+ * Initially, all buttons in the group are unselected.
  * <p>
  * For examples and further information on using button groups see
- * <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/button.html#radiobutton">How to Use Radio Buttons</a>,
+ * <a href="https://docs.oracle.com/javase/tutorial/uiswing/components/button.html#radiobutton">How to Use Radio Buttons</a>,
  * a section in <em>The Java Tutorial</em>.
  * <p>
  * <strong>Warning:</strong>
@@ -41,17 +59,17 @@ import java.io.Serializable;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Jeff Dinkins
  */
+@SuppressWarnings("serial")
 public class ButtonGroup implements Serializable {
 
     // the list of buttons participating in this group
-    protected Vector<AbstractButton> buttons = new Vector();
+    protected Vector<AbstractButton> buttons = new Vector<AbstractButton>();
 
     /**
      * The current selection.
@@ -66,7 +84,7 @@ public class ButtonGroup implements Serializable {
     /**
      * Adds the button to the group.
      * @param b the button to be added
-     */ 
+     */
     public void add(AbstractButton b) {
         if(b == null) {
             return;
@@ -83,11 +101,11 @@ public class ButtonGroup implements Serializable {
 
         b.getModel().setGroup(this);
     }
- 
+
     /**
      * Removes the button from the group.
      * @param b the button to be removed
-     */ 
+     */
     public void remove(AbstractButton b) {
         if(b == null) {
             return;
@@ -98,21 +116,21 @@ public class ButtonGroup implements Serializable {
         }
         b.getModel().setGroup(null);
     }
-    
+
     /**
-     * Clears the selection such that none of the buttons 
+     * Clears the selection such that none of the buttons
      * in the <code>ButtonGroup</code> are selected.
-     * 
-     * @since 1.6       
-     */ 
+     *
+     * @since 1.6
+     */
     public void clearSelection() {
         if (selection != null) {
             ButtonModel oldSelection = selection;
             selection = null;
-            oldSelection.setSelected(false);            
+            oldSelection.setSelected(false);
         }
     }
- 
+
     /**
      * Returns all the buttons that are participating in
      * this group.
@@ -145,7 +163,7 @@ public class ButtonGroup implements Serializable {
                 oldSelection.setSelected(false);
             }
             m.setSelected(true);
-        } 
+        }
     }
 
     /**
@@ -163,11 +181,11 @@ public class ButtonGroup implements Serializable {
      * @since 1.3
      */
     public int getButtonCount() {
-	if (buttons == null) {
-	    return 0;
-	} else {
-	    return buttons.size();
-	}
+        if (buttons == null) {
+            return 0;
+        } else {
+            return buttons.size();
+        }
     }
 
 }

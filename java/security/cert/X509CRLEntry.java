@@ -1,17 +1,35 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.cert;
 
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.Set;
-
 import javax.security.auth.x500.X500Principal;
+
+import sun.security.x509.X509CRLEntryImpl;
 
 /**
  * <p>Abstract class for a revoked certificate in a CRL (Certificate
@@ -25,11 +43,11 @@ import javax.security.auth.x500.X500Principal;
  *     crlEntryExtensions Extensions OPTIONAL
  *                        -- if present, must be v2
  * }  OPTIONAL
- *<p>
+ *
  * CertificateSerialNumber  ::=  INTEGER
- *<p>
+ *
  * Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
- *<p>
+ *
  * Extension  ::=  SEQUENCE  {
  *     extnId        OBJECT IDENTIFIER,
  *     critical      BOOLEAN DEFAULT FALSE,
@@ -44,15 +62,14 @@ import javax.security.auth.x500.X500Principal;
  * @see X509Extension
  *
  * @author Hemma Prafullchandra
- * @version %I% %E%
  */
 
 public abstract class X509CRLEntry implements X509Extension {
 
     /**
      * Compares this CRL entry for equality with the given
-     * object. If the <code>other</code> object is an
-     * <code>instanceof</code> <code>X509CRLEntry</code>, then
+     * object. If the {@code other} object is an
+     * {@code instanceof} {@code X509CRLEntry}, then
      * its encoded form (the inner SEQUENCE) is retrieved and compared
      * with the encoded form of this CRL entry.
      *
@@ -131,7 +148,7 @@ public abstract class X509CRLEntry implements X509Extension {
      * @since 1.5
      */
     public X500Principal getCertificateIssuer() {
-	return null;
+        return null;
     }
 
     /**
@@ -141,7 +158,7 @@ public abstract class X509CRLEntry implements X509Extension {
      * @return the revocation date.
      */
     public abstract Date getRevocationDate();
-    
+
     /**
      * Returns true if this CRL entry has extensions.
      *
@@ -155,4 +172,20 @@ public abstract class X509CRLEntry implements X509Extension {
      * @return a string representation of this CRL entry.
      */
     public abstract String toString();
+
+    /**
+     * Returns the reason the certificate has been revoked, as specified
+     * in the Reason Code extension of this CRL entry.
+     *
+     * @return the reason the certificate has been revoked, or
+     *    {@code null} if this CRL entry does not have
+     *    a Reason Code extension
+     * @since 1.7
+     */
+    public CRLReason getRevocationReason() {
+        if (!hasExtensions()) {
+            return null;
+        }
+        return X509CRLEntryImpl.getRevocationReason(this);
+    }
 }

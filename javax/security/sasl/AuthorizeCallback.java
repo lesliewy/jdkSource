@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.security.sasl;
@@ -10,8 +28,8 @@ package javax.security.sasl;
 import javax.security.auth.callback.Callback;
 
 /**
-  * This callback is used by <tt>SaslServer</tt> to determine whether
-  * one entity (identified by an authenticated authentication id) 
+  * This callback is used by {@code SaslServer} to determine whether
+  * one entity (identified by an authenticated authentication id)
   * can act on
   * behalf of another entity (identified by an authorization id).
   *
@@ -42,20 +60,20 @@ public class AuthorizeCallback implements Callback, java.io.Serializable {
 
     /**
      * A flag indicating whether the authentication id is allowed to
-     * act on behalf of the authorization id. 
+     * act on behalf of the authorization id.
      * @serial
      */
     private boolean authorized;
 
     /**
-     * Constructs an instance of <tt>AuthorizeCallback</tt>.
+     * Constructs an instance of {@code AuthorizeCallback}.
      *
-     * @param authnID	The (authenticated) authentication id.
+     * @param authnID   The (authenticated) authentication id.
      * @param authzID   The authorization id.
      */
     public AuthorizeCallback(String authnID, String authzID) {
-	authenticationID = authnID;
-	authorizationID = authzID;
+        authenticationID = authnID;
+        authorizationID = authzID;
     }
 
     /**
@@ -63,7 +81,7 @@ public class AuthorizeCallback implements Callback, java.io.Serializable {
      * @return The authentication id to check.
      */
     public String getAuthenticationID() {
-	return authenticationID;
+        return authenticationID;
     }
 
     /**
@@ -71,43 +89,43 @@ public class AuthorizeCallback implements Callback, java.io.Serializable {
      * @return The authentication id to check.
      */
     public String getAuthorizationID() {
-	return authorizationID;
+        return authorizationID;
     }
 
     /**
      * Determines whether the authentication id is allowed to
      * act on behalf of the authorization id.
      *
-     * @return <tt>true</tt> if authorization is allowed; <tt>false</tt> otherwise
+     * @return {@code true} if authorization is allowed; {@code false} otherwise
      * @see #setAuthorized(boolean)
      * @see #getAuthorizedID()
      */
     public boolean isAuthorized() {
-	return authorized;
+        return authorized;
     }
 
     /**
      * Sets whether the authorization is allowed.
-     * @param ok <tt>true</tt> if authorization is allowed; <tt>false</tt> otherwise
+     * @param ok {@code true} if authorization is allowed; {@code false} otherwise
      * @see #isAuthorized
      * @see #setAuthorizedID(java.lang.String)
      */
     public void setAuthorized(boolean ok) {
-	authorized = ok;
+        authorized = ok;
     }
 
     /**
      * Returns the id of the authorized user.
-     * @return The id of the authorized user. <tt>null</tt> means the
+     * @return The id of the authorized user. {@code null} means the
      * authorization failed.
      * @see #setAuthorized(boolean)
      * @see #setAuthorizedID(java.lang.String)
      */
     public String getAuthorizedID() {
-	if (!authorized) {
-	    return null;
-	}
-	return (authorizedID == null) ? authorizationID : authorizedID;
+        if (!authorized) {
+            return null;
+        }
+        return (authorizedID == null) ? authorizationID : authorizedID;
     }
 
     /**
@@ -120,7 +138,7 @@ public class AuthorizeCallback implements Callback, java.io.Serializable {
      * @see #getAuthorizedID
      */
     public void setAuthorizedID(String id) {
-	authorizedID = id;
+        authorizedID = id;
     }
 
     private static final long serialVersionUID = -2353344186490470805L;

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
- * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.javadoc;
@@ -11,9 +29,8 @@ package com.sun.javadoc;
 /**
  * Represents an annotation.
  * An annotation associates a value with each element of an annotation type.
- * 
+ *
  * @author Scott Seligman
- * @version %I% %E%
  * @since 1.5
  */
 public interface AnnotationDesc {
@@ -35,29 +52,34 @@ public interface AnnotationDesc {
      */
     ElementValuePair[] elementValues();
 
+    /**
+     * Check for the synthesized bit on the annotation.
+     *
+     * @return true if the annotation is synthesized.
+     */
+    boolean isSynthesized();
 
     /**
      * Represents an association between an annotation type element
      * and one of its values.
-     * 
+     *
      * @author Scott Seligman
-     * @version %I% %E%
      * @since 1.5
      */
     public interface ElementValuePair {
 
-	/**
-	 * Returns the annotation type element.
-	 *
-	 * @return the annotation type element.
-	 */
-	AnnotationTypeElementDoc element();
+        /**
+         * Returns the annotation type element.
+         *
+         * @return the annotation type element.
+         */
+        AnnotationTypeElementDoc element();
 
-	/**
-	 * Returns the value associated with the annotation type element.
-	 *
-	 * @return the value associated with the annotation type element.
-	 */
-	AnnotationValue value();
+        /**
+         * Returns the value associated with the annotation type element.
+         *
+         * @return the value associated with the annotation type element.
+         */
+        AnnotationValue value();
     }
 }

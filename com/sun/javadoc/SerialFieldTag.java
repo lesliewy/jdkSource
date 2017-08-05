@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.javadoc;
@@ -28,7 +46,7 @@ package com.sun.javadoc;
 public interface SerialFieldTag extends Tag, Comparable<Object> {
 
     /**
-     * Return the serialziable field name.
+     * Return the serializable field name.
      */
     public String fieldName();
 
@@ -60,9 +78,9 @@ public interface SerialFieldTag extends Tag, Comparable<Object> {
      *
      * @param   obj the <code>Object</code> to be compared.
      * @return  a negative integer, zero, or a positive integer as this Object
-     *		is less than, equal to, or greater than the given Object.
+     *          is less than, equal to, or greater than the given Object.
      * @exception ClassCastException the specified Object's type prevents it
-     *		  from being compared to this Object.
+     *            from being compared to this Object.
      * @since 1.2
      */
     public int compareTo(Object obj);

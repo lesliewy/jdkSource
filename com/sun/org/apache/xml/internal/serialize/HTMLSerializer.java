@@ -1,12 +1,16 @@
 /*
- * Copyright 1999-2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,13 +37,11 @@
 package com.sun.org.apache.xml.internal.serialize;
 
 import com.sun.org.apache.xerces.internal.dom.DOMMessageFormatter;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.util.Enumeration;
 import java.util.Locale;
-
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -83,10 +85,9 @@ import org.xml.sax.SAXException;
  * </ul>
  *
  * @deprecated This class was deprecated in Xerces 2.6.2. It is
- * recommended that new applications use JAXP's Transformation API 
+ * recommended that new applications use JAXP's Transformation API
  * for XML (TrAX) for serializing HTML. See the Xerces documentation
  * for more information.
- * @version $Revision: 1.4 $ $Date: 2007/07/19 04:39:18 $
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
  * @see Serializer
  */
@@ -203,9 +204,9 @@ public class HTMLSerializer
 
         try {
             if ( _printer == null )
-            	throw new IllegalStateException( 
-				    DOMMessageFormatter.formatMessage(
-				    DOMMessageFormatter.SERIALIZER_DOMAIN,
+                throw new IllegalStateException(
+                                    DOMMessageFormatter.formatMessage(
+                                    DOMMessageFormatter.SERIALIZER_DOMAIN,
                     "NoWriterSupplied", null));
 
             state = getElementState();
@@ -215,7 +216,7 @@ public class HTMLSerializer
                 // the document's DOCTYPE. Space preserving defaults
                 // to that of the output format.
                 if ( ! _started )
-                    startDocument( (localName == null || localName.length() == 0) 
+                    startDocument( (localName == null || localName.length() == 0)
                         ? rawName : localName );
             } else {
                 // For any other element, if first in parent, then
@@ -234,13 +235,13 @@ public class HTMLSerializer
 
             // Do not change the current element state yet.
             // This only happens in endElement().
-            
+
             // As per SAX2, the namespace URI is an empty string if the element has no
             // namespace URI, or namespaces is turned off. The check against null protects
             // against broken SAX implementations, so I've left it there. - mrglavas
             boolean hasNamespaceURI = (namespaceURI != null && namespaceURI.length() != 0);
 
-            // SAX2: rawName (QName) could be empty string if 
+            // SAX2: rawName (QName) could be empty string if
             // namespace-prefixes property is false.
             if ( rawName == null || rawName.length() == 0) {
                 rawName = localName;
@@ -317,13 +318,10 @@ public class HTMLSerializer
                 preserveSpace = true;
 
             if ( addNSAttr ) {
-                Enumeration keys;
-
-                keys = _prefixes.keys();
-                while ( keys.hasMoreElements() ) {
+                for (Map.Entry<String, String> entry : _prefixes.entrySet()) {
                     _printer.printSpace();
-                    value = (String) keys.nextElement();
-                    name = (String) _prefixes.get( value );
+                    value = entry.getKey(); //The prefixes map uses the URI value as key.
+                    name = entry.getValue(); //and prefix name as value
                     if ( name.length() == 0 ) {
                         _printer.printText( "xmlns=\"" );
                         printEscaped( value );
@@ -482,9 +480,9 @@ public class HTMLSerializer
 
         try {
             if ( _printer == null )
-                throw new IllegalStateException( 
-				    DOMMessageFormatter.formatMessage(
-				    DOMMessageFormatter.SERIALIZER_DOMAIN,
+                throw new IllegalStateException(
+                                    DOMMessageFormatter.formatMessage(
+                                    DOMMessageFormatter.SERIALIZER_DOMAIN,
                     "NoWriterSupplied", null));
 
 
@@ -876,7 +874,3 @@ public class HTMLSerializer
 
 
 }
-
-
-
-

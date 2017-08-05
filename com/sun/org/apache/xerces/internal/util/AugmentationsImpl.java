@@ -1,12 +1,16 @@
 /*
- * Copyright 2000-2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,30 +20,30 @@
 
 package com.sun.org.apache.xerces.internal.util;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
-
 import com.sun.org.apache.xerces.internal.xni.Augmentations;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * This class provides an implementation for Augmentations interface. 
- * Augmentations interface defines a hashtable of additional data that could
+ * This class provides an implementation for Augmentations interface.
+ * Augmentations interface defines a map of additional data that could
  * be passed along the document pipeline. The information can contain extra
  * arguments or infoset augmentations, for example PSVI. This additional
  * information is identified by a String key.
  * <p>
- * 
+ *
  * @author Elena Litani, IBM
- * @version $Id: AugmentationsImpl.java,v 1.4 2007/07/19 04:38:58 ofung Exp $
  */
 public class AugmentationsImpl implements Augmentations{
-    
+
     private AugmentationsItemsContainer fAugmentationsContainer =
                                         new SmallContainer();
-    
+
     /**
      * Add additional information identified by a key to the Augmentations structure.
-     * 
+     *
      * @param key    Identifier, can't be <code>null</code>
      * @param item   Additional information
      *
@@ -59,7 +63,7 @@ public class AugmentationsImpl implements Augmentations{
 
     /**
      * Get information identified by a key from the Augmentations structure
-     * 
+     *
      * @param key    Identifier, can't be <code>null</code>
      *
      * @return the value to which the key is mapped in the Augmentations structure;
@@ -68,11 +72,11 @@ public class AugmentationsImpl implements Augmentations{
     public Object getItem(String key){
         return fAugmentationsContainer.getItem(key);
     }
-    
-    
+
+
     /**
      * Remove additional info from the Augmentations structure
-     * 
+     *
      * @param key    Identifier, can't be <code>null</code>
      */
     public Object removeItem (String key){
@@ -191,18 +195,18 @@ public class AugmentationsImpl implements Augmentations{
         }
 
         public String toString() {
-            StringBuffer buff = new StringBuffer();
-            buff.append("SmallContainer - fNumEntries == " + fNumEntries);
+            StringBuilder buff = new StringBuilder();
+            buff.append("SmallContainer - fNumEntries == ").append(fNumEntries);
 
             for (int i = 0; i < SIZE_LIMIT*2; i=i+2) {
-                buff.append("\nfAugmentations[");
-                buff.append(i);
-                buff.append("] == ");
-                buff.append(fAugmentations[i]);
-                buff.append("; fAugmentations[");
-                buff.append(i+1);
-                buff.append("] == ");
-                buff.append(fAugmentations[i+1]);
+                buff.append("\nfAugmentations[")
+                    .append(i)
+                    .append("] == ")
+                    .append(fAugmentations[i])
+                    .append("; fAugmentations[")
+                    .append(i+1)
+                    .append("] == ")
+                    .append(fAugmentations[i+1]);
             }
 
             return buff.toString();
@@ -237,7 +241,7 @@ public class AugmentationsImpl implements Augmentations{
     }
 
     class LargeContainer extends AugmentationsItemsContainer {
-        final Hashtable fAugmentations = new Hashtable();
+        final Map<Object, Object> fAugmentations = new HashMap<>();
 
         public Object getItem(Object key) {
             return fAugmentations.get(key);
@@ -252,7 +256,7 @@ public class AugmentationsImpl implements Augmentations{
         }
 
         public Enumeration keys() {
-            return fAugmentations.keys();
+            return Collections.enumeration(fAugmentations.keySet());
         }
 
         public void clear() {
@@ -268,18 +272,14 @@ public class AugmentationsImpl implements Augmentations{
         }
 
         public String toString() {
-            StringBuffer buff = new StringBuffer();
+            StringBuilder buff = new StringBuilder();
             buff.append("LargeContainer");
-            Enumeration keys = fAugmentations.keys();
-
-            while (keys.hasMoreElements()) {
-                Object key = keys.nextElement();
+            for(Object key : fAugmentations.keySet()) {
                 buff.append("\nkey == ");
                 buff.append(key);
                 buff.append("; value == ");
                 buff.append(fAugmentations.get(key));
             }
-
             return buff.toString();
         }
     }

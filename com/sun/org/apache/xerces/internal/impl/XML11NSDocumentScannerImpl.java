@@ -1,58 +1,21 @@
 /*
- * The Apache Software License, Version 1.1
+ * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+ */
+
+/*
+ * Copyright 2005 The Apache Software Foundation.
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Copyright (c) 1999-2003 The Apache Software Foundation.
- * All rights reserved.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. The end-user documentation included with the redistribution,
- *    if any, must include the following acknowledgment:
- *       "This product includes software developed by the
- *        Apache Software Foundation (http://www.apache.org/)."
- *    Alternately, this acknowledgment may appear in the software itself,
- *    if and wherever such third-party acknowledgments normally appear.
- *
- * 4. The names "Xerces" and "Apache Software Foundation" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact apache@apache.org.
- *
- * 5. Products derived from this software may not be called "Apache",
- *    nor may "Apache" appear in their name, without prior written
- *    permission of the Apache Software Foundation.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
- * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- * ====================================================================
- *
- * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Software Foundation and was
- * originally based on software copyright (c) 2002, International
- * Business Machines, Inc., http://www.apache.org.  For more
- * information on the Apache Software Foundation, please see
- * <http://www.apache.org/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.sun.org.apache.xerces.internal.impl;
@@ -63,6 +26,7 @@ import com.sun.org.apache.xerces.internal.impl.dtd.XMLDTDValidatorFilter;
 import com.sun.org.apache.xerces.internal.impl.msg.XMLMessageFormatter;
 import com.sun.org.apache.xerces.internal.util.XMLAttributesImpl;
 import com.sun.org.apache.xerces.internal.util.XMLSymbols;
+import com.sun.org.apache.xerces.internal.utils.XMLSecurityManager;
 import com.sun.org.apache.xerces.internal.xni.NamespaceContext;
 import com.sun.org.apache.xerces.internal.xni.QName;
 import com.sun.org.apache.xerces.internal.xni.XMLDocumentHandler;
@@ -98,23 +62,23 @@ import javax.xml.stream.events.XMLEvent;
  *  <li>http://apache.org/xml/properties/internal/entity-manager</li>
  *  <li>http://apache.org/xml/properties/internal/dtd-scanner</li>
  * </ul>
- * 
+ *
  * @xerces.internal
  *
  * @author Elena Litani, IBM
  * @author Michael Glavassevich, IBM
  * @author Sunitha Reddy, Sun Microsystems
- * @version $Id: XML11NSDocumentScannerImpl.java,v 1.5 2007/07/19 04:38:23 ofung Exp $
+ * @version $Id: XML11NSDocumentScannerImpl.java,v 1.6 2010-11-01 04:39:40 joehw Exp $
  */
 public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
-    /** 
+    /**
      * If is true, the dtd validator is no longer in the pipeline
-     * and the scanner should bind namespaces 
+     * and the scanner should bind namespaces
      */
     protected boolean fBindNamespaces;
 
-    /** 
+    /**
      * If validating parser, make sure we report an error in the
      *  scanner if DTD grammar is missing.
      */
@@ -125,21 +89,21 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
     /** DTD validator */
     private XMLDTDValidatorFilter fDTDValidator;
-    
-    /** 
+
+    /**
      * Saw spaces after element name or between attributes.
-     * 
+     *
      * This is reserved for the case where scanning of a start element spans
-     * several methods, as is the case when scanning the start of a root element 
+     * several methods, as is the case when scanning the start of a root element
      * where a DTD external subset may be read after scanning the element name.
      */
     private boolean fSawSpace;
 
-    
+
     /**
      * The scanner is responsible for removing DTD validator
      * from the pipeline if it is not needed.
-     * 
+     *
      * @param validator the DTD validator from the pipeline
      */
     public void setDTDValidator(XMLDTDValidatorFilter validator) {
@@ -168,11 +132,11 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
      *          production [44].
      */
     protected boolean scanStartElement() throws IOException, XNIException {
-        
+
         if (DEBUG_START_END_ELEMENT)
             System.out.println(">>> scanStartElementNS()");
                 // Note: namespace processing is on by default
-        fEntityScanner.scanQName(fElementQName);
+        fEntityScanner.scanQName(fElementQName, NameType.ATTRIBUTE);
         // REVISIT - [Q] Why do we need this local variable? -- mrglavas
         String rawname = fElementQName.rawname;
         if (fBindNamespaces) {
@@ -210,11 +174,11 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
             // end tag?
             int c = fEntityScanner.peekChar();
             if (c == '>') {
-                fEntityScanner.scanChar();
+                fEntityScanner.scanChar(null);
                 break;
             } else if (c == '/') {
-                fEntityScanner.scanChar();
-                if (!fEntityScanner.skipChar('>')) {
+                fEntityScanner.scanChar(null);
+                if (!fEntityScanner.skipChar('>', null)) {
                     reportFatalError(
                         "ElementUnterminated",
                         new Object[] { rawname });
@@ -233,12 +197,13 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
             // attributes
             scanAttribute(fAttributes);
-            if (fSecurityManager != null && fAttributes.getLength() > fElementAttributeLimit){                
+            if (fSecurityManager != null && (!fSecurityManager.isNoLimit(fElementAttributeLimit)) &&
+                    fAttributes.getLength() > fElementAttributeLimit){
                 fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN,
                                              "ElementAttributeLimit",
                                              new Object[]{rawname, new Integer(fElementAttributeLimit) },
                                              XMLErrorReporter.SEVERITY_FATAL_ERROR );
-            }           
+            }
 
         } while (true);
 
@@ -335,63 +300,64 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         }
 
         // call handler
-        
-            if (empty) {
+        if (empty) {
+            //decrease the markup depth..
+            fMarkupDepth--;
 
-                //decrease the markup depth..
-                fMarkupDepth--;
+            // check that this element was opened in the same entity
+            if (fMarkupDepth < fEntityStack[fEntityDepth - 1]) {
+                reportFatalError(
+                    "ElementEntityMismatch",
+                    new Object[] { fCurrentElement.rawname });
+            }
 
-                // check that this element was opened in the same entity
-                if (fMarkupDepth < fEntityStack[fEntityDepth - 1]) {
-                    reportFatalError(
-                        "ElementEntityMismatch",
-                        new Object[] { fCurrentElement.rawname });
-                }
-
+            if (fDocumentHandler != null) {
                 fDocumentHandler.emptyElement(fElementQName, fAttributes, null);
-                
-                /*if (fBindNamespaces) {
-                    fNamespaceContext.popContext();
-                }*/
-                fScanEndElement = true;
-                
-                //pop the element off the stack..
-                fElementStack.popElement();
-            } else {
-                
-                if(dtdGrammarUtil != null)
-                    dtdGrammarUtil.startElement(fElementQName, fAttributes); 
-                
-                if (fDocumentHandler != null)
+            }
+
+            /*if (fBindNamespaces) {
+                fNamespaceContext.popContext();
+            }*/
+            fScanEndElement = true;
+
+            //pop the element off the stack..
+            fElementStack.popElement();
+        } else {
+            if(dtdGrammarUtil != null) {
+                dtdGrammarUtil.startElement(fElementQName, fAttributes);
+            }
+
+            if (fDocumentHandler != null) {
                 fDocumentHandler.startElement(fElementQName, fAttributes, null);
             }
-        
+        }
+
         if (DEBUG_START_END_ELEMENT)
             System.out.println("<<< scanStartElement(): " + empty);
         return empty;
 
     } // scanStartElement():boolean
-    
+
     /**
-     * Scans the name of an element in a start or empty tag. 
-     * 
+     * Scans the name of an element in a start or empty tag.
+     *
      * @see #scanStartElement()
      */
     protected void scanStartElementName ()
         throws IOException, XNIException {
         // Note: namespace processing is on by default
-        fEntityScanner.scanQName(fElementQName);
+        fEntityScanner.scanQName(fElementQName, NameType.ATTRIBUTE);
         // Must skip spaces here because the DTD scanner
         // would consume them at the end of the external subset.
         fSawSpace = fEntityScanner.skipSpaces();
     } // scanStartElementName()
-    
+
     /**
      * Scans the remainder of a start or empty tag after the element name.
-     * 
+     *
      * @see #scanStartElement
      * @return True if element is empty.
-     */    
+     */
     protected boolean scanStartElementAfterName()
         throws IOException, XNIException {
 
@@ -426,15 +392,15 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         boolean empty = false;
         fAttributes.removeAllAttributes();
         do {
-        	
+
             // end tag?
             int c = fEntityScanner.peekChar();
             if (c == '>') {
-                fEntityScanner.scanChar();
+                fEntityScanner.scanChar(null);
                 break;
             } else if (c == '/') {
-                fEntityScanner.scanChar();
-                if (!fEntityScanner.skipChar('>')) {
+                fEntityScanner.scanChar(null);
+                if (!fEntityScanner.skipChar('>', null)) {
                     reportFatalError(
                         "ElementUnterminated",
                         new Object[] { rawname });
@@ -453,7 +419,7 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
             // attributes
             scanAttribute(fAttributes);
-            
+
             // spaces
             fSawSpace = fEntityScanner.skipSpaces();
 
@@ -580,7 +546,7 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         if (DEBUG_START_END_ELEMENT)
             System.out.println("<<< scanStartElementAfterName(): " + empty);
         return empty;
-        
+
     } // scanStartElementAfterName()
 
     /**
@@ -606,11 +572,11 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
             System.out.println(">>> scanAttribute()");
 
         // name
-        fEntityScanner.scanQName(fAttributeQName);
+        fEntityScanner.scanQName(fAttributeQName, NameType.ATTRIBUTE);
 
         // equals
         fEntityScanner.skipSpaces();
-        if (!fEntityScanner.skipChar('=')) {
+        if (!fEntityScanner.skipChar('=', NameType.ATTRIBUTE)) {
             reportFatalError(
                 "EqRequiredInAttribute",
                 new Object[] {
@@ -649,13 +615,20 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         //REVISIT: one more case needs to be included: external PE and standalone is no
         boolean isVC = fHasExternalDTD && !fStandalone;
 
-        // REVISIT: it seems that this function should not take attributes, and length
-        scanAttributeValue(
-            this.fTempString,
-            fTempString2,
-            fAttributeQName.rawname,
-            isVC,
-            fCurrentElement.rawname);
+        /**
+         * Determine whether this is a namespace declaration that will be subject
+         * to the name limit check in the scanAttributeValue operation.
+         * Namespace declaration format: xmlns="..." or xmlns:prefix="..."
+         * Note that prefix:xmlns="..." isn't a namespace.
+         */
+        String localpart = fAttributeQName.localpart;
+        String prefix = fAttributeQName.prefix != null
+                ? fAttributeQName.prefix : XMLSymbols.EMPTY_STRING;
+        boolean isNSDecl = fBindNamespaces & (prefix == XMLSymbols.PREFIX_XMLNS ||
+                    prefix == XMLSymbols.EMPTY_STRING && localpart == XMLSymbols.PREFIX_XMLNS);
+
+        scanAttributeValue(this.fTempString, fTempString2, fAttributeQName.rawname,
+            isVC, fCurrentElement.rawname, isNSDecl);
         String value = fTempString.toString();
         attributes.setValue(attrIndex, value);
         attributes.setNonNormalizedValue(attrIndex, fTempString2.toString());
@@ -663,18 +636,14 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
         // record namespace declarations if any.
         if (fBindNamespaces) {
-
-            String localpart = fAttributeQName.localpart;
-            String prefix =
-                fAttributeQName.prefix != null
-                    ? fAttributeQName.prefix
-                    : XMLSymbols.EMPTY_STRING;
-            // when it's of form xmlns="..." or xmlns:prefix="...",
-            // it's a namespace declaration. but prefix:xmlns="..." isn't.
-            if (prefix == XMLSymbols.PREFIX_XMLNS
-                || prefix == XMLSymbols.EMPTY_STRING
-                && localpart == XMLSymbols.PREFIX_XMLNS) {
-
+            if (isNSDecl) {
+                if (value.length() > fXMLNameLimit) {
+                    fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN,
+                            "MaxXMLNameLimit",
+                            new Object[]{value, value.length(), fXMLNameLimit,
+                            fSecurityManager.getStateLiteral(XMLSecurityManager.Limit.MAX_NAME_LIMIT)},
+                            XMLErrorReporter.SEVERITY_FATAL_ERROR);
+                }
                 // get the internalized value of this attribute
                 String uri = fSymbolTable.addSymbol(value);
 
@@ -723,8 +692,8 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
                         ? localpart
                         : XMLSymbols.EMPTY_STRING;
 
-                // Declare prefix in context. Removing the association between a prefix and a 
-                // namespace name is permitted in XML 1.1, so if the uri value is the empty string, 
+                // Declare prefix in context. Removing the association between a prefix and a
+                // namespace name is permitted in XML 1.1, so if the uri value is the empty string,
                 // the prefix is being unbound. -- mrglavas
                 fNamespaceContext.declarePrefix(
                     prefix,
@@ -768,7 +737,7 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
         // pop context
         QName endElementName = fElementStack.popElement();
-                
+
         // Take advantage of the fact that next string _should_ be "fElementQName.rawName",
         //In scanners most of the time is consumed on checks done for XML characters, we can
         // optimize on it and avoid the checks done for endElement,
@@ -778,7 +747,7 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
         //REVISIT: if the string is not the same as expected.. we need to do better error handling..
         //We can skip this for now... In any case if the string doesn't match -- document is not well formed.
-        
+
         if (!fEntityScanner.skipString(endElementName.rawname)) {
              reportFatalError(
                 "ETagRequired",
@@ -787,7 +756,7 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
 
         // end
         fEntityScanner.skipSpaces();
-        if (!fEntityScanner.skipChar('>')) {
+        if (!fEntityScanner.skipChar('>', NameType.ELEMENTEND)) {
             reportFatalError(
                 "ETagUnterminated",
                 new Object[] { endElementName.rawname });
@@ -800,23 +769,23 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         // check that this element was opened in the same entity
         if (fMarkupDepth < fEntityStack[fEntityDepth - 1]) {
             reportFatalError(
-                "ElementEntityMismatch", 
+                "ElementEntityMismatch",
                 new Object[] { endElementName.rawname });
         }
-        
+
         // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.endElement(endElementName, null);
-           
+
             /*if (fBindNamespaces) {
                 fNamespaceContext.popContext();
             }*/
-            
+
         }
-        
+
         if(dtdGrammarUtil != null)
             dtdGrammarUtil.endElement(endElementName);
-        
+
         return fMarkupDepth;
 
     } // scanEndElement():int
@@ -834,25 +803,25 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
         return new NS11ContentDriver();
     } // createContentDriver():Driver
 
-    
+
     /** return the next state on the input
      *
      * @return int
      */
-    
+
     public int next() throws IOException, XNIException {
         //since namespace context should still be valid when the parser is at the end element state therefore
         //we pop the context only when next() has been called after the end element state was encountered. - nb.
-        
+
         if((fScannerLastState == XMLEvent.END_ELEMENT) && fBindNamespaces){
             fScannerLastState = -1;
             fNamespaceContext.popContext();
         }
-        
+
         return fScannerLastState = super.next();
     }
-    
-    
+
+
     /**
      * Driver to handle content scanning.
      */
@@ -872,8 +841,8 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
          */
         protected boolean scanRootElementHook()
             throws IOException, XNIException {
-            
-            if (fExternalSubsetResolver != null && !fSeenDoctypeDecl 
+
+            if (fExternalSubsetResolver != null && !fSeenDoctypeDecl
                 && !fDisallowDoctype && (fValidation || fLoadExternalDTD)) {
                 scanStartElementName();
                 resolveExternalSubsetAndRead();
@@ -895,9 +864,9 @@ public class XML11NSDocumentScannerImpl extends XML11DocumentScannerImpl {
             return false;
 
         } // scanRootElementHook():boolean
-        
+
         /**
-         * Re-configures pipeline by removing the DTD validator 
+         * Re-configures pipeline by removing the DTD validator
          * if no DTD grammar exists. If no validator exists in the
          * pipeline or there is no DTD grammar, namespace binding
          * is performed by the scanner in the enclosing class.

@@ -1,11 +1,15 @@
 /*
- * Copyright 2001-2004 The Apache Software Foundation.
+ * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,45 +23,47 @@
 
 package com.sun.org.apache.xalan.internal.xsltc.trax;
 
+import com.sun.org.apache.xalan.internal.XalanConstants;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
+import com.sun.org.apache.xalan.internal.xsltc.DOM;
+import com.sun.org.apache.xalan.internal.xsltc.Translet;
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamField;
 import java.io.Serializable;
-import java.util.Properties;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import javax.xml.XMLConstants;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.URIResolver;
 
-import com.sun.org.apache.xalan.internal.xsltc.DOM;
-import com.sun.org.apache.xalan.internal.xsltc.Translet;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
-import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
-import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
-
 /**
  * @author Morten Jorgensen
  * @author G. Todd Millerj
  * @author Jochen Cordes <Jochen.Cordes@t-online.de>
- * @author Santiago Pericas-Geertsen 
+ * @author Santiago Pericas-Geertsen
  */
 public final class TemplatesImpl implements Templates, Serializable {
     static final long serialVersionUID = 673094361519270707L;
-    public final static String DESERIALIZE_TRANSLET = "jdk.xml.enableTemplatesImplDeserialization";    
+    public final static String DESERIALIZE_TRANSLET = "jdk.xml.enableTemplatesImplDeserialization";
 
     /**
      * Name of the superclass of all translets. This is needed to
-     * determine which, among all classes comprising a translet, 
+     * determine which, among all classes comprising a translet,
      * is the main one.
      */
-    private static String ABSTRACT_TRANSLET 
-	= "com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet";
+    private static String ABSTRACT_TRANSLET
+        = "com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet";
 
     /**
      * Name of the main class or default name if unknown.
@@ -69,9 +75,9 @@ public final class TemplatesImpl implements Templates, Serializable {
      * any auxiliary classes.
      */
     private byte[][] _bytecodes = null;
-    
+
     /**
-     * Contains the translet class definition(s). These are created when 
+     * Contains the translet class definition(s). These are created when
      * this Templates is created or when it is read back from disk.
      */
     private Class[] _class = null;
@@ -81,16 +87,16 @@ public final class TemplatesImpl implements Templates, Serializable {
      * _bytecodes.
      */
     private int _transletIndex = -1;
-    
+
     /**
      * Contains the list of auxiliary class definitions.
      */
-    private Hashtable _auxClasses = null;
-    
+    private transient Map<String, Class<?>> _auxClasses = null;
+
     /**
      * Output properties of this translet.
      */
-    private Properties _outputProperties; 
+    private Properties _outputProperties;
 
     /**
      * Number of spaces to add for output indentation.
@@ -99,7 +105,7 @@ public final class TemplatesImpl implements Templates, Serializable {
 
     /**
      * This URIResolver is passed to all Transformers.
-     * Declaring it transient to fix bug 22438 
+     * Declaring it transient to fix bug 22438
      */
     private transient URIResolver _uriResolver = null;
 
@@ -107,30 +113,77 @@ public final class TemplatesImpl implements Templates, Serializable {
      * Cache the DTM for the stylesheet in a thread local variable,
      * which is used by the document('') function.
      * Use ThreadLocal because a DTM cannot be shared between
-     * multiple threads. 
-     * Declaring it transient to fix bug 22438 
+     * multiple threads.
+     * Declaring it transient to fix bug 22438
      */
     private transient ThreadLocal _sdom = new ThreadLocal();
-    
+
     /**
      * A reference to the transformer factory that this templates
      * object belongs to.
      */
     private transient TransformerFactoryImpl _tfactory = null;
 
-    private boolean _useServicesMechanism;
+    /**
+     * A flag to determine whether the Service Mechanism is used
+     */
+    private transient boolean _useServicesMechanism;
+
+    /**
+     * protocols allowed for external references set by the stylesheet processing instruction, Import and Include element.
+     */
+    private transient String _accessExternalStylesheet = XalanConstants.EXTERNAL_ACCESS_DEFAULT;
+
+    /**
+     * @serialField _name String The Name of the main class
+     * @serialField _bytecodes byte[][] Class definition
+     * @serialField _class Class[] The translet class definition(s).
+     * @serialField _transletIndex int The index of the main translet class
+     * @serialField _outputProperties Properties Output properties of this translet.
+     * @serialField _indentNumber int Number of spaces to add for output indentation.
+     */
+    private static final ObjectStreamField[] serialPersistentFields =
+        new ObjectStreamField[] {
+            new ObjectStreamField("_name", String.class),
+            new ObjectStreamField("_bytecodes", byte[][].class),
+            new ObjectStreamField("_class", Class[].class),
+            new ObjectStreamField("_transletIndex", int.class),
+            new ObjectStreamField("_outputProperties", Properties.class),
+            new ObjectStreamField("_indentNumber", int.class),
+        };
 
     static final class TransletClassLoader extends ClassLoader {
-	TransletClassLoader(ClassLoader parent) {
-	    super(parent);
-	}
+        private final Map<String,Class> _loadedExternalExtensionFunctions;
+
+         TransletClassLoader(ClassLoader parent) {
+             super(parent);
+            _loadedExternalExtensionFunctions = null;
+        }
+
+        TransletClassLoader(ClassLoader parent,Map<String, Class> mapEF) {
+            super(parent);
+            _loadedExternalExtensionFunctions = mapEF;
+        }
+
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            Class<?> ret = null;
+            // The _loadedExternalExtensionFunctions will be empty when the
+            // SecurityManager is not set and the FSP is turned off
+            if (_loadedExternalExtensionFunctions != null) {
+                ret = _loadedExternalExtensionFunctions.get(name);
+            }
+            if (ret == null) {
+                ret = super.loadClass(name);
+            }
+            return ret;
+         }
 
         /**
          * Access to final protected superclass member from outer class.
          */
-	Class defineClass(final byte[] b) {
+        Class defineClass(final byte[] b) {
             return defineClass(null, b, 0, b.length);
-	}
+        }
     }
 
 
@@ -140,33 +193,34 @@ public final class TemplatesImpl implements Templates, Serializable {
      * the main translet class, must be supplied.
      */
     protected TemplatesImpl(byte[][] bytecodes, String transletName,
-	Properties outputProperties, int indentNumber,
-	TransformerFactoryImpl tfactory) 
+        Properties outputProperties, int indentNumber,
+        TransformerFactoryImpl tfactory)
     {
-	_bytecodes = bytecodes;
+        _bytecodes = bytecodes;
         init(transletName, outputProperties, indentNumber, tfactory);
     }
-    
+
     /**
      * Create an XSLTC template object from the translet class definition(s).
      */
     protected TemplatesImpl(Class[] transletClasses, String transletName,
-	Properties outputProperties, int indentNumber,
-	TransformerFactoryImpl tfactory) 
+        Properties outputProperties, int indentNumber,
+        TransformerFactoryImpl tfactory)
     {
-	_class     = transletClasses;
-	_transletIndex = 0;
+        _class     = transletClasses;
+        _transletIndex = 0;
         init(transletName, outputProperties, indentNumber, tfactory);
     }
-    
+
     private void init(String transletName,
-	Properties outputProperties, int indentNumber,
-	TransformerFactoryImpl tfactory) {
-	_name      = transletName;
-	_outputProperties = outputProperties;
-	_indentNumber = indentNumber;
-	_tfactory = tfactory;
+        Properties outputProperties, int indentNumber,
+        TransformerFactoryImpl tfactory) {
+        _name      = transletName;
+        _outputProperties = outputProperties;
+        _indentNumber = indentNumber;
+        _tfactory = tfactory;
         _useServicesMechanism = tfactory.useServicesMechnism();
+        _accessExternalStylesheet = (String) tfactory.getAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET);
     }
     /**
      * Need for de-serialization, see readObject().
@@ -182,25 +236,35 @@ public final class TemplatesImpl implements Templates, Serializable {
      *  if yes then we need to deserialize the URIResolver
      *  Fix for bugzilla bug 22438
      */
-    private void  readObject(ObjectInputStream is) 
-      throws IOException, ClassNotFoundException 
+    @SuppressWarnings("unchecked")
+    private void  readObject(ObjectInputStream is)
+      throws IOException, ClassNotFoundException
     {
         SecurityManager security = System.getSecurityManager();
         if (security != null){
             String temp = SecuritySupport.getSystemProperty(DESERIALIZE_TRANSLET);
             if (temp == null || !(temp.length()==0 || temp.equalsIgnoreCase("true"))) {
-            	ErrorMsg err = new ErrorMsg(ErrorMsg.DESERIALIZE_TRANSLET_ERR);
-            	throw new UnsupportedOperationException(err.toString());                
+                ErrorMsg err = new ErrorMsg(ErrorMsg.DESERIALIZE_TRANSLET_ERR);
+                throw new UnsupportedOperationException(err.toString());
             }
-        }           
+        }
 
-	is.defaultReadObject();
+        // We have to read serialized fields first.
+        ObjectInputStream.GetField gf = is.readFields();
+        _name = (String)gf.get("_name", null);
+        _bytecodes = (byte[][])gf.get("_bytecodes", null);
+        _class = (Class[])gf.get("_class", null);
+        _transletIndex = gf.get("_transletIndex", -1);
+
+        _outputProperties = (Properties)gf.get("_outputProperties", null);
+        _indentNumber = gf.get("_indentNumber", 0);
+
         if (is.readBoolean()) {
             _uriResolver = (URIResolver) is.readObject();
         }
 
-	_tfactory = new TransformerFactoryImpl();
-    } 
+        _tfactory = new TransformerFactoryImpl();
+    }
 
 
     /**
@@ -210,7 +274,22 @@ public final class TemplatesImpl implements Templates, Serializable {
      */
     private void writeObject(ObjectOutputStream os)
         throws IOException, ClassNotFoundException {
-        os.defaultWriteObject();
+        if (_auxClasses != null) {
+            //throw with the same message as when Hashtable was used for compatibility.
+            throw new NotSerializableException(
+                    "com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable");
+        }
+
+        // Write serialized fields
+        ObjectOutputStream.PutField pf = os.putFields();
+        pf.put("_name", _name);
+        pf.put("_bytecodes", _bytecodes);
+        pf.put("_class", _class);
+        pf.put("_transletIndex", _transletIndex);
+        pf.put("_outputProperties", _outputProperties);
+        pf.put("_indentNumber", _indentNumber);
+        os.writeFields();
+
         if (_uriResolver instanceof Serializable) {
             os.writeBoolean(true);
             os.writeObject((Serializable) _uriResolver);
@@ -231,7 +310,7 @@ public final class TemplatesImpl implements Templates, Serializable {
      * Store URIResolver needed for Transformers.
      */
     public synchronized void setURIResolver(URIResolver resolver) {
-	_uriResolver = resolver;
+        _uriResolver = resolver;
     }
 
     /**
@@ -239,69 +318,69 @@ public final class TemplatesImpl implements Templates, Serializable {
      * method before we can create any translet instances
      *
      * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure 
+     * CR 6537898. When merging with Apache, we must ensure
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
     private synchronized void setTransletBytecodes(byte[][] bytecodes) {
-	_bytecodes = bytecodes;
+        _bytecodes = bytecodes;
     }
 
     /**
      * Returns the translet bytecodes stored in this template
      *
      * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure 
+     * CR 6537898. When merging with Apache, we must ensure
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
     private synchronized byte[][] getTransletBytecodes() {
-	return _bytecodes;
+        return _bytecodes;
     }
 
     /**
      * Returns the translet bytecodes stored in this template
      *
      * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure 
+     * CR 6537898. When merging with Apache, we must ensure
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
     private synchronized Class[] getTransletClasses() {
-	try {
-	    if (_class == null) defineTransletClasses();
-	}
-	catch (TransformerConfigurationException e) {
-	    // Falls through
-	}
-	return _class;
+        try {
+            if (_class == null) defineTransletClasses();
+        }
+        catch (TransformerConfigurationException e) {
+            // Falls through
+        }
+        return _class;
     }
 
     /**
      * Returns the index of the main class in array of bytecodes
      */
     public synchronized int getTransletIndex() {
-	try {
-	    if (_class == null) defineTransletClasses();
-	}
-	catch (TransformerConfigurationException e) {
-	    // Falls through
-	}
-	return _transletIndex;
+        try {
+            if (_class == null) defineTransletClasses();
+        }
+        catch (TransformerConfigurationException e) {
+            // Falls through
+        }
+        return _transletIndex;
     }
 
     /**
      * The TransformerFactory should call this method to set the translet name
      */
     protected synchronized void setTransletName(String name) {
-	_name = name;
+        _name = name;
     }
 
     /**
      * Returns the name of the main translet class stored in this template
      */
     protected synchronized String getTransletName() {
-	return _name;
+        return _name;
     }
 
     /**
@@ -309,54 +388,54 @@ public final class TemplatesImpl implements Templates, Serializable {
      * Returns a reference to the Class object that defines the main class
      */
     private void defineTransletClasses()
-	throws TransformerConfigurationException {
+        throws TransformerConfigurationException {
 
-	if (_bytecodes == null) {
-	    ErrorMsg err = new ErrorMsg(ErrorMsg.NO_TRANSLET_CLASS_ERR);
-	    throw new TransformerConfigurationException(err.toString());
-	}
+        if (_bytecodes == null) {
+            ErrorMsg err = new ErrorMsg(ErrorMsg.NO_TRANSLET_CLASS_ERR);
+            throw new TransformerConfigurationException(err.toString());
+        }
 
         TransletClassLoader loader = (TransletClassLoader)
             AccessController.doPrivileged(new PrivilegedAction() {
                 public Object run() {
-                    return new TransletClassLoader(ObjectFactory.findClassLoader());
+                    return new TransletClassLoader(ObjectFactory.findClassLoader(),_tfactory.getExternalExtensionsMap());
                 }
             });
 
-	try {
-	    final int classCount = _bytecodes.length;
-	    _class = new Class[classCount];
+        try {
+            final int classCount = _bytecodes.length;
+            _class = new Class[classCount];
 
-	    if (classCount > 1) {
-	        _auxClasses = new Hashtable();
-	    }
+            if (classCount > 1) {
+                _auxClasses = new HashMap<>();
+            }
 
-	    for (int i = 0; i < classCount; i++) {
-		_class[i] = loader.defineClass(_bytecodes[i]);
-		final Class superClass = _class[i].getSuperclass();
+            for (int i = 0; i < classCount; i++) {
+                _class[i] = loader.defineClass(_bytecodes[i]);
+                final Class superClass = _class[i].getSuperclass();
 
-		// Check if this is the main class
-		if (superClass.getName().equals(ABSTRACT_TRANSLET)) {
-		    _transletIndex = i;
-		}
-		else {
-		    _auxClasses.put(_class[i].getName(), _class[i]);
-		}
-	    }
+                // Check if this is the main class
+                if (superClass.getName().equals(ABSTRACT_TRANSLET)) {
+                    _transletIndex = i;
+                }
+                else {
+                    _auxClasses.put(_class[i].getName(), _class[i]);
+                }
+            }
 
-	    if (_transletIndex < 0) {
-		ErrorMsg err= new ErrorMsg(ErrorMsg.NO_MAIN_TRANSLET_ERR, _name);
-		throw new TransformerConfigurationException(err.toString());
-	    }
-	}
-	catch (ClassFormatError e) {
-	    ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_CLASS_ERR, _name);
-	    throw new TransformerConfigurationException(err.toString());
-	}
-	catch (LinkageError e) {
-	    ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
-	    throw new TransformerConfigurationException(err.toString());
-	}
+            if (_transletIndex < 0) {
+                ErrorMsg err= new ErrorMsg(ErrorMsg.NO_MAIN_TRANSLET_ERR, _name);
+                throw new TransformerConfigurationException(err.toString());
+            }
+        }
+        catch (ClassFormatError e) {
+            ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_CLASS_ERR, _name);
+            throw new TransformerConfigurationException(err.toString());
+        }
+        catch (LinkageError e) {
+            ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
+            throw new TransformerConfigurationException(err.toString());
+        }
     }
 
     /**
@@ -365,32 +444,33 @@ public final class TemplatesImpl implements Templates, Serializable {
      * be wrapped inside a Transformer object.
      */
     private Translet getTransletInstance()
-	throws TransformerConfigurationException {
-	try {
-	    if (_name == null) return null;
+        throws TransformerConfigurationException {
+        try {
+            if (_name == null) return null;
 
-	    if (_class == null) defineTransletClasses();
+            if (_class == null) defineTransletClasses();
 
-	    // The translet needs to keep a reference to all its auxiliary 
-	    // class to prevent the GC from collecting them
-	    AbstractTranslet translet = (AbstractTranslet) _class[_transletIndex].newInstance();
+            // The translet needs to keep a reference to all its auxiliary
+            // class to prevent the GC from collecting them
+            AbstractTranslet translet = (AbstractTranslet) _class[_transletIndex].newInstance();
             translet.postInitialization();
-	    translet.setTemplates(this);
+            translet.setTemplates(this);
             translet.setServicesMechnism(_useServicesMechanism);
-	    if (_auxClasses != null) {
-	        translet.setAuxiliaryClasses(_auxClasses);
-	    }
-	    
-	    return translet;
-	}
-	catch (InstantiationException e) {
-	    ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
-	    throw new TransformerConfigurationException(err.toString());
-	}
-	catch (IllegalAccessException e) {
-	    ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
-	    throw new TransformerConfigurationException(err.toString());
-	}
+            translet.setAllowedProtocols(_accessExternalStylesheet);
+            if (_auxClasses != null) {
+                translet.setAuxiliaryClasses(_auxClasses);
+            }
+
+            return translet;
+        }
+        catch (InstantiationException e) {
+            ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
+            throw new TransformerConfigurationException(err.toString());
+        }
+        catch (IllegalAccessException e) {
+            ErrorMsg err = new ErrorMsg(ErrorMsg.TRANSLET_OBJECT_ERR, _name);
+            throw new TransformerConfigurationException(err.toString());
+        }
     }
 
     /**
@@ -399,49 +479,49 @@ public final class TemplatesImpl implements Templates, Serializable {
      * @throws TransformerConfigurationException
      */
     public synchronized Transformer newTransformer()
-	throws TransformerConfigurationException 
+        throws TransformerConfigurationException
     {
-	TransformerImpl transformer;
+        TransformerImpl transformer;
 
-	transformer = new TransformerImpl(getTransletInstance(), _outputProperties,
-	    _indentNumber, _tfactory);
-	
-	if (_uriResolver != null) {
-	    transformer.setURIResolver(_uriResolver);
-	}
-	
-	if (_tfactory.getFeature(XMLConstants.FEATURE_SECURE_PROCESSING)) {
-	    transformer.setSecureProcessing(true);
-	}
-	return transformer;
+        transformer = new TransformerImpl(getTransletInstance(), _outputProperties,
+            _indentNumber, _tfactory);
+
+        if (_uriResolver != null) {
+            transformer.setURIResolver(_uriResolver);
+        }
+
+        if (_tfactory.getFeature(XMLConstants.FEATURE_SECURE_PROCESSING)) {
+            transformer.setSecureProcessing(true);
+        }
+        return transformer;
     }
 
     /**
-     * Implements JAXP's Templates.getOutputProperties(). We need to 
+     * Implements JAXP's Templates.getOutputProperties(). We need to
      * instanciate a translet to get the output settings, so
      * we might as well just instanciate a Transformer and use its
      * implementation of this method.
      */
-    public synchronized Properties getOutputProperties() { 
-	try {
-	    return newTransformer().getOutputProperties();
-	}
-	catch (TransformerConfigurationException e) {
-	    return null;
-	}
+    public synchronized Properties getOutputProperties() {
+        try {
+            return newTransformer().getOutputProperties();
+        }
+        catch (TransformerConfigurationException e) {
+            return null;
+        }
     }
 
     /**
      * Return the thread local copy of the stylesheet DOM.
      */
     public DOM getStylesheetDOM() {
-    	return (DOM)_sdom.get();
+        return (DOM)_sdom.get();
     }
-    
+
     /**
      * Set the thread local copy of the stylesheet DOM.
      */
     public void setStylesheetDOM(DOM sdom) {
-    	_sdom.set(sdom);
+        _sdom.set(sdom);
     }
 }

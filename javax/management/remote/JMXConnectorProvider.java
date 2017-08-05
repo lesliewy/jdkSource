@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- * 
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 
@@ -19,7 +37,6 @@ import java.util.Map;
  * newJMXConnector} method.</p>
  *
  * @since 1.5
- * @since.unbundled 1.0
  */
 public interface JMXConnectorProvider {
     /**
@@ -33,7 +50,7 @@ public interface JMXConnectorProvider {
      * @param environment a read-only Map containing named attributes
      * to determine how the connection is made.  Keys in this map must
      * be Strings.  The appropriate type of each associated value
-     * depends on the attribute.</p>
+     * depends on the attribute.
      *
      * @return a <code>JMXConnector</code> representing the new
      * connector client.  Each successful call to this method produces
@@ -51,6 +68,6 @@ public interface JMXConnectorProvider {
      * connection cannot be made because of a communication problem.
      */
     public JMXConnector newJMXConnector(JMXServiceURL serviceURL,
-					Map<String,?> environment)
-	    throws IOException;
+                                        Map<String,?> environment)
+            throws IOException;
 }

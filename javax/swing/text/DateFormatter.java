@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -21,13 +39,12 @@ import javax.swing.text.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see java.text.DateFormat
  *
- * @version 1.5 04/09/01
  * @since 1.4
  */
 public class DateFormatter extends InternationalFormatter {
@@ -97,7 +114,7 @@ public class DateFormatter extends InternationalFormatter {
             Object key = attrs.next();
 
             if ((key instanceof DateFormat.Field) &&
-                (key == DateFormat.Field.HOUR1 || 
+                (key == DateFormat.Field.HOUR1 ||
                  ((DateFormat.Field)key).getCalendarField() != -1)) {
                 return key;
             }

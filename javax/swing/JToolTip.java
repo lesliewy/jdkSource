@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 
@@ -13,6 +31,7 @@ import javax.accessibility.*;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 
 /**
@@ -25,7 +44,7 @@ import java.io.IOException;
  * display can override <code>JComponent</code>'s <code>createToolTip</code>
  * method and use a subclass of this class.
  * <p>
- * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/tooltip.html">How to Use Tool Tips</a>
+ * See <a href="https://docs.oracle.com/javase/tutorial/uiswing/components/tooltip.html">How to Use Tool Tips</a>
  * in <em>The Java Tutorial</em>
  * for further documentation.
  * <p>
@@ -39,16 +58,16 @@ import java.io.IOException;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see JComponent#setToolTipText
  * @see JComponent#createToolTip
- * @version %I% %G%
  * @author Dave Moore
  * @author Rich Shiavi
  */
+@SuppressWarnings("serial")
 public class JToolTip extends JComponent implements Accessible {
     /**
      * @see #getUIClassID
@@ -66,7 +85,7 @@ public class JToolTip extends JComponent implements Accessible {
     }
 
     /**
-     * Returns the L&F object that renders this component.
+     * Returns the L&amp;F object that renders this component.
      *
      * @return the <code>ToolTipUI</code> object that renders this component
      */
@@ -85,7 +104,7 @@ public class JToolTip extends JComponent implements Accessible {
 
 
     /**
-     * Returns the name of the L&F class that renders this component.
+     * Returns the name of the L&amp;F class that renders this component.
      *
      * @return the string "ToolTipUI"
      * @see JComponent#getUIClassID
@@ -110,6 +129,11 @@ public class JToolTip extends JComponent implements Accessible {
         String oldValue = this.tipText;
         this.tipText = tipText;
         firePropertyChange("tiptext", oldValue, tipText);
+
+        if (!Objects.equals(oldValue, tipText)) {
+            revalidate();
+            repaint();
+        }
     }
 
     /**
@@ -155,18 +179,18 @@ public class JToolTip extends JComponent implements Accessible {
     }
 
     /**
-     * Always returns true since tooltips, by definition, 
+     * Always returns true since tooltips, by definition,
      * should always be on top of all other windows.
      */
     // package private
     boolean alwaysOnTop() {
-	return true;
+        return true;
     }
 
 
-    /** 
+    /**
      * See <code>readObject</code> and <code>writeObject</code>
-     * in <code>JComponent</code> for more 
+     * in <code>JComponent</code> for more
      * information about serialization in Swing.
      */
     private void writeObject(ObjectOutputStream s) throws IOException {
@@ -183,17 +207,17 @@ public class JToolTip extends JComponent implements Accessible {
 
     /**
      * Returns a string representation of this <code>JToolTip</code>.
-     * This method 
-     * is intended to be used only for debugging purposes, and the 
-     * content and format of the returned string may vary between      
-     * implementations. The returned string may be empty but may not 
+     * This method
+     * is intended to be used only for debugging purposes, and the
+     * content and format of the returned string may vary between
+     * implementations. The returned string may be empty but may not
      * be <code>null</code>.
-     * 
+     *
      * @return  a string representation of this <code>JToolTip</code>
      */
     protected String paramString() {
         String tipTextString = (tipText != null ?
-				tipText : "");
+                                tipText : "");
 
         return super.paramString() +
         ",tipText=" + tipTextString;
@@ -205,12 +229,12 @@ public class JToolTip extends JComponent implements Accessible {
 ////////////////
 
     /**
-     * Gets the AccessibleContext associated with this JToolTip. 
-     * For tool tips, the AccessibleContext takes the form of an 
-     * AccessibleJToolTip. 
+     * Gets the AccessibleContext associated with this JToolTip.
+     * For tool tips, the AccessibleContext takes the form of an
+     * AccessibleJToolTip.
      * A new AccessibleJToolTip instance is created if necessary.
      *
-     * @return an AccessibleJToolTip that serves as the 
+     * @return an AccessibleJToolTip that serves as the
      *         AccessibleContext of this JToolTip
      */
     public AccessibleContext getAccessibleContext() {
@@ -221,8 +245,8 @@ public class JToolTip extends JComponent implements Accessible {
     }
 
     /**
-     * This class implements accessibility support for the 
-     * <code>JToolTip</code> class.  It provides an implementation of the 
+     * This class implements accessibility support for the
+     * <code>JToolTip</code> class.  It provides an implementation of the
      * Java Accessibility API appropriate to tool tip user-interface elements.
      * <p>
      * <strong>Warning:</strong>
@@ -230,10 +254,11 @@ public class JToolTip extends JComponent implements Accessible {
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
+    @SuppressWarnings("serial")
     protected class AccessibleJToolTip extends AccessibleJComponent {
 
         /**
@@ -257,7 +282,7 @@ public class JToolTip extends JComponent implements Accessible {
         /**
          * Get the role of this object.
          *
-         * @return an instance of AccessibleRole describing the role of the 
+         * @return an instance of AccessibleRole describing the role of the
          * object
          */
         public AccessibleRole getAccessibleRole() {

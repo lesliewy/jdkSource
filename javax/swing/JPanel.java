@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -21,7 +39,7 @@ import java.io.IOException;
  * <code>JPanel</code> is a generic lightweight container.
  * For examples and task-oriented documentation for JPanel, see
  * <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/components/panel.html">How to Use Panels</a>,
+ href="https://docs.oracle.com/javase/tutorial/uiswing/components/panel.html">How to Use Panels</a>,
  * a section in <em>The Java Tutorial</em>.
  * <p>
  * <strong>Warning:</strong> Swing is not thread safe. For more
@@ -34,14 +52,13 @@ import java.io.IOException;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @beaninfo
  * description: A generic lightweight container.
- * 
- * @version %I% %G%
+ *
  * @author Arnaud Weber
  * @author Steve Wilson
  */
@@ -59,7 +76,7 @@ public class JPanel extends JComponent implements Accessible
      *
      * @param layout  the LayoutManager to use
      * @param isDoubleBuffered  a boolean, true for double-buffering, which
-     *        uses additional memory space to achieve fast, flicker-free 
+     *        uses additional memory space to achieve fast, flicker-free
      *        updates
      */
     public JPanel(LayoutManager layout, boolean isDoubleBuffered) {
@@ -85,7 +102,7 @@ public class JPanel extends JComponent implements Accessible
      * will use a double buffer.
      *
      * @param isDoubleBuffered  a boolean, true for double-buffering, which
-     *        uses additional memory space to achieve fast, flicker-free 
+     *        uses additional memory space to achieve fast, flicker-free
      *        updates
      */
     public JPanel(boolean isDoubleBuffered) {
@@ -110,7 +127,7 @@ public class JPanel extends JComponent implements Accessible
     }
 
     /**
-     * Returns the look and feel (L&F) object that renders this component.
+     * Returns the look and feel (L&amp;amp;F) object that renders this component.
      *
      * @return the PanelUI object that renders this component
      * @since 1.4
@@ -121,23 +138,23 @@ public class JPanel extends JComponent implements Accessible
 
 
     /**
-     * Sets the look and feel (L&F) object that renders this component.
+     * Sets the look and feel (L&amp;F) object that renders this component.
      *
-     * @param ui  the PanelUI L&F object
+     * @param ui  the PanelUI L&amp;F object
      * @see UIDefaults#getUI
      * @since 1.4
      * @beaninfo
      *        bound: true
      *       hidden: true
      *    attribute: visualUpdate true
-     *  description: The UI object that implements the Component's LookAndFeel. 
+     *  description: The UI object that implements the Component's LookAndFeel.
      */
     public void setUI(PanelUI ui) {
         super.setUI(ui);
     }
 
     /**
-     * Returns a string that specifies the name of the L&F class
+     * Returns a string that specifies the name of the L&amp;F class
      * that renders this component.
      *
      * @return "PanelUI"
@@ -145,15 +162,15 @@ public class JPanel extends JComponent implements Accessible
      * @see UIDefaults#getUI
      * @beaninfo
      *        expert: true
-     *   description: A string that specifies the name of the L&F class.
+     *   description: A string that specifies the name of the L&amp;F class.
      */
     public String getUIClassID() {
         return uiClassID;
     }
 
 
-    /** 
-     * See readObject() and writeObject() in JComponent for more 
+    /**
+     * See readObject() and writeObject() in JComponent for more
      * information about serialization in Swing.
      */
     private void writeObject(ObjectOutputStream s) throws IOException {
@@ -169,16 +186,16 @@ public class JPanel extends JComponent implements Accessible
 
 
     /**
-     * Returns a string representation of this JPanel. This method 
-     * is intended to be used only for debugging purposes, and the 
-     * content and format of the returned string may vary between      
-     * implementations. The returned string may be empty but may not 
+     * Returns a string representation of this JPanel. This method
+     * is intended to be used only for debugging purposes, and the
+     * content and format of the returned string may vary between
+     * implementations. The returned string may be empty but may not
      * be <code>null</code>.
-     * 
+     *
      * @return  a string representation of this JPanel.
      */
     protected String paramString() {
-	return super.paramString();
+        return super.paramString();
     }
 
 /////////////////
@@ -186,12 +203,12 @@ public class JPanel extends JComponent implements Accessible
 ////////////////
 
     /**
-     * Gets the AccessibleContext associated with this JPanel. 
-     * For JPanels, the AccessibleContext takes the form of an 
-     * AccessibleJPanel. 
+     * Gets the AccessibleContext associated with this JPanel.
+     * For JPanels, the AccessibleContext takes the form of an
+     * AccessibleJPanel.
      * A new AccessibleJPanel instance is created if necessary.
      *
-     * @return an AccessibleJPanel that serves as the 
+     * @return an AccessibleJPanel that serves as the
      *         AccessibleContext of this JPanel
      */
     public AccessibleContext getAccessibleContext() {
@@ -202,9 +219,9 @@ public class JPanel extends JComponent implements Accessible
     }
 
     /**
-     * This class implements accessibility support for the 
-     * <code>JPanel</code> class.  It provides an implementation of the 
-     * Java Accessibility API appropriate to panel user-interface 
+     * This class implements accessibility support for the
+     * <code>JPanel</code> class.  It provides an implementation of the
+     * Java Accessibility API appropriate to panel user-interface
      * elements.
      * <p>
      * <strong>Warning:</strong>
@@ -212,7 +229,7 @@ public class JPanel extends JComponent implements Accessible
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
@@ -221,7 +238,7 @@ public class JPanel extends JComponent implements Accessible
         /**
          * Get the role of this object.
          *
-         * @return an instance of AccessibleRole describing the role of the 
+         * @return an instance of AccessibleRole describing the role of the
          * object
          */
         public AccessibleRole getAccessibleRole() {
@@ -229,4 +246,3 @@ public class JPanel extends JComponent implements Accessible
         }
     }
 }
-

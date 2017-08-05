@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.event;
 
@@ -23,13 +41,13 @@ import java.awt.Component;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Georges Saab
  */
+@SuppressWarnings("serial")
 public class MenuDragMouseEvent extends MouseEvent {
     private MenuElement path[];
     private MenuSelectionManager manager;
@@ -59,12 +77,12 @@ public class MenuDragMouseEvent extends MouseEvent {
      * @see MouseEvent#MouseEvent(java.awt.Component, int, long, int, int, int, int, int, int, boolean, int)
      */
     public MenuDragMouseEvent(Component source, int id, long when,
-			      int modifiers, int x, int y, int clickCount,
-			      boolean popupTrigger, MenuElement p[],
-			      MenuSelectionManager m) {
+                              int modifiers, int x, int y, int clickCount,
+                              boolean popupTrigger, MenuElement p[],
+                              MenuSelectionManager m) {
         super(source, id, when, modifiers, x, y, clickCount, popupTrigger);
-  	path = p;
-  	manager = m;
+        path = p;
+        manager = m;
     }
 
     /**
@@ -97,14 +115,14 @@ public class MenuDragMouseEvent extends MouseEvent {
      * @since 1.6
      */
     public MenuDragMouseEvent(Component source, int id, long when,
-			      int modifiers, int x, int y, int xAbs,
+                              int modifiers, int x, int y, int xAbs,
                               int yAbs, int clickCount,
-			      boolean popupTrigger, MenuElement p[],
-			      MenuSelectionManager m) {
+                              boolean popupTrigger, MenuElement p[],
+                              MenuSelectionManager m) {
         super(source, id, when, modifiers, x, y, xAbs, yAbs, clickCount,
               popupTrigger, MouseEvent.NOBUTTON);
-	path = p;
-	manager = m;
+        path = p;
+        manager = m;
     }
 
     /**
@@ -113,7 +131,7 @@ public class MenuDragMouseEvent extends MouseEvent {
      * @return an array of MenuElement objects representing the path value
      */
     public MenuElement[] getPath() {
-	return path;
+        return path;
     }
 
     /**
@@ -122,7 +140,6 @@ public class MenuDragMouseEvent extends MouseEvent {
      * @return a MenuSelectionManager object
      */
     public MenuSelectionManager getMenuSelectionManager() {
-	return manager;
+        return manager;
     }
 }
-

@@ -1,19 +1,36 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.security.auth.callback;
 
 /**
  * <p> Underlying security services instantiate and pass a
- * <code>ConfirmationCallback</code> to the <code>handle</code>
- * method of a <code>CallbackHandler</code> to ask for YES/NO,
+ * {@code ConfirmationCallback} to the {@code handle}
+ * method of a {@code CallbackHandler} to ask for YES/NO,
  * OK/CANCEL, YES/NO/CANCEL or other similar confirmations.
  *
- * @version %I%, %G%
  * @see javax.security.auth.callback.CallbackHandler
  */
 public class ConfirmationCallback implements Callback, java.io.Serializable {
@@ -23,86 +40,86 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
     /**
      * Unspecified option type.
      *
-     * <p> The <code>getOptionType</code> method returns this
-     * value if this <code>ConfirmationCallback</code> was instantiated
-     * with <code>options</code> instead of an <code>optionType</code>.
+     * <p> The {@code getOptionType} method returns this
+     * value if this {@code ConfirmationCallback} was instantiated
+     * with {@code options} instead of an {@code optionType}.
      */
-    public static final int UNSPECIFIED_OPTION		= -1;
+    public static final int UNSPECIFIED_OPTION          = -1;
 
     /**
      * YES/NO confirmation option.
      *
      * <p> An underlying security service specifies this as the
-     * <code>optionType</code> to a <code>ConfirmationCallback</code>
+     * {@code optionType} to a {@code ConfirmationCallback}
      * constructor if it requires a confirmation which can be answered
-     * with either <code>YES</code> or <code>NO</code>.
+     * with either {@code YES} or {@code NO}.
      */
-    public static final int YES_NO_OPTION		= 0;
+    public static final int YES_NO_OPTION               = 0;
 
     /**
      * YES/NO/CANCEL confirmation confirmation option.
      *
      * <p> An underlying security service specifies this as the
-     * <code>optionType</code> to a <code>ConfirmationCallback</code>
+     * {@code optionType} to a {@code ConfirmationCallback}
      * constructor if it requires a confirmation which can be answered
-     * with either <code>YES</code>, <code>NO</code> or <code>CANCEL</code>.
+     * with either {@code YES}, {@code NO} or {@code CANCEL}.
      */
-    public static final int YES_NO_CANCEL_OPTION	= 1;
+    public static final int YES_NO_CANCEL_OPTION        = 1;
 
     /**
      * OK/CANCEL confirmation confirmation option.
      *
      * <p> An underlying security service specifies this as the
-     * <code>optionType</code> to a <code>ConfirmationCallback</code>
+     * {@code optionType} to a {@code ConfirmationCallback}
      * constructor if it requires a confirmation which can be answered
-     * with either <code>OK</code> or <code>CANCEL</code>.
+     * with either {@code OK} or {@code CANCEL}.
      */
-    public static final int OK_CANCEL_OPTION		= 2;
- 
+    public static final int OK_CANCEL_OPTION            = 2;
+
     /**
      * YES option.
      *
-     * <p> If an <code>optionType</code> was specified to this
-     * <code>ConfirmationCallback</code>, this option may be specified as a
-     * <code>defaultOption</code> or returned as the selected index.
+     * <p> If an {@code optionType} was specified to this
+     * {@code ConfirmationCallback}, this option may be specified as a
+     * {@code defaultOption} or returned as the selected index.
      */
-    public static final int YES				= 0;
+    public static final int YES                         = 0;
 
     /**
      * NO option.
      *
-     * <p> If an <code>optionType</code> was specified to this
-     * <code>ConfirmationCallback</code>, this option may be specified as a
-     * <code>defaultOption</code> or returned as the selected index.
+     * <p> If an {@code optionType} was specified to this
+     * {@code ConfirmationCallback}, this option may be specified as a
+     * {@code defaultOption} or returned as the selected index.
      */
-    public static final int NO				= 1;
+    public static final int NO                          = 1;
 
     /**
      * CANCEL option.
      *
-     * <p> If an <code>optionType</code> was specified to this
-     * <code>ConfirmationCallback</code>, this option may be specified as a
-     * <code>defaultOption</code> or returned as the selected index.
+     * <p> If an {@code optionType} was specified to this
+     * {@code ConfirmationCallback}, this option may be specified as a
+     * {@code defaultOption} or returned as the selected index.
      */
-    public static final int CANCEL			= 2;
+    public static final int CANCEL                      = 2;
 
     /**
      * OK option.
      *
-     * <p> If an <code>optionType</code> was specified to this
-     * <code>ConfirmationCallback</code>, this option may be specified as a
-     * <code>defaultOption</code> or returned as the selected index.
+     * <p> If an {@code optionType} was specified to this
+     * {@code ConfirmationCallback}, this option may be specified as a
+     * {@code defaultOption} or returned as the selected index.
      */
-    public static final int OK				= 3;
- 
+    public static final int OK                          = 3;
+
     /** INFORMATION message type.  */
-    public static final int INFORMATION			= 0;
+    public static final int INFORMATION                 = 0;
 
     /** WARNING message type. */
-    public static final int WARNING			= 1;
+    public static final int WARNING                     = 1;
 
     /** ERROR message type. */
-    public static final int ERROR			= 2;
+    public static final int ERROR                       = 2;
     /**
      * @serial
      * @since 1.4
@@ -135,7 +152,7 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
     private int selection;
 
     /**
-     * Construct a <code>ConfirmationCallback</code> with a
+     * Construct a {@code ConfirmationCallback} with a
      * message type, an option type and a default option.
      *
      * <p> Underlying security services use this constructor if
@@ -144,107 +161,107 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      *
      * <p>
      *
-     * @param messageType the message type (<code>INFORMATION</code>,
-     *			<code>WARNING</code> or <code>ERROR</code>). <p>
+     * @param messageType the message type ({@code INFORMATION},
+     *                  {@code WARNING} or {@code ERROR}). <p>
      *
-     * @param optionType the option type (<code>YES_NO_OPTION</code>,
-     *			<code>YES_NO_CANCEL_OPTION</code> or
-     *			<code>OK_CANCEL_OPTION</code>). <p>
+     * @param optionType the option type ({@code YES_NO_OPTION},
+     *                  {@code YES_NO_CANCEL_OPTION} or
+     *                  {@code OK_CANCEL_OPTION}). <p>
      *
      * @param defaultOption the default option
-     *			from the provided optionType (<code>YES</code>,
-     *			<code>NO</code>, <code>CANCEL</code> or
-     *			<code>OK</code>).
+     *                  from the provided optionType ({@code YES},
+     *                  {@code NO}, {@code CANCEL} or
+     *                  {@code OK}).
      *
      * @exception IllegalArgumentException if messageType is not either
-     *			<code>INFORMATION</code>, <code>WARNING</code>,
-     *			or <code>ERROR</code>, if optionType is not either
-     *			<code>YES_NO_OPTION</code>,
-     *			<code>YES_NO_CANCEL_OPTION</code>, or
-     *			<code>OK_CANCEL_OPTION</code>,
-     *			or if <code>defaultOption</code>
-     *			does not correspond to one of the options in
-     *			<code>optionType</code>.
+     *                  {@code INFORMATION}, {@code WARNING},
+     *                  or {@code ERROR}, if optionType is not either
+     *                  {@code YES_NO_OPTION},
+     *                  {@code YES_NO_CANCEL_OPTION}, or
+     *                  {@code OK_CANCEL_OPTION},
+     *                  or if {@code defaultOption}
+     *                  does not correspond to one of the options in
+     *                  {@code optionType}.
      */
     public ConfirmationCallback(int messageType,
                 int optionType, int defaultOption) {
 
-	if (messageType < INFORMATION || messageType > ERROR ||
-	    optionType < YES_NO_OPTION || optionType > OK_CANCEL_OPTION)
-	    throw new IllegalArgumentException();
+        if (messageType < INFORMATION || messageType > ERROR ||
+            optionType < YES_NO_OPTION || optionType > OK_CANCEL_OPTION)
+            throw new IllegalArgumentException();
 
-	switch (optionType) {
-	case YES_NO_OPTION:
-	    if (defaultOption != YES && defaultOption != NO)
-		throw new IllegalArgumentException();
-	    break;
-	case YES_NO_CANCEL_OPTION:
-	    if (defaultOption != YES && defaultOption != NO &&
-		defaultOption != CANCEL)
-		throw new IllegalArgumentException();
-	    break;
-	case OK_CANCEL_OPTION:
-	    if (defaultOption != OK && defaultOption != CANCEL)
-		throw new IllegalArgumentException();
-	    break;
-	}
-		 
-	this.messageType = messageType;
-	this.optionType = optionType;
-	this.defaultOption = defaultOption;
+        switch (optionType) {
+        case YES_NO_OPTION:
+            if (defaultOption != YES && defaultOption != NO)
+                throw new IllegalArgumentException();
+            break;
+        case YES_NO_CANCEL_OPTION:
+            if (defaultOption != YES && defaultOption != NO &&
+                defaultOption != CANCEL)
+                throw new IllegalArgumentException();
+            break;
+        case OK_CANCEL_OPTION:
+            if (defaultOption != OK && defaultOption != CANCEL)
+                throw new IllegalArgumentException();
+            break;
+        }
+
+        this.messageType = messageType;
+        this.optionType = optionType;
+        this.defaultOption = defaultOption;
     }
 
     /**
-     * Construct a <code>ConfirmationCallback</code> with a
+     * Construct a {@code ConfirmationCallback} with a
      * message type, a list of options and a default option.
      *
      * <p> Underlying security services use this constructor if
      * they require a confirmation different from the available preset
      * confirmations provided (for example, CONTINUE/ABORT or STOP/GO).
-     * The confirmation options are listed in the <code>options</code> array,
-     * and are displayed by the <code>CallbackHandler</code> implementation
+     * The confirmation options are listed in the {@code options} array,
+     * and are displayed by the {@code CallbackHandler} implementation
      * in a manner consistent with the way preset options are displayed.
      *
      * <p>
      *
-     * @param messageType the message type (<code>INFORMATION</code>,
-     *			<code>WARNING</code> or <code>ERROR</code>). <p>
+     * @param messageType the message type ({@code INFORMATION},
+     *                  {@code WARNING} or {@code ERROR}). <p>
      *
      * @param options the list of confirmation options. <p>
      *
      * @param defaultOption the default option, represented as an index
-     *			into the <code>options</code> array.
+     *                  into the {@code options} array.
      *
      * @exception IllegalArgumentException if messageType is not either
-     *			<code>INFORMATION</code>, <code>WARNING</code>,
-     *			or <code>ERROR</code>, if <code>options</code> is null,
-     *			if <code>options</code> has a length of 0,
-     *			if any element from <code>options</code> is null,
-     *			if any element from <code>options</code>
-     *			has a length of 0, or if <code>defaultOption</code>
-     *			does not lie within the array boundaries of
-     *			<code>options</code>.
+     *                  {@code INFORMATION}, {@code WARNING},
+     *                  or {@code ERROR}, if {@code options} is null,
+     *                  if {@code options} has a length of 0,
+     *                  if any element from {@code options} is null,
+     *                  if any element from {@code options}
+     *                  has a length of 0, or if {@code defaultOption}
+     *                  does not lie within the array boundaries of
+     *                  {@code options}.
      */
     public ConfirmationCallback(int messageType,
                 String[] options, int defaultOption) {
 
-	if (messageType < INFORMATION || messageType > ERROR ||
-	    options == null || options.length == 0 ||
-	    defaultOption < 0 || defaultOption >= options.length)
-	    throw new IllegalArgumentException();
+        if (messageType < INFORMATION || messageType > ERROR ||
+            options == null || options.length == 0 ||
+            defaultOption < 0 || defaultOption >= options.length)
+            throw new IllegalArgumentException();
 
-	for (int i = 0; i < options.length; i++) {
-	    if (options[i] == null || options[i].length() == 0)
-		throw new IllegalArgumentException();
-	}
-		 
-	this.messageType = messageType;
-	this.options = options;
-	this.defaultOption = defaultOption;
+        for (int i = 0; i < options.length; i++) {
+            if (options[i] == null || options[i].length() == 0)
+                throw new IllegalArgumentException();
+        }
+
+        this.messageType = messageType;
+        this.options = options;
+        this.defaultOption = defaultOption;
     }
 
     /**
-     * Construct a <code>ConfirmationCallback</code> with a prompt,
+     * Construct a {@code ConfirmationCallback} with a prompt,
      * message type, an option type and a default option.
      *
      * <p> Underlying security services use this constructor if
@@ -255,113 +272,113 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      *
      * @param prompt the prompt used to describe the list of options. <p>
      *
-     * @param messageType the message type (<code>INFORMATION</code>,
-     *			<code>WARNING</code> or <code>ERROR</code>). <p>
+     * @param messageType the message type ({@code INFORMATION},
+     *                  {@code WARNING} or {@code ERROR}). <p>
      *
-     * @param optionType the option type (<code>YES_NO_OPTION</code>,
-     *			<code>YES_NO_CANCEL_OPTION</code> or
-     *			<code>OK_CANCEL_OPTION</code>). <p>
+     * @param optionType the option type ({@code YES_NO_OPTION},
+     *                  {@code YES_NO_CANCEL_OPTION} or
+     *                  {@code OK_CANCEL_OPTION}). <p>
      *
      * @param defaultOption the default option
-     *			from the provided optionType (<code>YES</code>,
-     *			<code>NO</code>, <code>CANCEL</code> or
-     *			<code>OK</code>).
+     *                  from the provided optionType ({@code YES},
+     *                  {@code NO}, {@code CANCEL} or
+     *                  {@code OK}).
      *
-     * @exception IllegalArgumentException if <code>prompt</code> is null,
-     *			if <code>prompt</code> has a length of 0,
-     *			if messageType is not either
-     *			<code>INFORMATION</code>, <code>WARNING</code>,
-     *			or <code>ERROR</code>, if optionType is not either
-     *			<code>YES_NO_OPTION</code>,
-     *			<code>YES_NO_CANCEL_OPTION</code>, or
-     *			<code>OK_CANCEL_OPTION</code>,
-     *			or if <code>defaultOption</code>
-     *			does not correspond to one of the options in
-     *			<code>optionType</code>.
+     * @exception IllegalArgumentException if {@code prompt} is null,
+     *                  if {@code prompt} has a length of 0,
+     *                  if messageType is not either
+     *                  {@code INFORMATION}, {@code WARNING},
+     *                  or {@code ERROR}, if optionType is not either
+     *                  {@code YES_NO_OPTION},
+     *                  {@code YES_NO_CANCEL_OPTION}, or
+     *                  {@code OK_CANCEL_OPTION},
+     *                  or if {@code defaultOption}
+     *                  does not correspond to one of the options in
+     *                  {@code optionType}.
      */
     public ConfirmationCallback(String prompt, int messageType,
                 int optionType, int defaultOption) {
 
-	if (prompt == null || prompt.length() == 0 ||
-	    messageType < INFORMATION || messageType > ERROR ||
-	    optionType < YES_NO_OPTION || optionType > OK_CANCEL_OPTION)
-	    throw new IllegalArgumentException();
+        if (prompt == null || prompt.length() == 0 ||
+            messageType < INFORMATION || messageType > ERROR ||
+            optionType < YES_NO_OPTION || optionType > OK_CANCEL_OPTION)
+            throw new IllegalArgumentException();
 
-	switch (optionType) {
-	case YES_NO_OPTION:
-	    if (defaultOption != YES && defaultOption != NO)
-		throw new IllegalArgumentException();
-	    break;
-	case YES_NO_CANCEL_OPTION:
-	    if (defaultOption != YES && defaultOption != NO &&
-		defaultOption != CANCEL)
-		throw new IllegalArgumentException();
-	    break;
-	case OK_CANCEL_OPTION:
-	    if (defaultOption != OK && defaultOption != CANCEL)
-		throw new IllegalArgumentException();
-	    break;
-	}
-		 
-	this.prompt = prompt;
-	this.messageType = messageType;
-	this.optionType = optionType;
-	this.defaultOption = defaultOption;
+        switch (optionType) {
+        case YES_NO_OPTION:
+            if (defaultOption != YES && defaultOption != NO)
+                throw new IllegalArgumentException();
+            break;
+        case YES_NO_CANCEL_OPTION:
+            if (defaultOption != YES && defaultOption != NO &&
+                defaultOption != CANCEL)
+                throw new IllegalArgumentException();
+            break;
+        case OK_CANCEL_OPTION:
+            if (defaultOption != OK && defaultOption != CANCEL)
+                throw new IllegalArgumentException();
+            break;
+        }
+
+        this.prompt = prompt;
+        this.messageType = messageType;
+        this.optionType = optionType;
+        this.defaultOption = defaultOption;
     }
 
     /**
-     * Construct a <code>ConfirmationCallback</code> with a prompt,
+     * Construct a {@code ConfirmationCallback} with a prompt,
      * message type, a list of options and a default option.
      *
      * <p> Underlying security services use this constructor if
      * they require a confirmation different from the available preset
      * confirmations provided (for example, CONTINUE/ABORT or STOP/GO).
-     * The confirmation options are listed in the <code>options</code> array,
-     * and are displayed by the <code>CallbackHandler</code> implementation
+     * The confirmation options are listed in the {@code options} array,
+     * and are displayed by the {@code CallbackHandler} implementation
      * in a manner consistent with the way preset options are displayed.
      *
      * <p>
      *
      * @param prompt the prompt used to describe the list of options. <p>
      *
-     * @param messageType the message type (<code>INFORMATION</code>,
-     *			<code>WARNING</code> or <code>ERROR</code>). <p>
+     * @param messageType the message type ({@code INFORMATION},
+     *                  {@code WARNING} or {@code ERROR}). <p>
      *
      * @param options the list of confirmation options. <p>
      *
      * @param defaultOption the default option, represented as an index
-     *			into the <code>options</code> array.
+     *                  into the {@code options} array.
      *
-     * @exception IllegalArgumentException if <code>prompt</code> is null,
-     *			if <code>prompt</code> has a length of 0,
-     *			if messageType is not either
-     *			<code>INFORMATION</code>, <code>WARNING</code>,
-     *			or <code>ERROR</code>, if <code>options</code> is null,
-     *			if <code>options</code> has a length of 0,
-     *			if any element from <code>options</code> is null,
-     *			if any element from <code>options</code>
-     *			has a length of 0, or if <code>defaultOption</code>
-     *			does not lie within the array boundaries of
-     *			<code>options</code>.
+     * @exception IllegalArgumentException if {@code prompt} is null,
+     *                  if {@code prompt} has a length of 0,
+     *                  if messageType is not either
+     *                  {@code INFORMATION}, {@code WARNING},
+     *                  or {@code ERROR}, if {@code options} is null,
+     *                  if {@code options} has a length of 0,
+     *                  if any element from {@code options} is null,
+     *                  if any element from {@code options}
+     *                  has a length of 0, or if {@code defaultOption}
+     *                  does not lie within the array boundaries of
+     *                  {@code options}.
      */
     public ConfirmationCallback(String prompt, int messageType,
                 String[] options, int defaultOption) {
 
-	if (prompt == null || prompt.length() == 0 ||
-	    messageType < INFORMATION || messageType > ERROR ||
-	    options == null || options.length == 0 ||
-	    defaultOption < 0 || defaultOption >= options.length)
-	    throw new IllegalArgumentException();
+        if (prompt == null || prompt.length() == 0 ||
+            messageType < INFORMATION || messageType > ERROR ||
+            options == null || options.length == 0 ||
+            defaultOption < 0 || defaultOption >= options.length)
+            throw new IllegalArgumentException();
 
-	for (int i = 0; i < options.length; i++) {
-	    if (options[i] == null || options[i].length() == 0)
-		throw new IllegalArgumentException();
-	}
-		 
-	this.prompt = prompt;
-	this.messageType = messageType;
-	this.options = options;
-	this.defaultOption = defaultOption;
+        for (int i = 0; i < options.length; i++) {
+            if (options[i] == null || options[i].length() == 0)
+                throw new IllegalArgumentException();
+        }
+
+        this.prompt = prompt;
+        this.messageType = messageType;
+        this.options = options;
+        this.defaultOption = defaultOption;
     }
 
     /**
@@ -369,11 +386,11 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      *
      * <p>
      *
-     * @return the prompt, or null if this <code>ConfirmationCallback</code>
-     *		was instantiated without a <code>prompt</code>.
+     * @return the prompt, or null if this {@code ConfirmationCallback}
+     *          was instantiated without a {@code prompt}.
      */
     public String getPrompt() {
-	return prompt;
+        return prompt;
     }
 
     /**
@@ -381,33 +398,33 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      *
      * <p>
      *
-     * @return the message type (<code>INFORMATION</code>,
-     *		<code>WARNING</code> or <code>ERROR</code>).
+     * @return the message type ({@code INFORMATION},
+     *          {@code WARNING} or {@code ERROR}).
      */
     public int getMessageType() {
-	return messageType;
+        return messageType;
     }
 
     /**
      * Get the option type.
      *
-     * <p> If this method returns <code>UNSPECIFIED_OPTION</code>, then this
-     * <code>ConfirmationCallback</code> was instantiated with
-     * <code>options</code> instead of an <code>optionType</code>.
-     * In this case, invoke the <code>getOptions</code> method
+     * <p> If this method returns {@code UNSPECIFIED_OPTION}, then this
+     * {@code ConfirmationCallback} was instantiated with
+     * {@code options} instead of an {@code optionType}.
+     * In this case, invoke the {@code getOptions} method
      * to determine which confirmation options to display.
      *
      * <p>
      *
-     * @return the option type (<code>YES_NO_OPTION</code>,
-     *		<code>YES_NO_CANCEL_OPTION</code> or
-     *		<code>OK_CANCEL_OPTION</code>), or
-     *		<code>UNSPECIFIED_OPTION</code> if this
-     *		<code>ConfirmationCallback</code> was instantiated with
-     *		<code>options</code> instead of an <code>optionType</code>.
+     * @return the option type ({@code YES_NO_OPTION},
+     *          {@code YES_NO_CANCEL_OPTION} or
+     *          {@code OK_CANCEL_OPTION}), or
+     *          {@code UNSPECIFIED_OPTION} if this
+     *          {@code ConfirmationCallback} was instantiated with
+     *          {@code options} instead of an {@code optionType}.
      */
     public int getOptionType() {
-	return optionType;
+        return optionType;
     }
 
     /**
@@ -416,11 +433,11 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      * <p>
      *
      * @return the list of confirmation options, or null if this
-     *		<code>ConfirmationCallback</code> was instantiated with
-     *		an <code>optionType</code> instead of <code>options</code>.
+     *          {@code ConfirmationCallback} was instantiated with
+     *          an {@code optionType} instead of {@code options}.
      */
     public String[] getOptions() {
-	return options;
+        return options;
     }
 
     /**
@@ -429,17 +446,17 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      * <p>
      *
      * @return the default option, represented as
-     *		<code>YES</code>, <code>NO</code>, <code>OK</code> or
-     *		<code>CANCEL</code> if an <code>optionType</code>
-     *		was specified to the constructor of this
-     *		<code>ConfirmationCallback</code>.
-     *		Otherwise, this method returns the default option as
-     *		an index into the
-     *		<code>options</code> array specified to the constructor
-     *		of this <code>ConfirmationCallback</code>.
+     *          {@code YES}, {@code NO}, {@code OK} or
+     *          {@code CANCEL} if an {@code optionType}
+     *          was specified to the constructor of this
+     *          {@code ConfirmationCallback}.
+     *          Otherwise, this method returns the default option as
+     *          an index into the
+     *          {@code options} array specified to the constructor
+     *          of this {@code ConfirmationCallback}.
      */
     public int getDefaultOption() {
-	return defaultOption;
+        return defaultOption;
     }
 
     /**
@@ -447,18 +464,18 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      *
      * <p>
      *
-     * @param selection the selection represented as <code>YES</code>,
-     *		<code>NO</code>, <code>OK</code> or <code>CANCEL</code>
-     *		if an <code>optionType</code> was specified to the constructor
-     *		of this <code>ConfirmationCallback</code>.
-     *		Otherwise, the selection represents the index into the
-     *		<code>options</code> array specified to the constructor
-     *		of this <code>ConfirmationCallback</code>.
+     * @param selection the selection represented as {@code YES},
+     *          {@code NO}, {@code OK} or {@code CANCEL}
+     *          if an {@code optionType} was specified to the constructor
+     *          of this {@code ConfirmationCallback}.
+     *          Otherwise, the selection represents the index into the
+     *          {@code options} array specified to the constructor
+     *          of this {@code ConfirmationCallback}.
      *
      * @see #getSelectedIndex
      */
     public void setSelectedIndex(int selection) {
-	this.selection = selection;
+        this.selection = selection;
     }
 
     /**
@@ -467,18 +484,18 @@ public class ConfirmationCallback implements Callback, java.io.Serializable {
      * <p>
      *
      * @return the selected confirmation option represented as
-     *		<code>YES</code>, <code>NO</code>, <code>OK</code> or
-     *		<code>CANCEL</code> if an <code>optionType</code>
-     *		was specified to the constructor of this
-     *		<code>ConfirmationCallback</code>.
-     *		Otherwise, this method returns the selected confirmation
-     *		option as an index into the
-     *		<code>options</code> array specified to the constructor
-     *		of this <code>ConfirmationCallback</code>.
+     *          {@code YES}, {@code NO}, {@code OK} or
+     *          {@code CANCEL} if an {@code optionType}
+     *          was specified to the constructor of this
+     *          {@code ConfirmationCallback}.
+     *          Otherwise, this method returns the selected confirmation
+     *          option as an index into the
+     *          {@code options} array specified to the constructor
+     *          of this {@code ConfirmationCallback}.
      *
      * @see #setSelectedIndex
      */
     public int getSelectedIndex() {
-	return selection;
+        return selection;
     }
 }

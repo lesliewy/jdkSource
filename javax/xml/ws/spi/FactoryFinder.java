@@ -1,23 +1,39 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.xml.ws.spi;
 
-import java.io.InputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 
 import java.util.Properties;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import javax.xml.ws.WebServiceException;
 
 class FactoryFinder {
 
     /**
-     * Creates an instance of the specified class using the specified 
+     * Creates an instance of the specified class using the specified
      * <code>ClassLoader</code> object.
      *
      * @exception WebServiceException if the given class could not be found
@@ -27,7 +43,7 @@ class FactoryFinder {
                                       ClassLoader classLoader)
     {
         try {
-            Class spiClass = safeLoadClass(className, classLoader);            
+            Class spiClass = safeLoadClass(className, classLoader);
             return spiClass.newInstance();
         } catch (ClassNotFoundException x) {
             throw new WebServiceException(
@@ -61,6 +77,9 @@ class FactoryFinder {
      */
     static Object find(String factoryId, String fallbackClassName)
     {
+        if (isOsgi()) {
+            return lookupUsingOSGiServiceLoader(factoryId);
+        }
         ClassLoader classLoader;
         try {
             classLoader = Thread.currentThread().getContextClassLoader();
@@ -70,31 +89,33 @@ class FactoryFinder {
 
         String serviceId = "META-INF/services/" + factoryId;
         // try to find services in CLASSPATH
+        BufferedReader rd = null;
         try {
-            InputStream is=null;
+            InputStream is;
             if (classLoader == null) {
                 is=ClassLoader.getSystemResourceAsStream(serviceId);
             } else {
                 is=classLoader.getResourceAsStream(serviceId);
             }
-        
+
             if( is!=null ) {
-                BufferedReader rd =
-                    new BufferedReader(new InputStreamReader(is, "UTF-8"));
-        
+                rd = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+
                 String factoryClassName = rd.readLine();
-                rd.close();
 
                 if (factoryClassName != null &&
                     ! "".equals(factoryClassName)) {
                     return newInstance(factoryClassName, classLoader);
                 }
             }
-        } catch( Exception ex ) {
+        } catch( Exception ignored) {
+        } finally {
+            close(rd);
         }
-        
+
 
         // try to read from $java.home/lib/jaxws.properties
+        FileInputStream inStream = null;
         try {
             String javah=System.getProperty( "java.home" );
             String configFile = javah + File.separator +
@@ -102,13 +123,15 @@ class FactoryFinder {
             File f=new File( configFile );
             if( f.exists()) {
                 Properties props=new Properties();
-                props.load( new FileInputStream(f));
+                inStream = new FileInputStream(f);
+                props.load(inStream);
                 String factoryClassName = props.getProperty(factoryId);
                 return newInstance(factoryClassName, classLoader);
             }
-        } catch(Exception ex ) {
+        } catch(Exception ignored) {
+        } finally {
+            close(inStream);
         }
-
 
         // Use the system property
         try {
@@ -117,7 +140,7 @@ class FactoryFinder {
             if( systemProp!=null) {
                 return newInstance(systemProp, classLoader);
             }
-        } catch (SecurityException se) {
+        } catch (SecurityException ignored) {
         }
 
         if (fallbackClassName == null) {
@@ -128,7 +151,15 @@ class FactoryFinder {
         return newInstance(fallbackClassName, classLoader);
     }
 
-    private static final String PLATFORM_DEFAULT_FACTORY_CLASS = "com.sun.xml.internal.ws.spi.ProviderImpl";
+    private static void close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
 
     /**
      * Loads the class, provided that the calling thread has an access to the class being loaded.
@@ -150,9 +181,35 @@ class FactoryFinder {
                 return classLoader.loadClass(className);
         } catch (SecurityException se) {
             // anyone can access the platform default factory class without permission
-            if (PLATFORM_DEFAULT_FACTORY_CLASS.equals(className))
+            if (Provider.DEFAULT_JAXWSPROVIDER.equals(className))
                 return Class.forName(className);
             throw se;
+        }
+    }
+
+    private static final String OSGI_SERVICE_LOADER_CLASS_NAME = "com.sun.org.glassfish.hk2.osgiresourcelocator.ServiceLoader";
+
+    private static boolean isOsgi() {
+        try {
+            Class.forName(OSGI_SERVICE_LOADER_CLASS_NAME);
+            return true;
+        } catch (ClassNotFoundException ignored) {
+        }
+        return false;
+    }
+
+    private static Object lookupUsingOSGiServiceLoader(String factoryId) {
+        try {
+            // Use reflection to avoid having any dependendcy on ServiceLoader class
+            Class serviceClass = Class.forName(factoryId);
+            Class[] args = new Class[]{serviceClass};
+            Class target = Class.forName(OSGI_SERVICE_LOADER_CLASS_NAME);
+            java.lang.reflect.Method m = target.getMethod("lookupProviderInstances", Class.class);
+            java.util.Iterator iter = ((Iterable) m.invoke(null, (Object[]) args)).iterator();
+            return iter.hasNext() ? iter.next() : null;
+        } catch (Exception ignored) {
+            // log and continue
+            return null;
         }
     }
 

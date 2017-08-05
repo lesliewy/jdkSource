@@ -1,18 +1,34 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.lang.model.util;
 
-
-import javax.lang.model.type.*;
 import javax.annotation.processing.SupportedSourceVersion;
-import static javax.lang.model.element.ElementKind.*;
-import static javax.lang.model.SourceVersion.*;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.type.*;
+import static javax.lang.model.SourceVersion.*;
 
 /**
  * A visitor of types based on their {@linkplain TypeKind kind} with
@@ -24,12 +40,12 @@ import javax.lang.model.SourceVersion;
  * first argument's kind.  The <tt>visit<i>XYZKind</i></tt> methods
  * call {@link #defaultAction defaultAction}, passing their arguments
  * to {@code defaultAction}'s corresponding parameters.
- * 
+ *
  * <p> Methods in this class may be overridden subject to their
  * general contract.  Note that annotating methods in concrete
  * subclasses with {@link java.lang.Override @Override} will help
  * ensure that methods are overridden as intended.
- * 
+ *
  * <p> <b>WARNING:</b> The {@code TypeVisitor} interface implemented
  * by this class may have methods added to it in the future to
  * accommodate new, currently unknown, language structures added to
@@ -38,7 +54,7 @@ import javax.lang.model.SourceVersion;
  * added to this class in the future; to avoid incompatibilities,
  * classes which extend this class should not declare any instance
  * methods with names beginning with {@code "visit"}.
- * 
+ *
  * <p>When such a new visit method is added, the default
  * implementation in this class will be to call the {@link
  * #visitUnknown visitUnknown} method.  A new type kind visitor class
@@ -46,6 +62,15 @@ import javax.lang.model.SourceVersion;
  * this visitor will have different default behavior for the visit
  * method in question.  When the new visitor is introduced, all or
  * portions of this visitor may be deprecated.
+ *
+ * <p>Note that adding a default implementation of a new visit method
+ * in a visitor class will occur instead of adding a <em>default
+ * method</em> directly in the visitor interface since a Java SE 8
+ * language feature cannot be used to this version of the API since
+ * this version is required to be runnable on Java SE 7
+ * implementations.  Future versions of the API that are only required
+ * to run on Java SE 8 and later may take advantage of default methods
+ * in this situation.
  *
  * @param <R> the return type of this visitor's methods.  Use {@link
  *            Void} for visitors that do not need to return results.
@@ -56,7 +81,9 @@ import javax.lang.model.SourceVersion;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
+ *
+ * @see TypeKindVisitor7
+ * @see TypeKindVisitor8
  * @since 1.6
  */
 @SupportedSourceVersion(RELEASE_6)
@@ -66,9 +93,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * for the default value.
      */
     protected TypeKindVisitor6() {
-	super(null);
+        super(null);
     }
-    
+
 
     /**
      * Constructor for concrete subclasses to call; uses the argument
@@ -77,7 +104,7 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @param defaultValue the value to assign to {@link #DEFAULT_VALUE}
      */
     protected TypeKindVisitor6(R defaultValue) {
-	super(defaultValue);
+        super(defaultValue);
     }
 
     /**
@@ -91,35 +118,35 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      */
     @Override
     public R visitPrimitive(PrimitiveType t, P p) {
-	TypeKind k = t.getKind();
-	switch (k) {
-	case BOOLEAN:
-	    return visitPrimitiveAsBoolean(t, p);
+        TypeKind k = t.getKind();
+        switch (k) {
+        case BOOLEAN:
+            return visitPrimitiveAsBoolean(t, p);
 
-	case BYTE:
-	    return visitPrimitiveAsByte(t, p);
-	    
-	case SHORT:
-	    return visitPrimitiveAsShort(t, p);
-	    
-	case INT:
-	    return visitPrimitiveAsInt(t, p);
-	    
-	case LONG:
-	    return visitPrimitiveAsLong(t, p);
-	    
-	case CHAR:
-	    return visitPrimitiveAsChar(t, p);
-	    
-	case FLOAT:
-	    return visitPrimitiveAsFloat(t, p);
-	    
-	case DOUBLE:
-	    return visitPrimitiveAsDouble(t, p);
-	    
-	default:
-	    throw new AssertionError("Bad kind " + k + " for PrimitiveType" + t);
-	}
+        case BYTE:
+            return visitPrimitiveAsByte(t, p);
+
+        case SHORT:
+            return visitPrimitiveAsShort(t, p);
+
+        case INT:
+            return visitPrimitiveAsInt(t, p);
+
+        case LONG:
+            return visitPrimitiveAsLong(t, p);
+
+        case CHAR:
+            return visitPrimitiveAsChar(t, p);
+
+        case FLOAT:
+            return visitPrimitiveAsFloat(t, p);
+
+        case DOUBLE:
+            return visitPrimitiveAsDouble(t, p);
+
+        default:
+            throw new AssertionError("Bad kind " + k + " for PrimitiveType" + t);
+        }
     }
 
     /**
@@ -131,7 +158,7 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsBoolean(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
 
     /**
@@ -143,7 +170,7 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsByte(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
 
     /**
@@ -155,9 +182,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsShort(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits an {@code INT} primitive type by calling
      * {@code defaultAction}.
@@ -167,9 +194,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsInt(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@code LONG} primitive type by calling
      * {@code defaultAction}.
@@ -179,9 +206,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsLong(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@code CHAR} primitive type by calling
      * {@code defaultAction}.
@@ -191,9 +218,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsChar(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@code FLOAT} primitive type by calling
      * {@code defaultAction}.
@@ -203,9 +230,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsFloat(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@code DOUBLE} primitive type by calling
      * {@code defaultAction}.
@@ -215,7 +242,7 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitPrimitiveAsDouble(PrimitiveType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
 
     /**
@@ -229,22 +256,22 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      */
     @Override
     public R visitNoType(NoType t, P p) {
-	TypeKind k = t.getKind();
-	switch (k) {
-	case VOID:
-	    return visitNoTypeAsVoid(t, p);
+        TypeKind k = t.getKind();
+        switch (k) {
+        case VOID:
+            return visitNoTypeAsVoid(t, p);
 
-	case PACKAGE:
-	    return visitNoTypeAsPackage(t, p);
-	    
-	case NONE:
-	    return visitNoTypeAsNone(t, p);
-	    
-	default:
-	    throw new AssertionError("Bad kind " + k + " for NoType" + t);
-	}
+        case PACKAGE:
+            return visitNoTypeAsPackage(t, p);
+
+        case NONE:
+            return visitNoTypeAsNone(t, p);
+
+        default:
+            throw new AssertionError("Bad kind " + k + " for NoType" + t);
+        }
     }
-	
+
     /**
      * Visits a {@link TypeKind#VOID VOID} pseudo-type by calling
      * {@code defaultAction}.
@@ -254,9 +281,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitNoTypeAsVoid(NoType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@link TypeKind#PACKAGE PACKAGE} pseudo-type by calling
      * {@code defaultAction}.
@@ -266,9 +293,9 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitNoTypeAsPackage(NoType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
-	
+
     /**
      * Visits a {@link TypeKind#NONE NONE} pseudo-type by calling
      * {@code defaultAction}.
@@ -278,6 +305,6 @@ public class TypeKindVisitor6<R, P> extends SimpleTypeVisitor6<R, P> {
      * @return  the result of {@code defaultAction}
      */
     public R visitNoTypeAsNone(NoType t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
 }

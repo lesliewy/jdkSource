@@ -1,196 +1,188 @@
-
 /*
- * Copyright  1999-2004 The Apache Software Foundation.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package com.sun.org.apache.xml.internal.security.keys.storage;
 
-
-
 import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import com.sun.org.apache.xml.internal.security.keys.storage.implementations.KeyStoreResolver;
 import com.sun.org.apache.xml.internal.security.keys.storage.implementations.SingleCertificateResolver;
 
-
 /**
  * This class collects customized resolvers for Certificates.
- *
- * @author $Author: raul $
  */
 public class StorageResolver {
 
-   /** {@link java.util.logging} logging facility */
-    static java.util.logging.Logger log = 
+    /** {@link org.apache.commons.logging} logging facility */
+    private static java.util.logging.Logger log =
         java.util.logging.Logger.getLogger(StorageResolver.class.getName());
 
-   /** Field _storageResolvers */
-   List _storageResolvers = new ArrayList();
+    /** Field storageResolvers */
+    private List<StorageResolverSpi> storageResolvers = null;
 
-   /** Field _iterator */
-   Iterator _iterator = null;
+    /**
+     * Constructor StorageResolver
+     *
+     */
+    public StorageResolver() {}
 
-   /**
-    * Constructor StorageResolver
-    *
-    */
-   public StorageResolver() {}
+    /**
+     * Constructor StorageResolver
+     *
+     * @param resolver
+     */
+    public StorageResolver(StorageResolverSpi resolver) {
+        this.add(resolver);
+    }
 
-   /**
-    * Constructor StorageResolver
-    *
-    * @param resolver
-    */
-   public StorageResolver(StorageResolverSpi resolver) {
-      this.add(resolver);
-   }
+    /**
+     * Method addResolver
+     *
+     * @param resolver
+     */
+    public void add(StorageResolverSpi resolver) {
+        if (storageResolvers == null) {
+            storageResolvers = new ArrayList<StorageResolverSpi>();
+        }
+        this.storageResolvers.add(resolver);
+    }
 
-   /**
-    * Method addResolver
-    *
-    * @param resolver
-    */
-   public void add(StorageResolverSpi resolver) {
+    /**
+     * Constructor StorageResolver
+     *
+     * @param keyStore
+     */
+    public StorageResolver(KeyStore keyStore) {
+        this.add(keyStore);
+    }
 
-      this._storageResolvers.add(resolver);
+    /**
+     * Method addKeyStore
+     *
+     * @param keyStore
+     */
+    public void add(KeyStore keyStore) {
+        try {
+            this.add(new KeyStoreResolver(keyStore));
+        } catch (StorageResolverException ex) {
+            log.log(java.util.logging.Level.SEVERE, "Could not add KeyStore because of: ", ex);
+        }
+    }
 
-      this._iterator = null;
-   }
+    /**
+     * Constructor StorageResolver
+     *
+     * @param x509certificate
+     */
+    public StorageResolver(X509Certificate x509certificate) {
+        this.add(x509certificate);
+    }
 
-   /**
-    * Constructor StorageResolver
-    *
-    * @param keyStore
-    */
-   public StorageResolver(KeyStore keyStore) {
-      this.add(keyStore);
-   }
+    /**
+     * Method addCertificate
+     *
+     * @param x509certificate
+     */
+    public void add(X509Certificate x509certificate) {
+        this.add(new SingleCertificateResolver(x509certificate));
+    }
 
-   /**
-    * Method addKeyStore
-    *
-    * @param keyStore
-    */
-   public void add(KeyStore keyStore) {
+    /**
+     * Method getIterator
+     * @return the iterator for the resolvers.
+     */
+    public Iterator<Certificate> getIterator() {
+        return new StorageResolverIterator(this.storageResolvers.iterator());
+    }
 
-      try {
-         this.add(new KeyStoreResolver(keyStore));
-      } catch (StorageResolverException ex) {
-         log.log(java.util.logging.Level.SEVERE, "Could not add KeyStore because of: ", ex);
-      }
-   }
+    /**
+     * Class StorageResolverIterator
+     * This iterates over all the Certificates found in all the resolvers.
+     */
+    static class StorageResolverIterator implements Iterator<Certificate> {
 
-   /**
-    * Constructor StorageResolver
-    *
-    * @param x509certificate
-    */
-   public StorageResolver(X509Certificate x509certificate) {
-      this.add(x509certificate);
-   }
+        /** Field resolvers */
+        Iterator<StorageResolverSpi> resolvers = null;
 
-   /**
-    * Method addCertificate
-    *
-    * @param x509certificate
-    */
-   public void add(X509Certificate x509certificate) {
-      this.add(new SingleCertificateResolver(x509certificate));
-   }
+        /** Field currentResolver */
+        Iterator<Certificate> currentResolver = null;
 
-   /**
-    * Method getIterator
-    * @return the iterator for the resolvers.
-    *
-    */
-   public Iterator getIterator() {
+        /**
+         * Constructor StorageResolverIterator
+         *
+         * @param resolvers
+         */
+        public StorageResolverIterator(Iterator<StorageResolverSpi> resolvers) {
+            this.resolvers = resolvers;
+            currentResolver = findNextResolver();
+        }
 
-      if (this._iterator == null) {
-         this._iterator = new StorageResolverIterator(this._storageResolvers.iterator());
-      }
+        /** @inheritDoc */
+        public boolean hasNext() {
+            if (currentResolver == null) {
+                return false;
+            }
 
-      return this._iterator;
-   }
+            if (currentResolver.hasNext()) {
+                return true;
+            }
 
-   /**
-    * Method hasNext
-    *
-    * @return true if there is more elements.
-    */
-   public boolean hasNext() {
+            currentResolver = findNextResolver();
+            return (currentResolver != null);
+        }
 
-      if (this._iterator == null) {
-         this._iterator = new StorageResolverIterator(this._storageResolvers.iterator());
-      }
+        /** @inheritDoc */
+        public Certificate next() {
+            if (hasNext()) {
+                return currentResolver.next();
+            }
 
-      return this._iterator.hasNext();
-   }
+            throw new NoSuchElementException();
+        }
 
-   /**
-    * Method next
-    *
-    * @return the next element
-    */
-   public X509Certificate next() {
-      return (X509Certificate) this._iterator.next();
-   }
+        /**
+         * Method remove
+         */
+        public void remove() {
+            throw new UnsupportedOperationException("Can't remove keys from KeyStore");
+        }
 
-   /**
-    * Class StorageResolverIterator
-    *
-    * @author $Author: raul $
-    * @version $Revision: 1.10 $
-    */
-   class StorageResolverIterator implements Iterator {
+        // Find the next storage with at least one element and return its Iterator
+        private Iterator<Certificate> findNextResolver() {
+            while (resolvers.hasNext()) {
+                StorageResolverSpi resolverSpi = resolvers.next();
+                Iterator<Certificate> iter = resolverSpi.getIterator();
+                if (iter.hasNext()) {
+                    return iter;
+                }
+            }
 
-      /** Field _resolvers */
-	   Iterator _resolvers = null;
-
-      /** Field _currentResolver */
-      int _currentResolver = 0;
-
-      /**
-       * Constructor FilesystemIterator
-       *
-       * @param resolvers
-       */
-      public StorageResolverIterator(Iterator resolvers) {
-         this._resolvers = resolvers;
-      }
-
-      /** @inheritDoc */
-      public boolean hasNext() {
-		  return _resolvers.hasNext();
-      }
-
-      /** @inheritDoc */
-      public Object next() {
-		  return _resolvers.next();
-      }
-
-      /**
-       * Method remove
-       *
-       */
-      public void remove() {
-         throw new UnsupportedOperationException(
-            "Can't remove keys from KeyStore");
-      }
-   }
+            return null;
+        }
+    }
 }

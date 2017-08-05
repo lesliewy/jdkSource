@@ -1,54 +1,15 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+/*
+ * Copyright 2001-2004 The Apache Software Foundation.
  *
- * Copyright (c) 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The contents of this file are subject to the terms of either the GNU
- * General Public License Version 2 only ("GPL") or the Common Development
- * and Distribution License("CDDL") (collectively, the "License").  You
- * may not use this file except in compliance with the License.  You can
- * obtain a copy of the License at
- * https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
- * language governing permissions and limitations under the License.
- *
- * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
- *
- * GPL Classpath Exception:
- * Oracle designates this particular file as subject to the "Classpath"
- * exception as provided by Oracle in the GPL Version 2 section of the License
- * file that accompanied this code.
- *
- * Modifications:
- * If applicable, add the following below the License Header, with the fields
- * enclosed by brackets [] replaced by your own identifying information:
- * "Portions Copyright [year] [name of copyright owner]"
- *
- * Contributor(s):
- * If you wish your version of this file to be governed by only the CDDL or
- * only the GPL Version 2, indicate your decision by adding "[Contributor]
- * elects to include this software in this distribution under the [CDDL or GPL
- * Version 2] license."  If you don't indicate a single choice of license, a
- * recipient has the option to distribute your version of this file under
- * either the CDDL, the GPL Version 2 or to extend the choice of license to
- * its licensees as provided above.  However, if you add GPL Version 2 code
- * and therefore, elected the GPL Version 2 license, then the option applies
- * only if the new code is made subject to such option by the copyright
- * holder.
- *
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,34 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /*
- * $Id: ObjectFactory.java,v 1.11 2010-11-01 04:34:25 joehw Exp $
+ * $Id: ObjectFactory.java,v 1.2.4.1 2005/09/15 02:39:54 jeffsuttor Exp $
  */
+
 package com.sun.org.apache.xalan.internal.utils;
-
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.File;
-import java.io.FileInputStream;
-
-import java.util.Properties;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 
 /**
  * This class is duplicated for each JAXP subpackage so keep it in sync.
  * It is package private and therefore is not exposed as part of the JAXP
  * API.
  * <p>
- * This code is designed to implement the JAXP 1.1 spec pluggability
- * feature and is designed to run on JDK version 1.1 and
- * later, and to compile on JDK 1.2 and onward.  
- * The code also runs both as part of an unbundled jar file and
- * when bundled as part of the JDK.
- * <p>
  * This class was moved from the <code>javax.xml.parsers.ObjectFactory</code>
- * class and modified to be used as a general utility for creating objects 
+ * class and modified to be used as a general utility for creating objects
  * dynamically.
  *
  * @version $Id: ObjectFactory.java,v 1.11 2010-11-01 04:34:25 joehw Exp $
@@ -93,332 +39,12 @@ public class ObjectFactory {
     //
     // Constants
     //
-     private static final String XALAN_INTERNAL = "com.sun.org.apache.xalan.internal";
-     private static final String XERCES_INTERNAL = "com.sun.org.apache.xerces.internal";
-
-    // name of default properties file to look for in JDK's jre/lib directory
-    private static final String DEFAULT_PROPERTIES_FILENAME =
-                                                     "xalan.properties";
-
-    private static final String SERVICES_PATH = "META-INF/services/";
+     private static final String JAXP_INTERNAL = "com.sun.org.apache";
+     private static final String STAX_INTERNAL = "com.sun.xml.internal";
 
     /** Set to true for debugging */
     private static final boolean DEBUG = false;
 
-    /** cache the contents of the xalan.properties file.
-     *  Until an attempt has been made to read this file, this will
-     * be null; if the file does not exist or we encounter some other error
-     * during the read, this will be empty.
-     */
-    private static Properties fXalanProperties = null;
-
-    /***
-     * Cache the time stamp of the xalan.properties file so
-     * that we know if it's been modified and can invalidate
-     * the cache when necessary.
-     */
-    private static long fLastModified = -1;
-
-    //
-    // Public static methods
-    //
-
-    /**
-     * Finds the implementation Class object in the specified order.  The
-     * specified order is the following:
-     * <ol>
-     *  <li>query the system property using <code>System.getProperty</code>
-     *  <li>read <code>META-INF/services/<i>factoryId</i></code> file
-     *  <li>use fallback classname
-     * </ol>
-     *
-     * @return instance of factory, never null
-     *
-     * @param factoryId             Name of the factory to find, same as
-     *                              a property name
-     * @param fallbackClassName     Implementation class name, if nothing else
-     *                              is found.  Use null to mean no fallback.
-     *
-     * @exception ObjectFactory.ConfigurationError
-     */
-    public static Object createObject(String factoryId, String fallbackClassName)
-        throws ConfigurationError {
-        return createObject(factoryId, null, fallbackClassName);
-    } // createObject(String,String):Object
-
-    /**
-     * Finds the implementation Class object in the specified order.  The
-     * specified order is the following:
-     * <ol>
-     *  <li>query the system property using <code>System.getProperty</code>
-     *  <li>read <code>$java.home/lib/<i>propertiesFilename</i></code> file
-     *  <li>read <code>META-INF/services/<i>factoryId</i></code> file
-     *  <li>use fallback classname
-     * </ol>
-     *
-     * @return instance of factory, never null
-     *
-     * @param factoryId             Name of the factory to find, same as
-     *                              a property name
-     * @param propertiesFilename The filename in the $java.home/lib directory
-     *                           of the properties file.  If none specified,
-     *                           ${java.home}/lib/xalan.properties will be used.
-     * @param fallbackClassName     Implementation class name, if nothing else
-     *                              is found.  Use null to mean no fallback.
-     *
-     * @exception ObjectFactory.ConfigurationError
-     */
-    static Object createObject(String factoryId, 
-                                      String propertiesFilename,
-                                      String fallbackClassName)
-        throws ConfigurationError
-    {
-        Class factoryClass = lookUpFactoryClass(factoryId,
-                                                propertiesFilename,
-                                                fallbackClassName);
-
-        if (factoryClass == null) {
-            throw new ConfigurationError(
-                "Provider for " + factoryId + " cannot be found", null);
-        }
-
-        try{
-            Object instance = factoryClass.newInstance();
-            if (DEBUG) debugPrintln("created new instance of factory " + factoryId);
-            return instance;
-        } catch (Exception x) {
-            throw new ConfigurationError(
-                "Provider for factory " + factoryId
-                    + " could not be instantiated: " + x, x);
-        }
-    } // createObject(String,String,String):Object
-
-    /**
-     * Finds the implementation Class object in the specified order.  The
-     * specified order is the following:
-     * <ol>
-     *  <li>query the system property using <code>System.getProperty</code>
-     *  <li>read <code>$java.home/lib/<i>propertiesFilename</i></code> file
-     *  <li>read <code>META-INF/services/<i>factoryId</i></code> file
-     *  <li>use fallback classname
-     * </ol>
-     *
-     * @return Class object of factory, never null
-     *
-     * @param factoryId             Name of the factory to find, same as
-     *                              a property name
-     * @param propertiesFilename The filename in the $java.home/lib directory
-     *                           of the properties file.  If none specified,
-     *                           ${java.home}/lib/xalan.properties will be used.
-     * @param fallbackClassName     Implementation class name, if nothing else
-     *                              is found.  Use null to mean no fallback.
-     *
-     * @exception ObjectFactory.ConfigurationError
-     */
-    public static Class lookUpFactoryClass(String factoryId)
-        throws ConfigurationError
-    {
-        return lookUpFactoryClass(factoryId, null, null);
-    } // lookUpFactoryClass(String):Class
-
-    /**
-     * Finds the implementation Class object in the specified order.  The
-     * specified order is the following:
-     * <ol>
-     *  <li>query the system property using <code>System.getProperty</code>
-     *  <li>read <code>$java.home/lib/<i>propertiesFilename</i></code> file
-     *  <li>read <code>META-INF/services/<i>factoryId</i></code> file
-     *  <li>use fallback classname
-     * </ol>
-     *
-     * @return Class object that provides factory service, never null
-     *
-     * @param factoryId             Name of the factory to find, same as
-     *                              a property name
-     * @param propertiesFilename The filename in the $java.home/lib directory
-     *                           of the properties file.  If none specified,
-     *                           ${java.home}/lib/xalan.properties will be used.
-     * @param fallbackClassName     Implementation class name, if nothing else
-     *                              is found.  Use null to mean no fallback.
-     *
-     * @exception ObjectFactory.ConfigurationError
-     */
-    public static Class lookUpFactoryClass(String factoryId,
-                                           String propertiesFilename,
-                                           String fallbackClassName)
-        throws ConfigurationError
-    {
-        String factoryClassName = lookUpFactoryClassName(factoryId,
-                                                         propertiesFilename,
-                                                         fallbackClassName);
-        ClassLoader cl = findClassLoader();
-
-        if (factoryClassName == null) {
-            factoryClassName = fallbackClassName;
-        }
-
-        // assert(className != null);
-        try{
-            Class providerClass = findProviderClass(factoryClassName,
-                                                    cl,
-                                                    true);
-            if (DEBUG) debugPrintln("created new instance of " + providerClass +
-                   " using ClassLoader: " + cl);
-            return providerClass;
-        } catch (ClassNotFoundException x) {
-            throw new ConfigurationError(
-                "Provider " + factoryClassName + " not found", x);
-        } catch (Exception x) {
-            throw new ConfigurationError(
-                "Provider "+factoryClassName+" could not be instantiated: "+x,
-                x);
-        }
-    } // lookUpFactoryClass(String,String,String):Class
-
-    /**
-     * Finds the name of the required implementation class in the specified
-     * order.  The specified order is the following:
-     * <ol>
-     *  <li>query the system property using <code>System.getProperty</code>
-     *  <li>read <code>$java.home/lib/<i>propertiesFilename</i></code> file
-     *  <li>read <code>META-INF/services/<i>factoryId</i></code> file
-     *  <li>use fallback classname
-     * </ol>
-     *
-     * @return name of class that provides factory service, never null
-     *
-     * @param factoryId             Name of the factory to find, same as
-     *                              a property name
-     * @param propertiesFilename The filename in the $java.home/lib directory
-     *                           of the properties file.  If none specified,
-     *                           ${java.home}/lib/xalan.properties will be used.
-     * @param fallbackClassName     Implementation class name, if nothing else
-     *                              is found.  Use null to mean no fallback.
-     *
-     * @exception ObjectFactory.ConfigurationError
-     */
-    static String lookUpFactoryClassName(String factoryId,
-                                                String propertiesFilename,
-                                                String fallbackClassName)
-    {
-        // Use the system property first
-        try {
-            String systemProp = SecuritySupport.getSystemProperty(factoryId);
-            if (systemProp != null) {
-                if (DEBUG) debugPrintln("found system property, value=" + systemProp);
-                return systemProp;
-            }
-        } catch (SecurityException se) {
-            // Ignore and continue w/ next location
-        }
-
-        // Try to read from propertiesFilename, or
-        // $java.home/lib/xalan.properties
-        String factoryClassName = null;
-        // no properties file name specified; use
-        // $JAVA_HOME/lib/xalan.properties:
-        if (propertiesFilename == null) {
-            File propertiesFile = null;
-            boolean propertiesFileExists = false;
-            try {
-                String javah = SecuritySupport.getSystemProperty("java.home");
-                propertiesFilename = javah + File.separator +
-                    "lib" + File.separator + DEFAULT_PROPERTIES_FILENAME;
-                propertiesFile = new File(propertiesFilename);
-                propertiesFileExists = SecuritySupport.getFileExists(propertiesFile);
-            } catch (SecurityException e) {
-                // try again...
-                fLastModified = -1;
-                fXalanProperties = null;
-            }
-
-            synchronized (ObjectFactory.class) {
-                boolean loadProperties = false;
-                FileInputStream fis = null;
-                try {
-                    // file existed last time
-                    if(fLastModified >= 0) {
-                        if(propertiesFileExists &&
-                                (fLastModified < (fLastModified = SecuritySupport.getLastModified(propertiesFile)))) {
-                            loadProperties = true;
-                        } else {
-                            // file has stopped existing...
-                            if(!propertiesFileExists) {
-                                fLastModified = -1;
-                                fXalanProperties = null;
-                            } // else, file wasn't modified!
-                        }
-                    } else {
-                        // file has started to exist:
-                        if(propertiesFileExists) {
-                            loadProperties = true;
-                            fLastModified = SecuritySupport.getLastModified(propertiesFile);
-                        } // else, nothing's changed
-                    }
-                    if(loadProperties) {
-                        // must never have attempted to read xalan.properties
-                        // before (or it's outdeated)
-                        fXalanProperties = new Properties();
-                        fis = SecuritySupport.getFileInputStream(propertiesFile);
-                        fXalanProperties.load(fis);
-                    }
-	        } catch (Exception x) {
-	            fXalanProperties = null;
-	            fLastModified = -1;
-                    // assert(x instanceof FileNotFoundException
-	            //        || x instanceof SecurityException)
-	            // In both cases, ignore and continue w/ next location
-	        }
-                finally {
-                    // try to close the input stream if one was opened.
-                    if (fis != null) {
-                        try {
-                            fis.close();
-                        }
-                        // Ignore the exception.
-                        catch (IOException exc) {}
-                    }
-                }	            
-            }
-            if(fXalanProperties != null) {
-                factoryClassName = fXalanProperties.getProperty(factoryId);
-            }
-        } else {
-            FileInputStream fis = null;
-            try {
-                fis = SecuritySupport.getFileInputStream(new File(propertiesFilename));
-                Properties props = new Properties();
-                props.load(fis);
-                factoryClassName = props.getProperty(factoryId);
-            } catch (Exception x) {
-                // assert(x instanceof FileNotFoundException
-                //        || x instanceof SecurityException)
-                // In both cases, ignore and continue w/ next location
-            }
-            finally {
-                // try to close the input stream if one was opened.
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    }
-                    // Ignore the exception.
-                    catch (IOException exc) {}
-                }
-            }               
-        }
-        if (factoryClassName != null) {
-            if (DEBUG) debugPrintln("found in " + propertiesFilename + ", value="
-                          + factoryClassName);
-            return factoryClassName;
-        }
-
-        // Try Jar Service Provider Mechanism
-        return findJarServiceProviderName(factoryId);
-    } // lookUpFactoryClass(String,String):String
-
-    //
-    // Private static methods
-    //
 
     /** Prints a message to standard error if debugging is enabled. */
     private static void debugPrintln(String msg) {
@@ -432,8 +58,7 @@ public class ObjectFactory {
      * the context ClassLoader.
      */
     public static ClassLoader findClassLoader()
-        throws ConfigurationError
-    { 
+    {
         if (System.getSecurityManager()!=null) {
             //this will ensure bootclassloader is used
             return null;
@@ -491,8 +116,8 @@ public class ObjectFactory {
     } // findClassLoader():ClassLoader
 
     /**
-     * Create an instance of a class using the same classloader for the ObjectFactory by default
-     * or bootclassloader when Security Manager is in place
+     * Create an instance of a class using the same class loader for the ObjectFactory by default
+     * or boot class loader when Security Manager is in place
      */
     public static Object newInstance(String className, boolean doFallback)
         throws ConfigurationError
@@ -507,7 +132,7 @@ public class ObjectFactory {
 
     /**
      * Create an instance of a class using the specified ClassLoader
-     */ 
+     */
     static Object newInstance(String className, ClassLoader cl,
                                       boolean doFallback)
         throws ConfigurationError
@@ -530,34 +155,30 @@ public class ObjectFactory {
     }
 
     /**
-     * Find a Class using the same classloader for the ObjectFactory by default
-     * or bootclassloader when Security Manager is in place
+     * Find a Class using the same class loader for the ObjectFactory by default
+     * or boot class loader when Security Manager is in place
      */
-    public static Class findProviderClass(String className, boolean doFallback)
+    public static Class<?> findProviderClass(String className, boolean doFallback)
         throws ClassNotFoundException, ConfigurationError
     {
-        if (System.getSecurityManager()!=null) {
-            return Class.forName(className);
-        } else {
-            return findProviderClass (className,
+        return findProviderClass (className,
                 findClassLoader (), doFallback);
-        }
     }
 
     /**
      * Find a Class using the specified ClassLoader
-     */ 
-    static Class findProviderClass(String className, ClassLoader cl,
+     */
+    private static Class<?> findProviderClass(String className, ClassLoader cl,
                                            boolean doFallback)
         throws ClassNotFoundException, ConfigurationError
-    {   
+    {
         //throw security exception if the calling thread is not allowed to access the
         //class. Restrict the access to the package classes as specified in java.security policy.
         SecurityManager security = System.getSecurityManager();
         try{
             if (security != null){
-                if (className.startsWith(XALAN_INTERNAL) ||
-                    className.startsWith(XERCES_INTERNAL)) {
+                if (className.startsWith(JAXP_INTERNAL) ||
+                    className.startsWith(STAX_INTERNAL)) {
                     cl = null;
                 } else {
                     final int lastDot = className.lastIndexOf(".");
@@ -569,19 +190,10 @@ public class ObjectFactory {
         }catch(SecurityException e){
             throw e;
         }
-        
-        Class providerClass;
+
+        Class<?> providerClass;
         if (cl == null) {
-            // XXX Use the bootstrap ClassLoader.  There is no way to
-            // load a class using the bootstrap ClassLoader that works
-            // in both JDK 1.1 and Java 2.  However, this should still
-            // work b/c the following should be true:
-            //
-            // (cl == null) iff current ClassLoader == null
-            //
-            // Thus Class.forName(String) will use the current
-            // ClassLoader which will be the bootstrap ClassLoader.
-            providerClass = Class.forName(className);
+            providerClass = Class.forName(className, false, ObjectFactory.class.getClassLoader());
         } else {
             try {
                 providerClass = cl.loadClass(className);
@@ -604,95 +216,6 @@ public class ObjectFactory {
         }
 
         return providerClass;
-    }
-
-    /**
-     * Find the name of service provider using Jar Service Provider Mechanism
-     *
-     * @return instance of provider class if found or null
-     */
-    private static String findJarServiceProviderName(String factoryId)
-    {
-        String serviceId = SERVICES_PATH + factoryId;
-        InputStream is = null;
-
-        // First try the Context ClassLoader
-        ClassLoader cl = findClassLoader();
-
-        is = SecuritySupport.getResourceAsStream(cl, serviceId);
-
-        // If no provider found then try the current ClassLoader
-        if (is == null) {
-            ClassLoader current = ObjectFactory.class.getClassLoader();
-            if (cl != current) {
-                cl = current;
-                is = SecuritySupport.getResourceAsStream(cl, serviceId);
-            }
-        }
-
-        if (is == null) {
-            // No provider found
-            return null;
-        }
-
-        if (DEBUG) debugPrintln("found jar resource=" + serviceId +
-               " using ClassLoader: " + cl);
-
-        // Read the service provider name in UTF-8 as specified in
-        // the jar spec.  Unfortunately this fails in Microsoft
-        // VJ++, which does not implement the UTF-8
-        // encoding. Theoretically, we should simply let it fail in
-        // that case, since the JVM is obviously broken if it
-        // doesn't support such a basic standard.  But since there
-        // are still some users attempting to use VJ++ for
-        // development, we have dropped in a fallback which makes a
-        // second attempt using the platform's default encoding. In
-        // VJ++ this is apparently ASCII, which is a subset of
-        // UTF-8... and since the strings we'll be reading here are
-        // also primarily limited to the 7-bit ASCII range (at
-        // least, in English versions), this should work well
-        // enough to keep us on the air until we're ready to
-        // officially decommit from VJ++. [Edited comment from
-        // jkesselm]
-        BufferedReader rd;
-        try {
-            rd = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-        } catch (java.io.UnsupportedEncodingException e) {
-            rd = new BufferedReader(new InputStreamReader(is));
-        }
-        
-        String factoryClassName = null;
-        try {
-            // XXX Does not handle all possible input as specified by the
-            // Jar Service Provider specification
-            factoryClassName = rd.readLine();
-        } catch (IOException x) {
-            // No provider found
-            return null;
-        }
-        finally {
-            try {
-                // try to close the reader.
-                rd.close();
-            }
-            // Ignore the exception.
-            catch (IOException exc) {}
-        }          
-
-        if (factoryClassName != null &&
-            ! "".equals(factoryClassName)) {
-            if (DEBUG) debugPrintln("found in resource, value="
-                   + factoryClassName);
-
-            // Note: here we do not want to fall back to the current
-            // ClassLoader because we want to avoid the case where the
-            // resource file was found using one ClassLoader and the
-            // provider class was instantiated using a different one.
-            return factoryClassName;
-        }
-
-        // No provider found
-        return null;
     }
 
 } // class ObjectFactory

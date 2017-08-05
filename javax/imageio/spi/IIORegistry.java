@@ -1,13 +1,31 @@
 /*
- * @(#)IIORegistry.java	1.65 04/06/17
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.spi;
 
-import java.security.PrivilegedAction; 
+import java.security.PrivilegedAction;
 import java.security.AccessController;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,8 +50,8 @@ import com.sun.imageio.plugins.bmp.BMPImageWriterSpi;
 import com.sun.imageio.plugins.wbmp.WBMPImageReaderSpi;
 import com.sun.imageio.plugins.wbmp.WBMPImageWriterSpi;
 import sun.awt.AppContext;
-import sun.misc.Service;
-import sun.misc.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.ServiceConfigurationError;
 
 /**
  * A registry for service provider instances.  Service provider
@@ -46,9 +64,9 @@ import sun.misc.ServiceConfigurationError;
  * <code>ImageWriter</code>, <code>ImageTranscoder</code>,
  * <code>ImageInputStream</code>, and <code>ImageOutputStream</code>.
  *
- * <p> Service providers found on the system classpath (<i>e.g.</i>,
- * the <code>jre/lib/ext</code> directory in Sun's implementation of
- * JDK) are automatically loaded as soon as this class is
+ * <p> Service providers found on the system classpath (typically
+ * the <code>lib/ext</code> directory in the Java
+ * installation directory) are automatically loaded as soon as this class is
  * instantiated.
  *
  * <p> When the <code>registerApplicationClasspathSpis</code> method
@@ -67,7 +85,7 @@ import sun.misc.ServiceConfigurationError;
  * <pre>
  * META-INF/services/javax.imageio.spi.ImageReaderSpi
  * </pre>
- * 
+ *
  * containing the line:
  *
  * <pre>
@@ -90,7 +108,6 @@ import sun.misc.ServiceConfigurationError;
  * href="{@docRoot}/../technotes/guides/jar/jar.html">
  * JAR File Specification</a>.
  *
- * @version 0.5
  */
 public final class IIORegistry extends ServiceRegistry {
 
@@ -178,21 +195,24 @@ public final class IIORegistry extends ServiceRegistry {
      */
     public void registerApplicationClasspathSpis() {
         // FIX: load only from application classpath
-        
-	ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
         Iterator categories = getCategories();
         while (categories.hasNext()) {
-            Class c = (Class)categories.next();
-            Iterator<IIOServiceProvider> riter = Service.providers(c, loader);
+            Class<IIOServiceProvider> c = (Class)categories.next();
+            Iterator<IIOServiceProvider> riter =
+                    ServiceLoader.load(c, loader).iterator();
             while (riter.hasNext()) {
                 try {
+                    // Note that the next() call is required to be inside
+                    // the try/catch block; see 6342404.
                     IIOServiceProvider r = riter.next();
                     registerServiceProvider(r);
                 } catch (ServiceConfigurationError err) {
                     if (System.getSecurityManager() != null) {
                         // In the applet case, we will catch the  error so
-                        // registration of other plugins can  proceed 
+                        // registration of other plugins can  proceed
                         err.printStackTrace();
                     } else {
                         // In the application case, we will  throw the
@@ -206,10 +226,12 @@ public final class IIORegistry extends ServiceRegistry {
 
     private void registerInstalledProviders() {
         /*
-          We need load installed providers from lib/ext
-          directory in the privileged mode in order to 
+          We need to load installed providers from the
+          system classpath (typically the <code>lib/ext</code>
+          directory in in the Java installation directory)
+          in the privileged mode in order to
           be able read corresponding jar files even if
-          file read capability is restricted (like the 
+          file read capability is restricted (like the
           applet context case).
          */
         PrivilegedAction doRegistration =
@@ -217,18 +239,15 @@ public final class IIORegistry extends ServiceRegistry {
                 public Object run() {
                     Iterator categories = getCategories();
                     while (categories.hasNext()) {
-                        Class c = (Class)categories.next();
-                        Iterator<IIOServiceProvider> providers =
-                            Service.installedProviders(c);
-                        while (providers.hasNext()) {
-                            IIOServiceProvider p = providers.next();
+                        Class<IIOServiceProvider> c = (Class)categories.next();
+                        for (IIOServiceProvider p : ServiceLoader.loadInstalled(c)) {
                             registerServiceProvider(p);
                         }
                     }
                     return this;
                 }
             };
-        
+
         AccessController.doPrivileged(doRegistration);
     }
 }

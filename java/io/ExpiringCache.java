@@ -1,10 +1,29 @@
 /*
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2011, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
- * %W% %E%
  */
 
 package java.io;
@@ -16,7 +35,7 @@ import java.util.Set;
 
 class ExpiringCache {
     private long millisUntilExpiration;
-    private Map  map;
+    private Map<String,Entry> map;
     // Clear out old entries every few queries
     private int queryCount;
     private int queryOverflow = 300;
@@ -25,7 +44,7 @@ class ExpiringCache {
     static class Entry {
         private long   timestamp;
         private String val;
-        
+
         Entry(long timestamp, String val) {
             this.timestamp = timestamp;
             this.val = val;
@@ -42,10 +61,11 @@ class ExpiringCache {
         this(30000);
     }
 
+    @SuppressWarnings("serial")
     ExpiringCache(long millisUntilExpiration) {
         this.millisUntilExpiration = millisUntilExpiration;
-        map = new LinkedHashMap() {
-            protected boolean removeEldestEntry(Map.Entry eldest) {
+        map = new LinkedHashMap<String,Entry>() {
+            protected boolean removeEldestEntry(Map.Entry<String,Entry> eldest) {
               return size() > MAX_ENTRIES;
             }
           };
@@ -80,7 +100,7 @@ class ExpiringCache {
     }
 
     private Entry entryFor(String key) {
-        Entry entry = (Entry) map.get(key);
+        Entry entry = map.get(key);
         if (entry != null) {
             long delta = System.currentTimeMillis() - entry.timestamp();
             if (delta < 0 || delta >= millisUntilExpiration) {
@@ -92,12 +112,11 @@ class ExpiringCache {
     }
 
     private void cleanup() {
-        Set keySet = map.keySet();
+        Set<String> keySet = map.keySet();
         // Avoid ConcurrentModificationExceptions
         String[] keys = new String[keySet.size()];
         int i = 0;
-        for (Iterator iter = keySet.iterator(); iter.hasNext(); ) {
-            String key = (String) iter.next();
+        for (String key: keySet) {
             keys[i++] = key;
         }
         for (int j = 0; j < keys.length; j++) {

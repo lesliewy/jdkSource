@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -39,7 +57,6 @@ import java.util.ArrayList;
  * "a < b < d & b < c"
  * XXX: make '' be a single quote.
  * @see PatternEntry
- * @version    %I% %G%
  * @author             Mark Davis, Helena Shih
  */
 
@@ -71,19 +88,19 @@ final class MergeCollation {
     public String getPattern(boolean withWhiteSpace) {
         StringBuffer result = new StringBuffer();
         PatternEntry tmp = null;
-        ArrayList extList = null;
+        ArrayList<PatternEntry> extList = null;
         int i;
         for (i = 0; i < patterns.size(); ++i) {
-            PatternEntry entry = (PatternEntry) patterns.get(i);
+            PatternEntry entry = patterns.get(i);
             if (entry.extension.length() != 0) {
                 if (extList == null)
-                    extList = new ArrayList();
+                    extList = new ArrayList<>();
                 extList.add(entry);
             } else {
                 if (extList != null) {
                     PatternEntry last = findLastWithNoExtension(i-1);
                     for (int j = extList.size() - 1; j >= 0 ; j--) {
-                        tmp = (PatternEntry)(extList.get(j));
+                        tmp = extList.get(j);
                         tmp.addToBuffer(result, false, withWhiteSpace, last);
                     }
                     extList = null;
@@ -94,7 +111,7 @@ final class MergeCollation {
         if (extList != null) {
             PatternEntry last = findLastWithNoExtension(i-1);
             for (int j = extList.size() - 1; j >= 0 ; j--) {
-                tmp = (PatternEntry)(extList.get(j));
+                tmp = extList.get(j);
                 tmp.addToBuffer(result, false, withWhiteSpace, last);
             }
             extList = null;
@@ -104,7 +121,7 @@ final class MergeCollation {
 
     private final PatternEntry findLastWithNoExtension(int i) {
         for (--i;i >= 0; --i) {
-            PatternEntry entry = (PatternEntry) patterns.get(i);
+            PatternEntry entry = patterns.get(i);
             if (entry.extension.length() == 0) {
                 return entry;
             }
@@ -132,7 +149,7 @@ final class MergeCollation {
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < patterns.size(); ++i)
         {
-            PatternEntry entry = (PatternEntry) patterns.get(i);
+            PatternEntry entry = patterns.get(i);
             if (entry != null) {
                 entry.addToBuffer(result, true, withWhiteSpace, null);
             }
@@ -157,9 +174,9 @@ final class MergeCollation {
     {
         if (pattern == null)
             return;
-        
+
         PatternEntry.Parser parser = new PatternEntry.Parser(pattern);
-        
+
         PatternEntry entry = parser.next();
         while (entry != null) {
             fixEntry(entry);
@@ -181,17 +198,17 @@ final class MergeCollation {
      * @return the requested pattern entry
      */
     public PatternEntry getItemAt(int index) {
-        return (PatternEntry) patterns.get(index);
+        return patterns.get(index);
     }
 
     //============================================================
     // privates
     //============================================================
-    ArrayList patterns = new ArrayList(); // a list of PatternEntries
+    ArrayList<PatternEntry> patterns = new ArrayList<>(); // a list of PatternEntries
 
     private transient PatternEntry saveEntry = null;
     private transient PatternEntry lastEntry = null;
-    
+
     // This is really used as a local variable inside fixEntry, but we cache
     // it here to avoid newing it up every time the method is called.
     private transient StringBuffer excess = new StringBuffer();
@@ -234,18 +251,18 @@ final class MergeCollation {
                 return;
             }
         }
-        
+
         boolean changeLastEntry = true;
         if (newEntry.strength != PatternEntry.RESET) {
             int oldIndex = -1;
 
             if ((newEntry.chars.length() == 1)) {
-            
+
                 char c = newEntry.chars.charAt(0);
                 int statusIndex = c >> BYTEPOWER;
                 byte bitClump = statusArray[statusIndex];
                 byte setBit = (byte)(BITARRAYMASK << (c & BYTEMASK));
-                
+
                 if (bitClump != 0 && (bitClump & setBit) != 0) {
                     oldIndex = patterns.lastIndexOf(newEntry);
                 } else {
@@ -259,7 +276,7 @@ final class MergeCollation {
             if (oldIndex != -1) {
                 patterns.remove(oldIndex);
             }
-            
+
             excess.setLength(0);
             int lastIndex = findLastEntry(lastEntry, excess);
 
@@ -287,11 +304,11 @@ final class MergeCollation {
     {
         if (entry == null)
             return 0;
-            
+
         if (entry.strength != PatternEntry.RESET) {
             // Search backwards for string that contains this one;
             // most likely entry is last one
-            
+
             int oldIndex = -1;
             if ((entry.chars.length() == 1)) {
                 int index = entry.chars.charAt(0) >> BYTEPOWER;
@@ -309,7 +326,7 @@ final class MergeCollation {
         } else {
             int i;
             for (i = patterns.size() - 1; i >= 0; --i) {
-                PatternEntry e = (PatternEntry) patterns.get(i);
+                PatternEntry e = patterns.get(i);
                 if (e.chars.regionMatches(0,entry.chars,0,
                                               e.chars.length())) {
                     excessChars.append(entry.chars.substring(e.chars.length(),
@@ -323,4 +340,3 @@ final class MergeCollation {
         }
     }
 }
-

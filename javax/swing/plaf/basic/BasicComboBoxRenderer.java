@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.plaf.basic;
 
@@ -23,11 +41,10 @@ import java.io.Serializable;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Arnaud Weber
  */
 public class BasicComboBoxRenderer extends JLabel
@@ -46,7 +63,7 @@ implements ListCellRenderer, Serializable {
         setOpaque(true);
         setBorder(getNoFocusBorder());
     }
-    
+
     private static Border getNoFocusBorder() {
         if (System.getSecurityManager() != null) {
             return SAFE_NO_FOCUS_BORDER;
@@ -54,10 +71,10 @@ implements ListCellRenderer, Serializable {
             return noFocusBorder;
         }
     }
-    
+
     public Dimension getPreferredSize() {
         Dimension size;
-        
+
         if ((this.getText() == null) || (this.getText().equals( "" ))) {
             setText( " " );
             size = super.getPreferredSize();
@@ -66,15 +83,15 @@ implements ListCellRenderer, Serializable {
         else {
             size = super.getPreferredSize();
         }
-        
+
         return size;
     }
 
     public Component getListCellRendererComponent(
-                                                 JList list, 
+                                                 JList list,
                                                  Object value,
-                                                 int index, 
-                                                 boolean isSelected, 
+                                                 int index,
+                                                 boolean isSelected,
                                                  boolean cellHasFocus)
     {
 
@@ -118,12 +135,10 @@ implements ListCellRenderer, Serializable {
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
     public static class UIResource extends BasicComboBoxRenderer implements javax.swing.plaf.UIResource {
     }
 }
-
-

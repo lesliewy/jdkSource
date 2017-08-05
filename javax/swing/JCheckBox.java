@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -20,19 +38,19 @@ import java.io.IOException;
 
 /**
  * An implementation of a check box -- an item that can be selected or
- * deselected, and which displays its state to the user. 
+ * deselected, and which displays its state to the user.
  * By convention, any number of check boxes in a group can be selected.
- * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/button.html">How to Use Buttons, Check Boxes, and Radio Buttons</a>
+ * See <a href="https://docs.oracle.com/javase/tutorial/uiswing/components/button.html">How to Use Buttons, Check Boxes, and Radio Buttons</a>
  * in <em>The Java Tutorial</em>
  * for examples and information on using check boxes.
  * <p>
- * Buttons can be configured, and to some degree controlled, by 
+ * Buttons can be configured, and to some degree controlled, by
  * <code><a href="Action.html">Action</a></code>s.  Using an
  * <code>Action</code> with a button has many benefits beyond directly
  * configuring a button.  Refer to <a href="Action.html#buttonActions">
  * Swing Components Supporting <code>Action</code></a> for more
  * details, and you can find more information in <a
- * href="http://java.sun.com/docs/books/tutorial/uiswing/misc/action.html">How
+ * href="https://docs.oracle.com/javase/tutorial/uiswing/misc/action.html">How
  * to Use Actions</a>, a section in <em>The Java Tutorial</em>.
  * <p>
  * <strong>Warning:</strong> Swing is not thread safe. For more
@@ -45,7 +63,7 @@ import java.io.IOException;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -55,7 +73,6 @@ import java.io.IOException;
  *   attribute: isContainer false
  * description: A component which can be selected or deselected.
  *
- * @version %I% %G%
  * @author Jeff Dinkins
  */
 public class JCheckBox extends JToggleButton implements Accessible {
@@ -87,7 +104,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
     public JCheckBox(Icon icon) {
         this(null, icon, false);
     }
-    
+
     /**
      * Creates a check box with an icon and specifies whether
      * or not it is initially selected.
@@ -99,7 +116,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
     public JCheckBox(Icon icon, boolean selected) {
         this(null, icon, selected);
     }
-    
+
     /**
      * Creates an initially unselected check box with text.
      *
@@ -110,19 +127,19 @@ public class JCheckBox extends JToggleButton implements Accessible {
     }
 
     /**
-     * Creates a check box where properties are taken from the 
+     * Creates a check box where properties are taken from the
      * Action supplied.
      *
      * @since 1.3
      */
     public JCheckBox(Action a) {
         this();
-	setAction(a);
+        setAction(a);
     }
 
 
     /**
-     * Creates a check box with text and specifies whether 
+     * Creates a check box with text and specifies whether
      * or not it is initially selected.
      *
      * @param text the text of the check box.
@@ -134,7 +151,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
     }
 
     /**
-     * Creates an initially unselected check box with 
+     * Creates an initially unselected check box with
      * the specified text and icon.
      *
      * @param text the text of the check box.
@@ -188,7 +205,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
         if (b != oldValue) {
             revalidate();
             repaint();
-	}
+        }
     }
 
     /**
@@ -199,7 +216,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
      * @since 1.3
      */
     public boolean isBorderPaintedFlat() {
-	return flat;
+        return flat;
     }
 
     /**
@@ -213,7 +230,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
 
 
     /**
-     * Returns a string that specifies the name of the L&F class
+     * Returns a string that specifies the name of the L&amp;F class
      * that renders this component.
      *
      * @return the string "CheckBoxUI"
@@ -221,7 +238,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
      * @see UIDefaults#getUI
      * @beaninfo
      *        expert: true
-     *   description: A string that specifies the name of the L&F class
+     *   description: A string that specifies the name of the L&amp;F class
      */
     public String getUIClassID() {
         return uiClassID;
@@ -255,28 +272,28 @@ public class JCheckBox extends JToggleButton implements Accessible {
      * See JComponent.readObject() for information about serialization
      * in Swing.
      */
-    private void readObject(ObjectInputStream s) 
-	throws IOException, ClassNotFoundException 
+    private void readObject(ObjectInputStream s)
+        throws IOException, ClassNotFoundException
     {
         s.defaultReadObject();
-	if (getUIClassID().equals(uiClassID)) {
-	    updateUI();
-	}
+        if (getUIClassID().equals(uiClassID)) {
+            updateUI();
+        }
     }
 
 
     /**
-     * Returns a string representation of this JCheckBox. This method 
-     * is intended to be used only for debugging purposes, and the 
-     * content and format of the returned string may vary between      
-     * implementations. The returned string may be empty but may not 
+     * Returns a string representation of this JCheckBox. This method
+     * is intended to be used only for debugging purposes, and the
+     * content and format of the returned string may vary between
+     * implementations. The returned string may be empty but may not
      * be <code>null</code>.
      * specific new aspects of the JFC components.
-     * 
+     *
      * @return  a string representation of this JCheckBox.
      */
     protected String paramString() {
-	return super.paramString();
+        return super.paramString();
     }
 
 /////////////////
@@ -284,12 +301,12 @@ public class JCheckBox extends JToggleButton implements Accessible {
 ////////////////
 
     /**
-     * Gets the AccessibleContext associated with this JCheckBox. 
-     * For JCheckBoxes, the AccessibleContext takes the form of an 
-     * AccessibleJCheckBox. 
+     * Gets the AccessibleContext associated with this JCheckBox.
+     * For JCheckBoxes, the AccessibleContext takes the form of an
+     * AccessibleJCheckBox.
      * A new AccessibleJCheckBox instance is created if necessary.
      *
-     * @return an AccessibleJCheckBox that serves as the 
+     * @return an AccessibleJCheckBox that serves as the
      *         AccessibleContext of this JCheckBox
      * @beaninfo
      *       expert: true
@@ -303,9 +320,9 @@ public class JCheckBox extends JToggleButton implements Accessible {
     }
 
     /**
-     * This class implements accessibility support for the 
-     * <code>JCheckBox</code> class.  It provides an implementation of the 
-     * Java Accessibility API appropriate to check box user-interface 
+     * This class implements accessibility support for the
+     * <code>JCheckBox</code> class.  It provides an implementation of the
+     * Java Accessibility API appropriate to check box user-interface
      * elements.
      * <p>
      * <strong>Warning:</strong>
@@ -313,7 +330,7 @@ public class JCheckBox extends JToggleButton implements Accessible {
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
@@ -331,4 +348,3 @@ public class JCheckBox extends JToggleButton implements Accessible {
 
     } // inner class AccessibleJCheckBox
 }
-  

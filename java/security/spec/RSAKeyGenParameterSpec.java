@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.spec;
@@ -13,9 +31,8 @@ import java.security.spec.AlgorithmParameterSpec;
 /**
  * This class specifies the set of parameters used to generate an RSA
  * key pair.
- * 
+ *
  * @author Jan Luehe
- * @version %I% %G%
  *
  * @see java.security.KeyPairGenerator#initialize(java.security.spec.AlgorithmParameterSpec)
  *
@@ -38,15 +55,15 @@ public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {
     public static final BigInteger F4 = BigInteger.valueOf(65537);
 
     /**
-     * Constructs a new <code>RSAParameterSpec</code> object from the
+     * Constructs a new {@code RSAParameterSpec} object from the
      * given keysize and public-exponent value.
      *
      * @param keysize the modulus size (specified in number of bits)
      * @param publicExponent the public exponent
      */
     public RSAKeyGenParameterSpec(int keysize, BigInteger publicExponent) {
-	this.keysize = keysize;
-	this.publicExponent = publicExponent;
+        this.keysize = keysize;
+        this.publicExponent = publicExponent;
     }
 
     /**
@@ -55,7 +72,7 @@ public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {
      * @return the keysize.
      */
     public int getKeysize() {
-	return keysize;
+        return keysize;
     }
 
     /**
@@ -64,6 +81,6 @@ public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {
      * @return the public-exponent value.
      */
     public BigInteger getPublicExponent() {
-	return publicExponent;
+        return publicExponent;
     }
 }

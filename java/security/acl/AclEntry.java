@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.acl;
@@ -31,7 +49,7 @@ import java.security.Principal;
  *
  * @see java.security.acl.Acl
  *
- * @author 	Satish Dharmaraj
+ * @author      Satish Dharmaraj
  */
 public interface AclEntry extends Cloneable {
 
@@ -66,7 +84,7 @@ public interface AclEntry extends Cloneable {
      * specified in the entry.
      *
      * Note: ACL entries are by default positive. An entry becomes a
-     * negative entry only if this <code>setNegativePermissions</code>
+     * negative entry only if this {@code setNegativePermissions}
      * method is called on it.
      */
     public void setNegativePermissions();
@@ -134,5 +152,3 @@ public interface AclEntry extends Cloneable {
      */
     public Object clone();
 }
-
-

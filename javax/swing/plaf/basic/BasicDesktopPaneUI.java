@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.plaf.basic;
@@ -18,23 +36,18 @@ import java.awt.Insets;
 import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
 import java.awt.*;
-import java.util.Vector;
+
 import sun.swing.DefaultLookup;
 import sun.swing.UIAction;
-import sun.awt.AppContext;
 
 /**
- * Basic L&F for a desktop.
+ * Basic L&amp;F for a desktop.
  *
- * @version %I% %G%
  * @author Steve Wilson
  */
 public class BasicDesktopPaneUI extends DesktopPaneUI {
     // Old actions forward to an instance of this.
     private static final Actions SHARED_ACTION = new Actions();
-    private static Dimension minSize = new Dimension(0,0);
-    private static Dimension maxSize = new Dimension(Integer.MAX_VALUE,
-            Integer.MAX_VALUE);
     private Handler handler;
     private PropertyChangeListener pcl;
 
@@ -100,27 +113,27 @@ public class BasicDesktopPaneUI extends DesktopPaneUI {
     }
 
     public void installUI(JComponent c)   {
-	desktop = (JDesktopPane)c;
-	installDefaults();
-	installDesktopManager();
+        desktop = (JDesktopPane)c;
+        installDefaults();
+        installDesktopManager();
         installListeners();
-	installKeyboardActions();
+        installKeyboardActions();
     }
 
     public void uninstallUI(JComponent c) {
-	uninstallKeyboardActions();
+        uninstallKeyboardActions();
         uninstallListeners();
-	uninstallDesktopManager();
+        uninstallDesktopManager();
         uninstallDefaults();
-	desktop = null;
+        desktop = null;
         handler = null;
     }
 
     protected void installDefaults() {
-	if (desktop.getBackground() == null || 
-	    desktop.getBackground() instanceof UIResource) {
-	    desktop.setBackground(UIManager.getColor("Desktop.background"));
-	}
+        if (desktop.getBackground() == null ||
+            desktop.getBackground() instanceof UIResource) {
+            desktop.setBackground(UIManager.getColor("Desktop.background"));
+        }
         LookAndFeel.installProperty(desktop, "opaque", Boolean.TRUE);
     }
 
@@ -140,7 +153,7 @@ public class BasicDesktopPaneUI extends DesktopPaneUI {
     }
 
     /**
-     * Uninstalls the <code>PropertyChangeListener</code> returned from 
+     * Uninstalls the <code>PropertyChangeListener</code> returned from
      * <code>createPropertyChangeListener</code> from the
      * <code>JDesktopPane</code>.
      *
@@ -154,64 +167,64 @@ public class BasicDesktopPaneUI extends DesktopPaneUI {
 
     protected void installDesktopManager() {
         desktopManager = desktop.getDesktopManager();
-	if(desktopManager == null) {
-	    desktopManager = new BasicDesktopManager();
-	    desktop.setDesktopManager(desktopManager);
-	}
+        if(desktopManager == null) {
+            desktopManager = new BasicDesktopManager();
+            desktop.setDesktopManager(desktopManager);
+        }
     }
 
     protected void uninstallDesktopManager() {
-	if(desktop.getDesktopManager() instanceof UIResource) {
-	    desktop.setDesktopManager(null);
-	}
-	desktopManager = null;
+        if(desktop.getDesktopManager() instanceof UIResource) {
+            desktop.setDesktopManager(null);
+        }
+        desktopManager = null;
     }
 
     protected void installKeyboardActions(){
-	InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-	if (inputMap != null) {
-	    SwingUtilities.replaceUIInputMap(desktop,
-			JComponent.WHEN_IN_FOCUSED_WINDOW, inputMap);
-	}
-	inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-	if (inputMap != null) {
-	    SwingUtilities.replaceUIInputMap(desktop,
-			JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,
-			inputMap);
-	}
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        if (inputMap != null) {
+            SwingUtilities.replaceUIInputMap(desktop,
+                        JComponent.WHEN_IN_FOCUSED_WINDOW, inputMap);
+        }
+        inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        if (inputMap != null) {
+            SwingUtilities.replaceUIInputMap(desktop,
+                        JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,
+                        inputMap);
+        }
 
         LazyActionMap.installLazyActionMap(desktop, BasicDesktopPaneUI.class,
                 "DesktopPane.actionMap");
-	registerKeyboardActions();
+        registerKeyboardActions();
     }
 
     protected void registerKeyboardActions(){
     }
- 
+
     protected void unregisterKeyboardActions(){
     }
 
     InputMap getInputMap(int condition) {
-	if (condition == JComponent.WHEN_IN_FOCUSED_WINDOW) {
-	    return createInputMap(condition);
-	}
-	else if (condition == JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT) {
-	    return (InputMap)DefaultLookup.get(desktop, this,
+        if (condition == JComponent.WHEN_IN_FOCUSED_WINDOW) {
+            return createInputMap(condition);
+        }
+        else if (condition == JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT) {
+            return (InputMap)DefaultLookup.get(desktop, this,
                     "Desktop.ancestorInputMap");
-	}
-	return null;
+        }
+        return null;
     }
 
     InputMap createInputMap(int condition) {
-	if (condition == JComponent.WHEN_IN_FOCUSED_WINDOW) {
-	    Object[] bindings = (Object[])DefaultLookup.get(desktop,
+        if (condition == JComponent.WHEN_IN_FOCUSED_WINDOW) {
+            Object[] bindings = (Object[])DefaultLookup.get(desktop,
                     this, "Desktop.windowBindings");
 
-	    if (bindings != null) {
-		return LookAndFeel.makeComponentInputMap(desktop, bindings);
-	    }
-	}
-	return null;
+            if (bindings != null) {
+                return LookAndFeel.makeComponentInputMap(desktop, bindings);
+            }
+        }
+        return null;
     }
 
     static void loadActionMap(LazyActionMap map) {
@@ -236,24 +249,30 @@ public class BasicDesktopPaneUI extends DesktopPaneUI {
         map.put(new Actions(Actions.NAVIGATE_PREVIOUS));
     }
 
-    protected void uninstallKeyboardActions(){ 
+    protected void uninstallKeyboardActions(){
       unregisterKeyboardActions();
       SwingUtilities.replaceUIInputMap(desktop, JComponent.
-				     WHEN_IN_FOCUSED_WINDOW, null);
+                                     WHEN_IN_FOCUSED_WINDOW, null);
       SwingUtilities.replaceUIInputMap(desktop, JComponent.
-				     WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, null);
+                                     WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, null);
       SwingUtilities.replaceUIActionMap(desktop, null);
     }
 
     public void paint(Graphics g, JComponent c) {}
 
-    public Dimension getPreferredSize(JComponent c) {return null;}
+    @Override
+    public Dimension getPreferredSize(JComponent c) {
+        return null;
+    }
 
+    @Override
     public Dimension getMinimumSize(JComponent c) {
-	return minSize;
-	}
-    public Dimension getMaximumSize(JComponent c){
-	return maxSize;
+        return new Dimension(0, 0);
+    }
+
+    @Override
+    public Dimension getMaximumSize(JComponent c) {
+        return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     /**
@@ -616,81 +635,81 @@ public class BasicDesktopPaneUI extends DesktopPaneUI {
      * @since 1.3
      */
     protected class OpenAction extends AbstractAction {
-	public void actionPerformed(ActionEvent evt) {
+        public void actionPerformed(ActionEvent evt) {
             JDesktopPane dp = (JDesktopPane)evt.getSource();
             SHARED_ACTION.setState(dp, Actions.RESTORE);
-	}
+        }
 
-	public boolean isEnabled() { 
-	    return true;
-	}
+        public boolean isEnabled() {
+            return true;
+        }
     }
 
     /**
      * Handles closing an internal frame.
      */
     protected class CloseAction extends AbstractAction {
-	public void actionPerformed(ActionEvent evt) {
+        public void actionPerformed(ActionEvent evt) {
             JDesktopPane dp = (JDesktopPane)evt.getSource();
             SHARED_ACTION.setState(dp, Actions.CLOSE);
-	}
+        }
 
-	public boolean isEnabled() { 
+        public boolean isEnabled() {
             JInternalFrame iFrame = desktop.getSelectedFrame();
             if (iFrame != null) {
                 return iFrame.isClosable();
-            }
-            return false;
-	}
-    }
-
-    /**
-     * Handles minimizing an internal frame.
-     */
-    protected class MinimizeAction extends AbstractAction {
-	public void actionPerformed(ActionEvent evt) {
-            JDesktopPane dp = (JDesktopPane)evt.getSource();
-            SHARED_ACTION.setState(dp, Actions.MINIMIZE);
-	}
-
-	public boolean isEnabled() { 
-            JInternalFrame iFrame = desktop.getSelectedFrame();
-            if (iFrame != null) {
-	        return iFrame.isIconifiable();
-            }
-            return false;
-	}
-    }
-
-    /**
-     * Handles maximizing an internal frame.
-     */
-    protected class MaximizeAction extends AbstractAction {
-	public void actionPerformed(ActionEvent evt) {
-            JDesktopPane dp = (JDesktopPane)evt.getSource();
-            SHARED_ACTION.setState(dp, Actions.MAXIMIZE);
-	}
-
-	public boolean isEnabled() { 
-            JInternalFrame iFrame = desktop.getSelectedFrame();
-            if (iFrame != null) {
-	        return iFrame.isMaximizable();
             }
             return false;
         }
     }
 
     /**
-     * Handles navigating to the next internal frame. 
+     * Handles minimizing an internal frame.
+     */
+    protected class MinimizeAction extends AbstractAction {
+        public void actionPerformed(ActionEvent evt) {
+            JDesktopPane dp = (JDesktopPane)evt.getSource();
+            SHARED_ACTION.setState(dp, Actions.MINIMIZE);
+        }
+
+        public boolean isEnabled() {
+            JInternalFrame iFrame = desktop.getSelectedFrame();
+            if (iFrame != null) {
+                return iFrame.isIconifiable();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Handles maximizing an internal frame.
+     */
+    protected class MaximizeAction extends AbstractAction {
+        public void actionPerformed(ActionEvent evt) {
+            JDesktopPane dp = (JDesktopPane)evt.getSource();
+            SHARED_ACTION.setState(dp, Actions.MAXIMIZE);
+        }
+
+        public boolean isEnabled() {
+            JInternalFrame iFrame = desktop.getSelectedFrame();
+            if (iFrame != null) {
+                return iFrame.isMaximizable();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Handles navigating to the next internal frame.
      */
     protected class NavigateAction extends AbstractAction {
-	public void actionPerformed(ActionEvent evt) {
+        public void actionPerformed(ActionEvent evt) {
             JDesktopPane dp = (JDesktopPane)evt.getSource();
             dp.selectFrame(true);
-	}
+        }
 
-	public boolean isEnabled() { 
-	    return true;
-	}
+        public boolean isEnabled() {
+            return true;
+        }
     }
 }

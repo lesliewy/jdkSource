@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.sound.midi;
@@ -37,11 +55,11 @@ package javax.sound.midi;
  * processing MIDI data that originated outside Java Sound and now
  * is encoded as signed bytes, the bytes can
  * can be converted to integers using this conversion:
- * <center><code>int i = (int)(byte & 0xFF)</code></center>
+ * <center>{@code int i = (int)(byte & 0xFF)}</center>
  * <p>
  * If you simply need to pass a known MIDI byte value as a method parameter,
  * it can be expressed directly as an integer, using (for example) decimal or
- * hexidecimal notation.  For instance, to pass the "active sensing" status byte
+ * hexadecimal notation.  For instance, to pass the "active sensing" status byte
  * as the first argument to ShortMessage's
  * {@link ShortMessage#setMessage(int) setMessage(int)}
  * method, you can express it as 254 or 0xFE.
@@ -50,7 +68,6 @@ package javax.sound.midi;
  * @see Sequence
  * @see Receiver
  *
- * @version %I%, %E%
  * @author David Rivas
  * @author Kara Kytle
  */
@@ -89,10 +106,10 @@ public abstract class MidiMessage implements Cloneable {
      * @see #setMessage
      */
     protected MidiMessage(byte[] data) {
-	this.data = data;
-	if (data != null) {
-	    this.length = data.length;
-	}
+        this.data = data;
+        if (data != null) {
+            this.length = data.length;
+        }
     }
 
 
@@ -101,17 +118,21 @@ public abstract class MidiMessage implements Cloneable {
      * method is called by concrete subclasses, which should
      * ensure that the data array specifies a complete, valid MIDI
      * message.
+     *
+     * @param data the data bytes in the MIDI message
+     * @param length the number of bytes in the data byte array
+     * @throws InvalidMidiDataException if the parameter values do not specify a valid MIDI meta message
      */
     protected void setMessage(byte[] data, int length) throws InvalidMidiDataException {
-	if (length < 0 || (length > 0 && length > data.length)) {
-	    throw new IndexOutOfBoundsException("length out of bounds: "+length);
-	}
-	this.length = length;
+        if (length < 0 || (length > 0 && length > data.length)) {
+            throw new IndexOutOfBoundsException("length out of bounds: "+length);
+        }
+        this.length = length;
 
-	if (this.data == null || this.data.length < this.length) {
-	    this.data = new byte[this.length];
-	}
-	System.arraycopy(data, 0, this.data, 0, length);
+        if (this.data == null || this.data.length < this.length) {
+            this.data = new byte[this.length];
+        }
+        System.arraycopy(data, 0, this.data, 0, length);
     }
 
 
@@ -126,9 +147,9 @@ public abstract class MidiMessage implements Cloneable {
      * @return the byte array containing the complete <code>MidiMessage</code> data
      */
     public byte[] getMessage() {
-	byte[] returnedArray = new byte[length];
-	System.arraycopy(data, 0, returnedArray, 0, length);
-	return returnedArray;
+        byte[] returnedArray = new byte[length];
+        System.arraycopy(data, 0, returnedArray, 0, length);
+        return returnedArray;
     }
 
 
@@ -141,10 +162,10 @@ public abstract class MidiMessage implements Cloneable {
      * @return the integer representation of this event's status byte
      */
     public int getStatus() {
-	if (length > 0) {
-	    return (data[0] & 0xFF);
-	}
-	return 0;
+        if (length > 0) {
+            return (data[0] & 0xFF);
+        }
+        return 0;
     }
 
 
@@ -158,7 +179,7 @@ public abstract class MidiMessage implements Cloneable {
      * @return the length of the message in bytes
      */
     public int getLength() {
-	return length;
+        return length;
     }
 
 

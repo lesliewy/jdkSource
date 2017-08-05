@@ -1,50 +1,43 @@
 /*
- * %Z%file      %M%
- * %Z%author    Sun Microsystems, Inc.
- * %Z%version   %I%
- * %Z%date      %D%
  *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
- *
  */
 // Copyright (c) 1995-96 by Cisco Systems, Inc.
 
-package com.sun.jmx.snmp ;
-
+package com.sun.jmx.snmp;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Objects;
 
 import com.sun.jmx.snmp.SnmpDefinitions;
 import com.sun.jmx.snmp.SnmpStatusException;
 
 
 /**
- * Contains a set of resources that are used by while sending or receiving 
+ * Contains a set of resources that are used by while sending or receiving
  * packets to and from an <CODE>SnmpPeer</CODE>. An <CODE>SnmpPeer</CODE> can
  * be configured explicitly to use a specific <CODE>SnmpParameter</CODE>.
- * A number of <CODE>SnmpPeer</CODE> objects can share a single parameter 
+ * A number of <CODE>SnmpPeer</CODE> objects can share a single parameter
  * object.
  * <P>
- * <B>Note</B>: Changing values for an <CODE>SnmpParameter</CODE> object 
+ * <B>Note</B>: Changing values for an <CODE>SnmpParameter</CODE> object
  * affects all <CODE>SnmpPeer</CODE> objects that share the parameter object.
  *
- * @version     %I%     %G%
- * @author      Sun Microsystems, Inc
- * @author      Cisco Systems, Inc.
  * @see com.sun.jmx.snmp.SnmpPeer
  *
- * <p><b>This API is a Sun Microsystems internal API  and is subject 
+ * <p><b>This API is a Sun Microsystems internal API  and is subject
  * to change without notice.</b></p>
  */
 
 
 public class SnmpParameters extends SnmpParams implements Cloneable, Serializable {
+    private static final long serialVersionUID = -1822462497931733790L;
 
     /**
      * Creates an <CODE>SnmpParameters</CODE> object with defaults set up.
-     * By default, <CODE>set</CODE> operations are not allowed, the read community and 
+     * By default, <CODE>set</CODE> operations are not allowed, the read community and
      * the inform community strings to use is "public" and the SNMP version is V1.
      */
     public SnmpParameters() {
@@ -79,7 +72,7 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
         _writeCommunity = wrc ;
         _informCommunity = inform ;
     }
-  
+
     /**
      * Gets the community to be used when issuing <CODE>get</CODE> operations.
      * @return The community string.
@@ -133,7 +126,7 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
         else
             _informCommunity = inform ;
     }
-    
+
     /**
      * Checks whether parameters are in place for an SNMP <CODE>set</CODE> operation.
      * @return <CODE>true</CODE> if parameters are in place, <CODE>false</CODE> otherwise.
@@ -149,6 +142,7 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
      * @param obj The object to compare <CODE>this</CODE> with.
      * @return <CODE>true</CODE> if <CODE>this</CODE> and the specified object are equal, <CODE>false</CODE> otherwise.
      */
+    @Override
     public synchronized boolean equals(Object obj) {
         if (!( obj instanceof SnmpParameters))
             return false;
@@ -161,7 +155,12 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
                 return true ;
         return false ;
     }
-  
+
+    @Override
+    public synchronized int hashCode() {
+        return (_protocolVersion * 31) ^ Objects.hashCode(_readCommunity);
+    }
+
     /**
      * Clones the object and its content.
      * @return The object clone.
@@ -179,17 +178,17 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
         }
         return par ;
     }
-        
+
     /**
      * For SNMP Runtime internal use only.
      */
-    public byte[] encodeAuthentication(int snmpCmd) 
-	throws SnmpStatusException {
+    public byte[] encodeAuthentication(int snmpCmd)
+        throws SnmpStatusException {
         //
         // Returns the community string associated to the specified command.
         //
         try {
-            if (snmpCmd == pduSetRequestPdu) 
+            if (snmpCmd == pduSetRequestPdu)
                 return _writeCommunity.getBytes("8859_1");
             else if (snmpCmd == pduInformRequestPdu)
                 return _informCommunity.getBytes("8859_1") ;
@@ -211,23 +210,23 @@ public class SnmpParameters extends SnmpParams implements Cloneable, Serializabl
      * By default, the value is SNMP version 1.
      * @serial
      */
-    private int		_protocolVersion = snmpVersionOne ;
+    private int         _protocolVersion = snmpVersionOne ;
     /**
      * The community to be used when issuing <CODE>get</CODE> operations.
      * @serial
      */
-    private String	_readCommunity ;
+    private String      _readCommunity ;
     /**
      * The community to be used when issuing <CODE>set</CODE> operations.
      * @serial
      */
-    private String	_writeCommunity ;
+    private String      _writeCommunity ;
     /**
      * The community to be used when issuing <CODE>inform</CODE> requests.
      * @serial
      */
-    private String	_informCommunity ;
+    private String      _informCommunity ;
     /**
      */
-    //private int		_retryPolicy ;  // not implemented as yet.
+    //private int               _retryPolicy ;  // not implemented as yet.
 }

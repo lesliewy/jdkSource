@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.naming;
@@ -20,20 +38,20 @@ import java.util.Hashtable;
  * constructors and/or corresponding "set" methods).
  * <p>
  * The following code sample shows how <tt>ReferralException</tt> can be used.
- * <p><blockquote><pre>
- *	while (true) {
- *	    try {
- *		bindings = ctx.listBindings(name);
- *		while (bindings.hasMore()) {
- *		    b = bindings.next();
- *		    ...
- *		}
- *		break;
- *	    } catch (ReferralException e) {
- *		ctx = e.getReferralContext();
- *	    }
- *	}
- * </pre></blockquote></p>
+ * <blockquote>{@code
+ *      while (true) {
+ *          try {
+ *              bindings = ctx.listBindings(name);
+ *              while (bindings.hasMore()) {
+ *                  b = bindings.next();
+ *                  ...
+ *              }
+ *              break;
+ *          } catch (ReferralException e) {
+ *              ctx = e.getReferralContext();
+ *          }
+ *      }
+ * }</blockquote>
  *<p>
  * <tt>ReferralException</tt> is an abstract class. Concrete implementations
  * determine its synchronization and serialization properties.
@@ -42,10 +60,9 @@ import java.util.Hashtable;
  * method is owned by the caller.
  * The service provider will not modify the object or keep a reference to it,
  * but may keep a reference to a clone of it.
- * 
+ *
  * @author Rosanna Lee
  * @author Scott Seligman
- * @version %I% %E%
  *
  * @since 1.3
  *
@@ -56,11 +73,11 @@ public abstract class ReferralException extends NamingException {
      * Constructs a new instance of ReferralException using the
      * explanation supplied. All other fields are set to null.
      *
-     * @param	explanation	Additional detail about this exception. Can be null.
+     * @param   explanation     Additional detail about this exception. Can be null.
      * @see java.lang.Throwable#getMessage
      */
     protected ReferralException(String explanation) {
-	super(explanation);
+        super(explanation);
     }
 
     /**
@@ -68,7 +85,7 @@ public abstract class ReferralException extends NamingException {
       * All fields are set to null.
       */
     protected ReferralException() {
-	super();
+        super();
     }
 
     /**
@@ -84,7 +101,7 @@ public abstract class ReferralException extends NamingException {
 
     /**
      * Retrieves the context at which to continue the method.
-     * Regardless of whether a referral is encountered directly during a 
+     * Regardless of whether a referral is encountered directly during a
      * context operation, or indirectly, for example, during a search
      * enumeration, the referral exception should provide a context
      * at which to continue the operation. The referral context is
@@ -94,7 +111,7 @@ public abstract class ReferralException extends NamingException {
      *<p>
      * To continue the operation, the client program should re-invoke
      * the method using the same arguments as the original invocation.
-     * 
+     *
      * @return The non-null context at which to continue the method.
      * @exception NamingException If a naming exception was encountered.
      * Call either <tt>retryReferral()</tt> or <tt>skipReferral()</tt>
@@ -103,9 +120,9 @@ public abstract class ReferralException extends NamingException {
     public abstract Context getReferralContext() throws NamingException;
 
     /**
-     * Retrieves the context at which to continue the method using 
+     * Retrieves the context at which to continue the method using
      * environment properties.
-     * Regardless of whether a referral is encountered directly during a 
+     * Regardless of whether a referral is encountered directly during a
      * context operation, or indirectly, for example, during a search
      * enumeration, the referral exception should provide a context
      * at which to continue the operation.
@@ -120,9 +137,9 @@ public abstract class ReferralException extends NamingException {
      *<p>
      * To continue the operation, the client program should re-invoke
      * the method using the same arguments as the original invocation.
-     * 
-     * @param env The possibly null environment to use when retrieving the 
-     * 		referral context. If null, no environment properties will be used.
+     *
+     * @param env The possibly null environment to use when retrieving the
+     *          referral context. If null, no environment properties will be used.
      *
      * @return The non-null context at which to continue the method.
      * @exception NamingException If a naming exception was encountered.
@@ -130,8 +147,8 @@ public abstract class ReferralException extends NamingException {
      * to continue processing referrals.
      */
     public abstract Context
-	getReferralContext(Hashtable<?,?> env)
-	throws NamingException;
+        getReferralContext(Hashtable<?,?> env)
+        throws NamingException;
 
     /**
      * Discards the referral about to be processed.
@@ -139,15 +156,15 @@ public abstract class ReferralException extends NamingException {
      * <code>getReferralContext</code> to allow the processing of
      * other referrals to continue.
      * The following code fragment shows a typical usage pattern.
-     * <p><blockquote><pre>
-     *	} catch (ReferralException e) {
-     *	    if (!shallIFollow(e.getReferralInfo())) {
-     *		if (!e.skipReferral()) {
-     *		    return;
-     *		}
-     *	    }
-     *	    ctx = e.getReferralContext();
-     *	}
+     * <blockquote><pre>
+     *  } catch (ReferralException e) {
+     *      if (!shallIFollow(e.getReferralInfo())) {
+     *          if (!e.skipReferral()) {
+     *              return;
+     *          }
+     *      }
+     *      ctx = e.getReferralContext();
+     *  }
      * </pre></blockquote>
      *
      * @return true If more referral processing is pending; false otherwise.
@@ -160,21 +177,21 @@ public abstract class ReferralException extends NamingException {
      * <code>getReferralContext</code> to allow the current
      * referral to be retried.
      * The following code fragment shows a typical usage pattern.
-     * <p><blockquote><pre>
-     *	} catch (ReferralException e) {
-     *	    while (true) {
-     *		try {
-     *		    ctx = e.getReferralContext(env);
-     *		    break;
-     *		} catch (NamingException ne) {
-     *		    if (! shallIRetry()) {
-     *			return;
-     *		    }
-     *		    // modify environment properties (env), if necessary
-     *		    e.retryReferral();
-     *		}
-     *	    }
-     *	}
+     * <blockquote><pre>
+     *  } catch (ReferralException e) {
+     *      while (true) {
+     *          try {
+     *              ctx = e.getReferralContext(env);
+     *              break;
+     *          } catch (NamingException ne) {
+     *              if (! shallIRetry()) {
+     *                  return;
+     *              }
+     *              // modify environment properties (env), if necessary
+     *              e.retryReferral();
+     *          }
+     *      }
+     *  }
      * </pre></blockquote>
      *
      */

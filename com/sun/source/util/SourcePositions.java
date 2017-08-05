@@ -1,11 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Use and Distribution is subject to the Java Research License available
- * at <http://wwws.sun.com/software/communitysource/jrl.html>.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.source.util;
@@ -20,13 +35,14 @@ import com.sun.source.tree.*;
  * @author Peter von der Ah&eacute;
  * @since 1.6
  */
+@jdk.Exported
 public interface SourcePositions {
 
     /**
      * Gets the starting position of tree within file.  If tree is not found within
      * file, or if the starting position is not available,
-     * return {@link javax.tools.Diagnostic#NOPOS}.  
-     * The returned position must be at the start of the yield of this tree, that 
+     * return {@link javax.tools.Diagnostic#NOPOS}.
+     * The returned position must be at the start of the yield of this tree, that
      * is for any sub-tree of this tree, the following must hold:
      *
      * <p>
@@ -43,9 +59,9 @@ public interface SourcePositions {
 
     /**
      * Gets the ending position of tree within file.  If tree is not found within
-     * file, or if the starting position is not available,
-     * return {@link javax.tools.Diagnostic#NOPOS}.  
-     * The returned position must be at the end of the yield of this tree, 
+     * file, or if the ending position is not available,
+     * return {@link javax.tools.Diagnostic#NOPOS}.
+     * The returned position must be at the end of the yield of this tree,
      * that is for any sub-tree of this tree, the following must hold:
      *
      * <p>

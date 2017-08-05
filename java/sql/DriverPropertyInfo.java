@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.sql;
@@ -20,7 +38,7 @@ public class DriverPropertyInfo {
     /**
      * Constructs a <code>DriverPropertyInfo</code> object with a  given
      * name and value.  The <code>description</code> and <code>choices</code>
-     * are intialized to <code>null</code> and <code>required</code> is initialized
+     * are initialized to <code>null</code> and <code>required</code> is initialized
      * to <code>false</code>.
      *
      * @param name the name of the property
@@ -42,25 +60,25 @@ public class DriverPropertyInfo {
     public String description = null;
 
     /**
-     * The <code>required</code> field is <code>true</code> if a value must be 
-	 * supplied for this property
+     * The <code>required</code> field is <code>true</code> if a value must be
+         * supplied for this property
      * during <code>Driver.connect</code> and <code>false</code> otherwise.
      */
     public boolean required = false;
 
     /**
-     * The <code>value</code> field specifies the current value of 
-	 * the property, based on a combination of the information
-	 * supplied to the method <code>getPropertyInfo</code>, the
+     * The <code>value</code> field specifies the current value of
+         * the property, based on a combination of the information
+         * supplied to the method <code>getPropertyInfo</code>, the
      * Java environment, and the driver-supplied default values.  This field
      * may be null if no value is known.
      */
     public String value = null;
 
     /**
-     * An array of possible values if the value for the field 
-	 * <code>DriverPropertyInfo.value</code> may be selected
-	 * from a particular set of values; otherwise null.
+     * An array of possible values if the value for the field
+         * <code>DriverPropertyInfo.value</code> may be selected
+         * from a particular set of values; otherwise null.
      */
     public String[] choices = null;
 }

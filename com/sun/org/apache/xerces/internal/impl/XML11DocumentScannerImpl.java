@@ -1,63 +1,24 @@
 /*
- * The Apache Software License, Version 1.1
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Copyright (c) 1999-2004 The Apache Software Foundation.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. The end-user documentation included with the redistribution,
- *    if any, must include the following acknowledgment:
- *       "This product includes software developed by the
- *        Apache Software Foundation (http://www.apache.org/)."
- *    Alternately, this acknowledgment may appear in the software itself,
- *    if and wherever such third-party acknowledgments normally appear.
- *
- * 4. The names "Xerces" and "Apache Software Foundation" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact apache@apache.org.
- *
- * 5. Products derived from this software may not be called "Apache",
- *    nor may "Apache" appear in their name, without prior written
- *    permission of the Apache Software Foundation.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
- * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- * ====================================================================
- *
- * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Software Foundation and was
- * originally based on software copyright (c) 1999, International
- * Business Machines, Inc., http://www.apache.org.  For more
- * information on the Apache Software Foundation, please see
- * <http://www.apache.org/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.sun.org.apache.xerces.internal.impl;
-
-import java.io.IOException;
 
 import com.sun.org.apache.xerces.internal.impl.msg.XMLMessageFormatter;
 import com.sun.org.apache.xerces.internal.util.XML11Char;
@@ -65,6 +26,7 @@ import com.sun.org.apache.xerces.internal.util.XMLChar;
 import com.sun.org.apache.xerces.internal.util.XMLStringBuffer;
 import com.sun.org.apache.xerces.internal.xni.XMLString;
 import com.sun.org.apache.xerces.internal.xni.XNIException;
+import java.io.IOException;
 
 /**
  * This class is responsible for scanning XML document structure
@@ -92,20 +54,16 @@ import com.sun.org.apache.xerces.internal.xni.XNIException;
  * @author Arnaud  Le Hors, IBM
  * @author Eric Ye, IBM
  *
- * @version $Id: XML11DocumentScannerImpl.java,v 1.4 2007/07/19 04:38:23 ofung Exp $
+ * @version $Id: XML11DocumentScannerImpl.java,v 1.5 2010/08/04 20:59:09 joehw Exp $
  */
 public class XML11DocumentScannerImpl
     extends XMLDocumentScannerImpl {
 
 
-    /** Array of 3 strings. */
-    private String[] fStrings = new String[3];
-
-    
     /** String buffer. */
-    private XMLStringBuffer fStringBuffer = new XMLStringBuffer();
-    private XMLStringBuffer fStringBuffer2 = new XMLStringBuffer();
-    private XMLStringBuffer fStringBuffer3 = new XMLStringBuffer();
+    private final XMLStringBuffer fStringBuffer = new XMLStringBuffer();
+    private final XMLStringBuffer fStringBuffer2 = new XMLStringBuffer();
+    private final XMLStringBuffer fStringBuffer3 = new XMLStringBuffer();
 
     //
     // Constructors
@@ -126,16 +84,16 @@ public class XML11DocumentScannerImpl
      * @return Returns the next character on the stream.
      */
     protected int scanContent(XMLStringBuffer content) throws IOException, XNIException {
-        
+
         fTempString.length = 0;
         int c = fEntityScanner.scanContent(fTempString);
         content.append(fTempString);
-        
+
         if (c == '\r' || c == 0x85 || c == 0x2028) {
             // happens when there is the character reference &#13;
             // but scanContent doesn't do entity expansions...
             // is this *really* necessary???  - NG
-            fEntityScanner.scanChar();
+            fEntityScanner.scanChar(null);
             content.append((char)c);
             c = -1;
         }
@@ -144,7 +102,7 @@ public class XML11DocumentScannerImpl
         } */
 
         if (c == ']') {
-            content.append((char)fEntityScanner.scanChar());
+            content.append((char)fEntityScanner.scanChar(null));
             // remember where we are in case we get an endEntity before we
             // could flush the buffer out - this happens when we're parsing an
             // entity which ends with a ]
@@ -153,12 +111,12 @@ public class XML11DocumentScannerImpl
             // We work on a single character basis to handle cases such as:
             // ']]]>' which we might otherwise miss.
             //
-            if (fEntityScanner.skipChar(']')) {
-                content.append(']'); 
-                while (fEntityScanner.skipChar(']')) {
-                    content.append(']'); 
+            if (fEntityScanner.skipChar(']', null)) {
+                content.append(']');
+                while (fEntityScanner.skipChar(']', null)) {
+                    content.append(']');
                 }
-                if (fEntityScanner.skipChar('>')) {
+                if (fEntityScanner.skipChar('>', null)) {
                     reportFatalError("CDEndInContent", null);
                 }
             }
@@ -175,26 +133,27 @@ public class XML11DocumentScannerImpl
     /**
      * Scans an attribute value and normalizes whitespace converting all
      * whitespace characters to space characters.
-     * 
+     *
      * [10] AttValue ::= '"' ([^<&"] | Reference)* '"' | "'" ([^<&'] | Reference)* "'"
      *
      * @param value The XMLString to fill in with the value.
-     * @param nonNormalizedValue The XMLString to fill in with the 
+     * @param nonNormalizedValue The XMLString to fill in with the
      *                           non-normalized value.
      * @param atName The name of the attribute being parsed (for error msgs).
-     * @param checkEntities true if undeclared entities should be reported as VC violation,  
+     * @param checkEntities true if undeclared entities should be reported as VC violation,
      *                      false if undeclared entities should be reported as WFC violation.
      * @param eleName The name of element to which this attribute belongs.
+     * @param isNSURI The flag indicating whether the content is a namespace URI
      *
      * @return true if the non-normalized and normalized value are the same
-     * 
+     *
      * <strong>Note:</strong> This method uses fStringBuffer2, anything in it
      * at the time of calling is lost.
      **/
-    protected boolean scanAttributeValue(XMLString value, 
+    protected boolean scanAttributeValue(XMLString value,
                                       XMLString nonNormalizedValue,
                                       String atName,
-                                      boolean checkEntities,String eleName)
+                                      boolean checkEntities,String eleName, boolean isNSURI)
         throws IOException, XNIException
     {
         // quote
@@ -203,20 +162,20 @@ public class XML11DocumentScannerImpl
             reportFatalError("OpenQuoteExpected", new Object[]{eleName,atName});
         }
 
-        fEntityScanner.scanChar();
+        fEntityScanner.scanChar(NameType.ATTRIBUTE);
         int entityDepth = fEntityDepth;
 
-        int c = fEntityScanner.scanLiteral(quote, value);
+        int c = fEntityScanner.scanLiteral(quote, value, isNSURI);
         if (DEBUG_ATTR_NORMALIZATION) {
             System.out.println("** scanLiteral -> \""
                                + value.toString() + "\"");
         }
-        
+
         int fromIndex = 0;
         if (c == quote && (fromIndex = isUnchangedByNormalization(value)) == -1) {
             /** Both the non-normalized and normalized attribute values are equal. **/
             nonNormalizedValue.setValues(value);
-            int cquote = fEntityScanner.scanChar();
+            int cquote = fEntityScanner.scanChar(NameType.ATTRIBUTE);
             if (cquote != quote) {
                 reportFatalError("CloseQuoteExpected", new Object[]{eleName,atName});
             }
@@ -239,11 +198,11 @@ public class XML11DocumentScannerImpl
                                        + fStringBuffer.toString() + "\"");
                 }
                 if (c == '&') {
-                    fEntityScanner.skipChar('&');
+                    fEntityScanner.skipChar('&', NameType.REFERENCE);
                     if (entityDepth == fEntityDepth) {
                         fStringBuffer2.append('&');
                     }
-                    if (fEntityScanner.skipChar('#')) {
+                    if (fEntityScanner.skipChar('#', NameType.REFERENCE)) {
                         if (entityDepth == fEntityDepth) {
                             fStringBuffer2.append('#');
                         }
@@ -257,59 +216,22 @@ public class XML11DocumentScannerImpl
                         }
                     }
                     else {
-                        String entityName = fEntityScanner.scanName();
+                        String entityName = fEntityScanner.scanName(NameType.REFERENCE);
                         if (entityName == null) {
                             reportFatalError("NameRequiredInReference", null);
                         }
                         else if (entityDepth == fEntityDepth) {
                             fStringBuffer2.append(entityName);
                         }
-                        if (!fEntityScanner.skipChar(';')) {
+                        if (!fEntityScanner.skipChar(';', NameType.REFERENCE)) {
                             reportFatalError("SemicolonRequiredInReference",
                                              new Object []{entityName});
                         }
                         else if (entityDepth == fEntityDepth) {
                             fStringBuffer2.append(';');
                         }
-                        if (entityName == fAmpSymbol) {
-                            fStringBuffer.append('&');
-                            if (DEBUG_ATTR_NORMALIZATION) {
-                                System.out.println("** value5: \""
-                                                   + fStringBuffer.toString()
-                                                   + "\"");
-                            }
-                        }
-                        else if (entityName == fAposSymbol) {
-                            fStringBuffer.append('\'');
-                            if (DEBUG_ATTR_NORMALIZATION) {
-                                System.out.println("** value7: \""
-                                                   + fStringBuffer.toString()
-                                                   + "\"");
-                            }
-                        }
-                        else if (entityName == fLtSymbol) {
-                            fStringBuffer.append('<');
-                            if (DEBUG_ATTR_NORMALIZATION) {
-                                System.out.println("** value9: \""
-                                                   + fStringBuffer.toString()
-                                                   + "\"");
-                            }
-                        }
-                        else if (entityName == fGtSymbol) {
-                            fStringBuffer.append('>');
-                            if (DEBUG_ATTR_NORMALIZATION) {
-                                System.out.println("** valueB: \""
-                                                   + fStringBuffer.toString()
-                                                   + "\"");
-                            }
-                        }
-                        else if (entityName == fQuotSymbol) {
-                            fStringBuffer.append('"');
-                            if (DEBUG_ATTR_NORMALIZATION) {
-                                System.out.println("** valueD: \""
-                                                   + fStringBuffer.toString()
-                                                   + "\"");
-                            }
+                        if (resolveCharacter(entityName, fStringBuffer)) {
+                            checkEntityLimit(false, fEntityScanner.fCurrentEntity.name, 1);
                         }
                         else {
                             if (fEntityManager.isExternalEntity(entityName)) {
@@ -332,7 +254,7 @@ public class XML11DocumentScannerImpl
                                                          new Object[]{entityName});
                                     }
                                 }
-                                fEntityManager.startEntity(entityName, true);
+                                fEntityManager.startEntity(true, entityName, true);
                             }
                         }
                     }
@@ -340,13 +262,13 @@ public class XML11DocumentScannerImpl
                 else if (c == '<') {
                     reportFatalError("LessthanInAttValue",
                                      new Object[] { eleName, atName });
-                    fEntityScanner.scanChar();
+                    fEntityScanner.scanChar(null);
                     if (entityDepth == fEntityDepth) {
                         fStringBuffer2.append((char)c);
                     }
                 }
                 else if (c == '%' || c == ']') {
-                    fEntityScanner.scanChar();
+                    fEntityScanner.scanChar(null);
                     fStringBuffer.append((char)c);
                     if (entityDepth == fEntityDepth) {
                         fStringBuffer2.append((char)c);
@@ -360,7 +282,7 @@ public class XML11DocumentScannerImpl
                 // XML11EntityScanner.  Not sure why
                 // this check was originally necessary.  - NG
                 else if (c == '\n' || c == '\r' || c == 0x85 || c == 0x2028) {
-                    fEntityScanner.scanChar();
+                    fEntityScanner.scanChar(null);
                     fStringBuffer.append(' ');
                     if (entityDepth == fEntityDepth) {
                         fStringBuffer2.append('\n');
@@ -380,15 +302,15 @@ public class XML11DocumentScannerImpl
                         }
                     }
                 }
-                else if (c != -1 && XML11Char.isXML11Invalid(c)) {
+                else if (c != -1 && isInvalidLiteral(c)) {
                     reportFatalError("InvalidCharInAttValue",
                                      new Object[] {eleName, atName, Integer.toString(c, 16)});
-                    fEntityScanner.scanChar();
+                    fEntityScanner.scanChar(null);
                     if (entityDepth == fEntityDepth) {
                         fStringBuffer2.append((char)c);
                     }
                 }
-                c = fEntityScanner.scanLiteral(quote, value);
+                c = fEntityScanner.scanLiteral(quote, value, isNSURI);
                 if (entityDepth == fEntityDepth) {
                     fStringBuffer2.append(value);
                 }
@@ -405,7 +327,7 @@ public class XML11DocumentScannerImpl
         nonNormalizedValue.setValues(fStringBuffer2);
 
         // quote
-        int cquote = fEntityScanner.scanChar();
+        int cquote = fEntityScanner.scanChar(null);
         if (cquote != quote) {
             reportFatalError("CloseQuoteExpected", new Object[]{eleName,atName});
         }
@@ -416,12 +338,12 @@ public class XML11DocumentScannerImpl
     // XMLScanner methods
     //
     // NOTE:  this is a carbon copy of the code in XML11DTDScannerImpl;
-    // we need to override these methods in both places.  
+    // we need to override these methods in both places.
     // this needs to be refactored!!!  - NG
     /**
      * Scans public ID literal.
      *
-     * [12] PubidLiteral ::= '"' PubidChar* '"' | "'" (PubidChar - "'")* "'" 
+     * [12] PubidLiteral ::= '"' PubidChar* '"' | "'" (PubidChar - "'")* "'"
      * [13] PubidChar::= #x20 | #xD | #xA | [a-zA-Z0-9] | [-'()+,./:=?;!*#@$_%]
      *
      * The returned string is normalized according to the following rule,
@@ -440,7 +362,7 @@ public class XML11DocumentScannerImpl
     protected boolean scanPubidLiteral(XMLString literal)
         throws IOException, XNIException
     {
-        int quote = fEntityScanner.scanChar();
+        int quote = fEntityScanner.scanChar(null);
         if (quote != '\'' && quote != '"') {
             reportFatalError("QuoteRequiredInPublicID", null);
             return false;
@@ -451,7 +373,7 @@ public class XML11DocumentScannerImpl
         boolean skipSpace = true;
         boolean dataok = true;
         while (true) {
-            int c = fEntityScanner.scanChar();
+            int c = fEntityScanner.scanChar(null);
             // REVISIT:  none of these except \n and 0x20 should make it past the entity scanner
             if (c == ' ' || c == '\n' || c == '\r' || c == 0x85 || c == 0x2028) {
                 if (!skipSpace) {
@@ -484,21 +406,21 @@ public class XML11DocumentScannerImpl
         }
         return dataok;
    }
-   
+
     /**
      * Normalize whitespace in an XMLString converting all whitespace
      * characters to space characters.
      */
     protected void normalizeWhitespace(XMLString value) {
         int end = value.offset + value.length;
-	    for (int i = value.offset; i < end; ++i) {
+            for (int i = value.offset; i < end; ++i) {
            int c = value.ch[i];
            if (XMLChar.isSpace(c)) {
                value.ch[i] = ' ';
            }
        }
     }
-    
+
     /**
      * Normalize whitespace in an XMLString converting all whitespace
      * characters to space characters.
@@ -512,10 +434,10 @@ public class XML11DocumentScannerImpl
             }
         }
     }
-    
+
     /**
      * Checks whether this string would be unchanged by normalization.
-     * 
+     *
      * @return -1 if the value would be unchanged by normalization,
      * otherwise the index of the first whitespace character which
      * would be transformed.
@@ -535,49 +457,49 @@ public class XML11DocumentScannerImpl
     // valid with respect to the version of
     // XML understood by this scanner.
     protected boolean isInvalid(int value) {
-        return (XML11Char.isXML11Invalid(value)); 
-    } // isInvalid(int):  boolean 
+        return (XML11Char.isXML11Invalid(value));
+    } // isInvalid(int):  boolean
 
     // returns true if the given character is not
-    // valid or may not be used outside a character reference 
+    // valid or may not be used outside a character reference
     // with respect to the version of XML understood by this scanner.
     protected boolean isInvalidLiteral(int value) {
-        return (!XML11Char.isXML11ValidLiteral(value)); 
+        return (!XML11Char.isXML11ValidLiteral(value));
     } // isInvalidLiteral(int):  boolean
 
-    // returns true if the given character is 
+    // returns true if the given character is
     // a valid nameChar with respect to the version of
     // XML understood by this scanner.
     protected boolean isValidNameChar(int value) {
-        return (XML11Char.isXML11Name(value)); 
+        return (XML11Char.isXML11Name(value));
     } // isValidNameChar(int):  boolean
 
-    // returns true if the given character is 
+    // returns true if the given character is
     // a valid nameStartChar with respect to the version of
     // XML understood by this scanner.
     protected boolean isValidNameStartChar(int value) {
-        return (XML11Char.isXML11NameStart(value)); 
+        return (XML11Char.isXML11NameStart(value));
     } // isValidNameStartChar(int):  boolean
-    
+
     // returns true if the given character is
     // a valid NCName character with respect to the version of
     // XML understood by this scanner.
     protected boolean isValidNCName(int value) {
         return (XML11Char.isXML11NCName(value));
     } // isValidNCName(int):  boolean
-    
-    // returns true if the given character is 
-    // a valid high surrogate for a nameStartChar 
-    // with respect to the version of XML understood 
+
+    // returns true if the given character is
+    // a valid high surrogate for a nameStartChar
+    // with respect to the version of XML understood
     // by this scanner.
     protected boolean isValidNameStartHighSurrogate(int value) {
-        return XML11Char.isXML11NameHighSurrogate(value); 
+        return XML11Char.isXML11NameHighSurrogate(value);
     } // isValidNameStartHighSurrogate(int):  boolean
 
     protected boolean versionSupported(String version) {
         return (version.equals("1.1") || version.equals("1.0"));
     } // versionSupported(String):  boolean
-    
+
     // returns the error message key for unsupported
     // versions of XML with respect to the version of
     // XML understood by this scanner.

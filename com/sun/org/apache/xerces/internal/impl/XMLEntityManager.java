@@ -1,37 +1,15 @@
 /*
- * The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the "License").  You may not use this file except
- * in compliance with the License.
- *
- * You can obtain a copy of the license at
- * https://jaxp.dev.java.net/CDDLv1.0.html.
- * See the License for the specific language governing
- * permissions and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL
- * HEADER in each file and include the License file at
- * https://jaxp.dev.java.net/CDDLv1.0.html
- * If applicable add the following below this CDDL HEADER
- * with the fields enclosed by brackets "[]" replaced with
- * your own identifying information: Portions Copyright
- * [year] [name of copyright owner]
+ * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
  */
-
 /*
- * $Id: XMLEntityManager.java,v 1.13 2007/03/16 16:13:11 spericas Exp $
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
- */
-
-/*
- * Copyright 2005 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,53 +18,39 @@
  * limitations under the License.
  */
 
-package com.sun.org.apache.xerces.internal.impl;
+package com.sun.org.apache.xerces.internal.impl ;
 
+import com.sun.org.apache.xerces.internal.impl.io.ASCIIReader;
+import com.sun.org.apache.xerces.internal.impl.io.UCSReader;
+import com.sun.org.apache.xerces.internal.impl.io.UTF8Reader;
+import com.sun.org.apache.xerces.internal.impl.msg.XMLMessageFormatter;
+import com.sun.org.apache.xerces.internal.impl.validation.ValidationManager;
+import com.sun.org.apache.xerces.internal.util.*;
+import com.sun.org.apache.xerces.internal.util.URI;
+import com.sun.org.apache.xerces.internal.utils.SecuritySupport;
+import com.sun.org.apache.xerces.internal.utils.XMLLimitAnalyzer;
+import com.sun.org.apache.xerces.internal.utils.XMLSecurityManager;
+import com.sun.org.apache.xerces.internal.utils.XMLSecurityPropertyManager;
+import com.sun.org.apache.xerces.internal.xni.Augmentations;
+import com.sun.org.apache.xerces.internal.xni.XMLResourceIdentifier;
+import com.sun.org.apache.xerces.internal.xni.XNIException;
+import com.sun.org.apache.xerces.internal.xni.parser.*;
+import com.sun.xml.internal.stream.Entity;
 import com.sun.xml.internal.stream.StaxEntityResolverWrapper;
 import com.sun.xml.internal.stream.StaxXMLInputSource;
 import com.sun.xml.internal.stream.XMLEntityStorage;
 import java.io.*;
-import java.io.BufferedReader;
-import java.util.*;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URISyntaxException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
-
-
-import com.sun.org.apache.xerces.internal.impl.io.*;
-import com.sun.org.apache.xerces.internal.impl.msg.XMLMessageFormatter;
-import com.sun.org.apache.xerces.internal.util.*;
-import com.sun.org.apache.xerces.internal.xni.XMLResourceIdentifier;
-import com.sun.org.apache.xerces.internal.xni.XNIException;
-import com.sun.org.apache.xerces.internal.xni.parser.*;
-import com.sun.org.apache.xerces.internal.impl.Constants;
-import com.sun.org.apache.xerces.internal.utils.SecuritySupport;
-import com.sun.xml.internal.stream.Entity;
-import com.sun.org.apache.xerces.internal.xni.Augmentations;
-
-import com.sun.org.apache.xerces.internal.impl.io.UTF8Reader;
-import com.sun.org.apache.xerces.internal.impl.io.ASCIIReader;
-import com.sun.org.apache.xerces.internal.impl.io.UCSReader;
-import com.sun.org.apache.xerces.internal.impl.XMLEntityHandler;
-import com.sun.org.apache.xerces.internal.util.HTTPInputSource;
-import com.sun.org.apache.xerces.internal.xinclude.XIncludeHandler;
-
-import com.sun.org.apache.xerces.internal.impl.validation.ValidationManager;
-import com.sun.org.apache.xerces.internal.util.SecurityManager;
-import com.sun.org.apache.xerces.internal.util.URI;
+import javax.xml.stream.XMLInputFactory;
 
 
 /**
@@ -116,77 +80,81 @@ import com.sun.org.apache.xerces.internal.util.URI;
  * @author K.Venugopal SUN Microsystems
  * @author Neeraj Bajaj SUN Microsystems
  * @author Sunitha Reddy SUN Microsystems
- * @version $Id: XMLEntityManager.java,v 1.16 2009/03/02 19:34:25 joehw Exp $
+ * @version $Id: XMLEntityManager.java,v 1.17 2010-11-01 04:39:41 joehw Exp $
  */
 public class XMLEntityManager implements XMLComponent, XMLEntityResolver {
-    
+
     //
     // Constants
     //
-    
+
     /** Default buffer size (2048). */
     public static final int DEFAULT_BUFFER_SIZE = 8192;
-    
+
     /** Default buffer size before we've finished with the XMLDecl:  */
     public static final int DEFAULT_XMLDECL_BUFFER_SIZE = 64;
-    
+
     /** Default internal entity buffer size (1024). */
     public static final int DEFAULT_INTERNAL_BUFFER_SIZE = 1024;
-    
+
     // feature identifiers
-    
+
     /** Feature identifier: validation. */
     protected static final String VALIDATION =
             Constants.SAX_FEATURE_PREFIX + Constants.VALIDATION_FEATURE;
-    
+
     /**
      * standard uri conformant (strict uri).
      * http://apache.org/xml/features/standard-uri-conformant
      */
     protected boolean fStrictURI;
-    
-    
+
+
     /** Feature identifier: external general entities. */
     protected static final String EXTERNAL_GENERAL_ENTITIES =
             Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_GENERAL_ENTITIES_FEATURE;
-    
+
     /** Feature identifier: external parameter entities. */
     protected static final String EXTERNAL_PARAMETER_ENTITIES =
             Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_PARAMETER_ENTITIES_FEATURE;
-    
+
     /** Feature identifier: allow Java encodings. */
     protected static final String ALLOW_JAVA_ENCODINGS =
             Constants.XERCES_FEATURE_PREFIX + Constants.ALLOW_JAVA_ENCODINGS_FEATURE;
-    
+
     /** Feature identifier: warn on duplicate EntityDef */
     protected static final String WARN_ON_DUPLICATE_ENTITYDEF =
             Constants.XERCES_FEATURE_PREFIX +Constants.WARN_ON_DUPLICATE_ENTITYDEF_FEATURE;
-    
+
+    /** Feature identifier: load external DTD. */
+    protected static final String LOAD_EXTERNAL_DTD =
+            Constants.XERCES_FEATURE_PREFIX + Constants.LOAD_EXTERNAL_DTD_FEATURE;
+
     // property identifiers
-    
+
     /** Property identifier: symbol table. */
     protected static final String SYMBOL_TABLE =
             Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY;
-    
+
     /** Property identifier: error reporter. */
     protected static final String ERROR_REPORTER =
             Constants.XERCES_PROPERTY_PREFIX + Constants.ERROR_REPORTER_PROPERTY;
-    
+
     /** Feature identifier: standard uri conformant */
     protected static final String STANDARD_URI_CONFORMANT =
             Constants.XERCES_FEATURE_PREFIX +Constants.STANDARD_URI_CONFORMANT_FEATURE;
-    
+
     /** Property identifier: entity resolver. */
     protected static final String ENTITY_RESOLVER =
             Constants.XERCES_PROPERTY_PREFIX + Constants.ENTITY_RESOLVER_PROPERTY;
-    
+
     protected static final String STAX_ENTITY_RESOLVER =
             Constants.XERCES_PROPERTY_PREFIX + Constants.STAX_ENTITY_RESOLVER_PROPERTY;
-    
+
     // property identifier:  ValidationManager
     protected static final String VALIDATION_MANAGER =
             Constants.XERCES_PROPERTY_PREFIX + Constants.VALIDATION_MANAGER_PROPERTY;
-    
+
     /** property identifier: buffer size. */
     protected static final String BUFFER_SIZE =
             Constants.XERCES_PROPERTY_PREFIX + Constants.BUFFER_SIZE_PROPERTY;
@@ -195,19 +163,28 @@ public class XMLEntityManager implements XMLComponent, XMLEntityResolver {
     protected static final String SECURITY_MANAGER =
         Constants.XERCES_PROPERTY_PREFIX + Constants.SECURITY_MANAGER_PROPERTY;
 
-protected static final String PARSER_SETTINGS = 
-        Constants.XERCES_FEATURE_PREFIX + Constants.PARSER_SETTINGS;        
+    protected static final String PARSER_SETTINGS =
+        Constants.XERCES_FEATURE_PREFIX + Constants.PARSER_SETTINGS;
+
+    /** Property identifier: Security property manager. */
+    private static final String XML_SECURITY_PROPERTY_MANAGER =
+            Constants.XML_SECURITY_PROPERTY_MANAGER;
+
+    /** access external dtd: file protocol */
+    static final String EXTERNAL_ACCESS_DEFAULT = Constants.EXTERNAL_ACCESS_DEFAULT;
+
     // recognized features and properties
-    
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
                 VALIDATION,
                 EXTERNAL_GENERAL_ENTITIES,
                 EXTERNAL_PARAMETER_ENTITIES,
                 ALLOW_JAVA_ENCODINGS,
-                WARN_ON_DUPLICATE_ENTITYDEF
+                WARN_ON_DUPLICATE_ENTITYDEF,
+                STANDARD_URI_CONFORMANT
     };
-    
+
     /** Feature defaults. */
     private static final Boolean[] FEATURE_DEFAULTS = {
                 null,
@@ -215,8 +192,9 @@ protected static final String PARSER_SETTINGS =
                 Boolean.TRUE,
                 Boolean.TRUE,
                 Boolean.FALSE,
+                Boolean.FALSE
     };
-    
+
     /** Recognized properties. */
     private static final String[] RECOGNIZED_PROPERTIES = {
                 SYMBOL_TABLE,
@@ -225,9 +203,9 @@ protected static final String PARSER_SETTINGS =
                 VALIDATION_MANAGER,
                 BUFFER_SIZE,
                 SECURITY_MANAGER,
-                
+                XML_SECURITY_PROPERTY_MANAGER
     };
-    
+
     /** Property defaults. */
     private static final Object[] PROPERTY_DEFAULTS = {
                 null,
@@ -235,96 +213,106 @@ protected static final String PARSER_SETTINGS =
                 null,
                 null,
                 new Integer(DEFAULT_BUFFER_SIZE),
+                null,
                 null
     };
-    
+
     private static final String XMLEntity = "[xml]".intern();
     private static final String DTDEntity = "[dtd]".intern();
-    
+
     // debugging
-    
+
     /**
      * Debug printing of buffer. This debugging flag works best when you
      * resize the DEFAULT_BUFFER_SIZE down to something reasonable like
      * 64 characters.
      */
     private static final boolean DEBUG_BUFFER = false;
-    
+
     /** warn on duplicate Entity declaration.
      *  http://apache.org/xml/features/warn-on-duplicate-entitydef
      */
     protected boolean fWarnDuplicateEntityDef;
-    
+
     /** Debug some basic entities. */
     private static final boolean DEBUG_ENTITIES = false;
-    
+
     /** Debug switching readers for encodings. */
     private static final boolean DEBUG_ENCODINGS = false;
-    
+
     // should be diplayed trace resolving messages
     private static final boolean DEBUG_RESOLVER = false ;
-    
+
     //
     // Data
     //
-    
+
     // features
-    
+
     /**
      * Validation. This feature identifier is:
      * http://xml.org/sax/features/validation
      */
     protected boolean fValidation;
-    
+
     /**
      * External general entities. This feature identifier is:
      * http://xml.org/sax/features/external-general-entities
      */
     protected boolean fExternalGeneralEntities;
-    
+
     /**
      * External parameter entities. This feature identifier is:
      * http://xml.org/sax/features/external-parameter-entities
      */
     protected boolean fExternalParameterEntities;
-    
+
     /**
      * Allow Java encoding names. This feature identifier is:
      * http://apache.org/xml/features/allow-java-encodings
      */
     protected boolean fAllowJavaEncodings = true ;
-    
-    
+
+    /** Load external DTD. */
+    protected boolean fLoadExternalDTD = true;
+
     // properties
-    
+
     /**
      * Symbol table. This property identifier is:
      * http://apache.org/xml/properties/internal/symbol-table
      */
     protected SymbolTable fSymbolTable;
-    
+
     /**
      * Error reporter. This property identifier is:
      * http://apache.org/xml/properties/internal/error-reporter
      */
     protected XMLErrorReporter fErrorReporter;
-    
+
     /**
      * Entity resolver. This property identifier is:
      * http://apache.org/xml/properties/internal/entity-resolver
      */
     protected XMLEntityResolver fEntityResolver;
-    
+
     /** Stax Entity Resolver. This property identifier is XMLInputFactory.ENTITY_RESOLVER */
-    
+
     protected StaxEntityResolverWrapper fStaxEntityResolver;
-    
+
     /** Property Manager. This is used from Stax */
     protected PropertyManager fPropertyManager ;
 
-    
+    /** StAX properties */
+    boolean fSupportDTD = true;
+    boolean fReplaceEntityReferences = true;
+    boolean fSupportExternalEntities = true;
+
+    /** used to restrict external access */
+    protected String fAccessExternalDTD = EXTERNAL_ACCESS_DEFAULT;
+
     // settings
-    
+
     /**
      * Validation manager. This property identifier is:
      * http://apache.org/xml/properties/internal/validation-manager
@@ -340,87 +328,86 @@ protected static final String PARSER_SETTINGS =
      */
     protected int fBufferSize = DEFAULT_BUFFER_SIZE;
 
-    // stores defaults for entity expansion limit if it has
-    // been set on the configuration.
-    protected SecurityManager fSecurityManager = null;
-    
+    /** Security Manager */
+    protected XMLSecurityManager fSecurityManager = null;
+
+    protected XMLLimitAnalyzer fLimitAnalyzer = null;
+
+    protected int entityExpansionIndex;
+
     /**
      * True if the document entity is standalone. This should really
      * only be set by the document source (e.g. XMLDocumentScanner).
      */
     protected boolean fStandalone;
-    
+
     // are the entities being parsed in the external subset?
     // NOTE:  this *is not* the same as whether they're external entities!
     protected boolean fInExternalSubset = false;
-           
-        
+
+
     // handlers
     /** Entity handler. */
     protected XMLEntityHandler fEntityHandler;
-    
+
     /** Current entity scanner */
     protected XMLEntityScanner fEntityScanner ;
-    
+
     /** XML 1.0 entity scanner. */
     protected XMLEntityScanner fXML10EntityScanner;
 
     /** XML 1.1 entity scanner. */
     protected XMLEntityScanner fXML11EntityScanner;
-    
-    /** entity expansion limit (contains useful data if and only if
-    fSecurityManager is non-null) */
-    protected int fEntityExpansionLimit = 0;
-    
+
     /** count of entities expanded: */
     protected int fEntityExpansionCount = 0;
-    
+
     // entities
-    
+
     /** Entities. */
-    protected Hashtable fEntities = new Hashtable();
-    
+    protected Map<String, Entity> fEntities = new HashMap<>();
+
     /** Entity stack. */
-    protected Stack fEntityStack = new Stack();
-    
+    protected Stack<Entity> fEntityStack = new Stack<>();
+
     /** Current entity. */
     protected Entity.ScannedEntity fCurrentEntity = null;
-    
+
+    /** identify if the InputSource is created by a resolver */
+    boolean fISCreatedByResolver = false;
+
     // shared context
-    
-    /** Shared declared entities.
-     * XXX understand it more deeply, why are we doing this ?? Is it really required ?
-     */
-    protected Hashtable fDeclaredEntities;
-    
+
     protected XMLEntityStorage fEntityStorage ;
-    
+
     protected final Object [] defaultEncoding = new Object[]{"UTF-8", null};
-    
-    
+
+
     // temp vars
-    
+
     /** Resource identifer. */
     private final XMLResourceIdentifierImpl fResourceIdentifier = new XMLResourceIdentifierImpl();
-    
+
     /** Augmentations for entities. */
     private final Augmentations fEntityAugs = new AugmentationsImpl();
-    
+
     /** Pool of character buffers. */
     private CharacterBufferPool fBufferPool = new CharacterBufferPool(fBufferSize, DEFAULT_INTERNAL_BUFFER_SIZE);
 
     //
     // Constructors
     //
-    
+
     /**
      * If this constructor is used to create the object, reset() should be invoked on this object
      */
     public XMLEntityManager() {
+        //for entity managers not created by parsers
+        fSecurityManager = new XMLSecurityManager(true);
         fEntityStorage = new XMLEntityStorage(this) ;
         setScannerVersion(Constants.XML_VERSION_1_0);
     } // <init>()
-    
+
     /** Default constructor. */
     public XMLEntityManager(PropertyManager propertyManager) {
         fPropertyManager = propertyManager ;
@@ -430,25 +417,7 @@ protected static final String PARSER_SETTINGS =
         fEntityScanner = new XMLEntityScanner(propertyManager, this) ;
         reset(propertyManager);
     } // <init>()
-    
-    /**
-     * Constructs an entity manager that shares the specified entity
-     * declarations during each parse.
-     * <p>
-     * <strong>REVISIT:</strong> We might want to think about the "right"
-     * way to expose the list of declared entities. For now, the knowledge
-     * how to access the entity declarations is implicit.
-     */
-    public XMLEntityManager(XMLEntityManager entityManager) {
 
-
-        // save shared entity declarations
-        fDeclaredEntities = entityManager != null
-                          ? entityManager.getEntityStore().getDeclaredEntities() : null;
-
-        setScannerVersion(Constants.XML_VERSION_1_0);
-    } // <init>(XMLEntityManager)
-    
     /**
      * Adds an internal entity declaration.
      * <p>
@@ -475,9 +444,9 @@ protected static final String PARSER_SETTINGS =
                         XMLErrorReporter.SEVERITY_WARNING );
             }
         }
-        
+
     } // addInternalEntity(String,String)
-    
+
     /**
      * Adds an external entity declaration.
      * <p>
@@ -531,10 +500,10 @@ protected static final String PARSER_SETTINGS =
                         XMLErrorReporter.SEVERITY_WARNING );
             }
         }
-        
+
     } // addExternalEntity(String,String,String,String)
-    
-    
+
+
     /**
      * Adds an unparsed entity declaration.
      * <p>
@@ -568,15 +537,15 @@ protected static final String PARSER_SETTINGS =
             }
         }
     } // addUnparsedEntity(String,String,String,String)
-    
-    
+
+
     /** get the entity storage object from entity manager */
     public XMLEntityStorage getEntityStore(){
         return fEntityStorage ;
     }
-    
+
     /** return the entity responsible for reading the entity */
-    public XMLEntityScanner getEntityScanner(){        
+    public XMLEntityScanner getEntityScanner(){
         if(fEntityScanner == null) {
             // default to 1.0
             if(fXML10EntityScanner == null) {
@@ -586,9 +555,9 @@ protected static final String PARSER_SETTINGS =
             fEntityScanner = fXML10EntityScanner;
         }
         return fEntityScanner;
-        
+
     }
-    
+
     public void setScannerVersion(short version) {
 
         if(version == Constants.XML_VERSION_1_0) {
@@ -606,12 +575,14 @@ protected static final String PARSER_SETTINGS =
             fEntityScanner = fXML11EntityScanner;
             fEntityScanner.setCurrentEntity(fCurrentEntity);
         }
-        
+
     }
-    
+
     /**
      * This method uses the passed-in XMLInputSource to make
      * fCurrentEntity usable for reading.
+     *
+     * @param reference flag to indicate whether the entity is an Entity Reference.
      * @param name  name of the entity (XML is it's the document entity)
      * @param xmlInputSource    the input source, with sufficient information
      *      to begin scanning characters.
@@ -622,22 +593,22 @@ protected static final String PARSER_SETTINGS =
      *  XNIException    If any parser-specific goes wrong.
      * @return the encoding of the new entity or null if a character stream was employed
      */
-    public String setupCurrentEntity(String name, XMLInputSource xmlInputSource,
+    public String setupCurrentEntity(boolean reference, String name, XMLInputSource xmlInputSource,
             boolean literal, boolean isExternal)
             throws IOException, XNIException {
         // get information
-        
+
         final String publicId = xmlInputSource.getPublicId();
         String literalSystemId = xmlInputSource.getSystemId();
         String baseSystemId = xmlInputSource.getBaseSystemId();
         String encoding = xmlInputSource.getEncoding();
         final boolean encodingExternallySpecified = (encoding != null);
-        Boolean isBigEndian = null;        
-        
+        Boolean isBigEndian = null;
+
         // create reader
         InputStream stream = null;
         Reader reader = xmlInputSource.getCharacterStream();
-        
+
         // First chance checking strict URI
         String expandedSystemId = expandSystemId(literalSystemId, baseSystemId, fStrictURI);
         if (baseSystemId == null) {
@@ -653,32 +624,32 @@ protected static final String PARSER_SETTINGS =
                 }
                 else {
                     boolean followRedirects = true;
-                    
+
                     // setup URLConnection if we have an HTTPInputSource
                     if (xmlInputSource instanceof HTTPInputSource) {
                         final HttpURLConnection urlConnection = (HttpURLConnection) connect;
                         final HTTPInputSource httpInputSource = (HTTPInputSource) xmlInputSource;
-                        
+
                         // set request properties
-                        Iterator propIter = httpInputSource.getHTTPRequestProperties();
+                        Iterator<Map.Entry<String, String>> propIter = httpInputSource.getHTTPRequestProperties();
                         while (propIter.hasNext()) {
-                            Map.Entry entry = (Map.Entry) propIter.next();
-                            urlConnection.setRequestProperty((String) entry.getKey(), (String) entry.getValue());
+                            Map.Entry<String, String> entry = propIter.next();
+                            urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
                         }
-                        
+
                         // set preference for redirection
                         followRedirects = httpInputSource.getFollowHTTPRedirects();
                         if (!followRedirects) {
                             setInstanceFollowRedirects(urlConnection, followRedirects);
                         }
                     }
-                    
+
                     stream = connect.getInputStream();
-                    
+
                     // REVISIT: If the URLConnection has external encoding
                     // information, we should be reading it here. It's located
                     // in the charset parameter of Content-Type. -- mrglavas
-                    
+
                     if (followRedirects) {
                         String redirect = connect.getURL().toString();
                         // E43: Check if the URL was redirected, and then
@@ -690,10 +661,10 @@ protected static final String PARSER_SETTINGS =
                     }
                 }
             }
-            
+
             // wrap this stream in RewindableInputStream
             stream = new RewindableInputStream(stream);
-            
+
             // perform auto-detect of encoding if necessary
             if (encoding == null) {
                 // read first four bytes and determine encoding
@@ -706,8 +677,8 @@ protected static final String PARSER_SETTINGS =
                     Object [] encodingDesc = getEncodingName(b4, count);
                     encoding = (String)(encodingDesc[0]);
                     isBigEndian = (Boolean)(encodingDesc[1]);
-                    
-                    stream.reset();                    
+
+                    stream.reset();
                     // Special case UTF-8 files with BOM created by Microsoft
                     // tools. It's more efficient to consume the BOM than make
                     // the reader perform extra checks. -Ac
@@ -725,11 +696,11 @@ protected static final String PARSER_SETTINGS =
                     reader = createReader(stream, encoding, isBigEndian);
                 }
             }
-            
+
             // use specified encoding
             else {
                 encoding = encoding.toUpperCase(Locale.ENGLISH);
-                
+
                 // If encoding is UTF-8, consume BOM if one is present.
                 if (encoding.equals("UTF-8")) {
                     final int[] b3 = new int[3];
@@ -759,7 +730,7 @@ protected static final String PARSER_SETTINGS =
                             break;
                     }
                     stream.reset();
-                    
+
                     String utf16Encoding = "UTF-16";
                     if (count >= 2) {
                         final int b0 = b4[0];
@@ -802,7 +773,7 @@ protected static final String PARSER_SETTINGS =
                             break;
                     }
                     stream.reset();
-                    
+
                     // Ignore unusual octet order for now.
                     if (count == 4) {
                         // UCS-4, big endian (1234)
@@ -826,7 +797,7 @@ protected static final String PARSER_SETTINGS =
                             break;
                     }
                     stream.reset();
-                    
+
                     if (count == 4) {
                         // UCS-2, big endian
                         if (b4[0] == 0x00 && b4[1] == 0x3C && b4[2] == 0x00 && b4[3] == 0x3F) {
@@ -838,10 +809,10 @@ protected static final String PARSER_SETTINGS =
                         }
                     }
                 }
-                
+
                 reader = createReader(stream, encoding, isBigEndian);
             }
-            
+
             // read one character at a time so we don't jump too far
             // ahead, converting characters from the byte stream in
             // the wrong encoding
@@ -850,25 +821,30 @@ protected static final String PARSER_SETTINGS =
             }
             //reader = new OneCharReader(reader);
         }
-        
+
         // We've seen a new Reader.
         // Push it on the stack so we can close it later.
         //fOwnReaders.add(reader);
-        
+
         // push entity on stack
         if (fCurrentEntity != null) {
             fEntityStack.push(fCurrentEntity);
         }
-        
+
         // create entity
-        /* if encoding is specified externally, 'encoding' information present 
+        /* if encoding is specified externally, 'encoding' information present
          * in the prolog of the XML document is not considered. Hence, prolog can
-         * be read in Chunks of data instead of byte by byte.  
+         * be read in Chunks of data instead of byte by byte.
          */
-        fCurrentEntity = new com.sun.xml.internal.stream.Entity.ScannedEntity(name,new XMLResourceIdentifierImpl(publicId, literalSystemId, baseSystemId, expandedSystemId),stream, reader, encoding, literal, encodingExternallySpecified, isExternal);        
+        fCurrentEntity = new Entity.ScannedEntity(reference, name,
+                new XMLResourceIdentifierImpl(publicId, literalSystemId, baseSystemId, expandedSystemId),
+                stream, reader, encoding, literal, encodingExternallySpecified, isExternal);
         fCurrentEntity.setEncodingExternallySpecified(encodingExternallySpecified);
         fEntityScanner.setCurrentEntity(fCurrentEntity);
         fResourceIdentifier.setValues(publicId, literalSystemId, baseSystemId, expandedSystemId);
+        if (fLimitAnalyzer != null) {
+            fLimitAnalyzer.startEntity(name);
+        }
         return encoding;
     } //setupCurrentEntity(String, XMLInputSource, boolean, boolean):  String
 
@@ -879,16 +855,16 @@ protected static final String PARSER_SETTINGS =
      * @param entityName The name of the entity to check.
      * @return True if the entity is external, false otherwise
      * (including when the entity is not declared).
-     */               
+     */
     public boolean isExternalEntity(String entityName) {
-        
-        Entity entity = (Entity)fEntities.get(entityName);
+
+        Entity entity = fEntities.get(entityName);
         if (entity == null) {
             return false;
         }
         return entity.isExternal();
     }
-    
+
     /**
      * Checks whether the declaration of an entity given by name is
      * // in the external subset.
@@ -898,20 +874,20 @@ protected static final String PARSER_SETTINGS =
      *           (including when the entity is not declared).
      */
     public boolean isEntityDeclInExternalSubset(String entityName) {
-        
-        Entity entity = (Entity)fEntities.get(entityName);
+
+        Entity entity = fEntities.get(entityName);
         if (entity == null) {
             return false;
         }
         return entity.isEntityDeclInExternalSubset();
     }
-    
-    
-    
+
+
+
     //
     // Public methods
     //
-    
+
     /**
      * Sets whether the document entity is standalone.
      *
@@ -921,29 +897,29 @@ protected static final String PARSER_SETTINGS =
         fStandalone = standalone;
     }
     // setStandalone(boolean)
-    
+
     /** Returns true if the document entity is standalone. */
     public boolean isStandalone() {
         return fStandalone;
     }  //isStandalone():boolean
-    
+
     public boolean isDeclaredEntity(String entityName) {
-        
-        Entity entity = (Entity)fEntities.get(entityName);
+
+        Entity entity = fEntities.get(entityName);
         return entity != null;
     }
-    
+
     public boolean isUnparsedEntity(String entityName) {
-        
-        Entity entity = (Entity)fEntities.get(entityName);
+
+        Entity entity = fEntities.get(entityName);
         if (entity == null) {
             return false;
         }
         return entity.isUnparsed();
     }
-    
-    
-    
+
+
+
     // this simply returns the fResourceIdentifier object;
     // this should only be used with caution by callers that
     // carefully manage the entity manager's behaviour, so that
@@ -952,23 +928,23 @@ protected static final String PARSER_SETTINGS =
     public XMLResourceIdentifier getCurrentResourceIdentifier() {
         return fResourceIdentifier;
     }
-    
+
     /**
      * Sets the entity handler. When an entity starts and ends, the
      * entity handler is notified of the change.
      *
      * @param entityHandler The new entity handler.
      */
-    
+
     public void setEntityHandler(com.sun.org.apache.xerces.internal.impl.XMLEntityHandler entityHandler) {
         fEntityHandler = (XMLEntityHandler) entityHandler;
     } // setEntityHandler(XMLEntityHandler)
-    
+
     //this function returns StaxXMLInputSource
     public StaxXMLInputSource resolveEntityAsPerStax(XMLResourceIdentifier resourceIdentifier) throws java.io.IOException{
-        
+
         if(resourceIdentifier == null ) return null;
-        
+
         String publicId = resourceIdentifier.getPublicId();
         String literalSystemId = resourceIdentifier.getLiteralSystemId();
         String baseSystemId = resourceIdentifier.getBaseSystemId();
@@ -990,13 +966,13 @@ protected static final String PARSER_SETTINGS =
         }
         if (needExpand)
             expandedSystemId = expandSystemId(literalSystemId, baseSystemId,false);
-        
+
         // give the entity resolver a chance
         StaxXMLInputSource staxInputSource = null;
         XMLInputSource xmlInputSource = null;
 
         XMLResourceIdentifierImpl ri = null;
-        
+
         if (resourceIdentifier instanceof XMLResourceIdentifierImpl) {
             ri = (XMLResourceIdentifierImpl)resourceIdentifier;
         } else {
@@ -1007,21 +983,28 @@ protected static final String PARSER_SETTINGS =
         if(DEBUG_RESOLVER){
             System.out.println("BEFORE Calling resolveEntity") ;
         }
-        
+
+        fISCreatedByResolver = false;
         //either of Stax or Xerces would be null
         if(fStaxEntityResolver != null){
             staxInputSource = fStaxEntityResolver.resolveEntity(ri);
+            if(staxInputSource != null) {
+                fISCreatedByResolver = true;
+            }
         }
-        
+
         if(fEntityResolver != null){
             xmlInputSource = fEntityResolver.resolveEntity(ri);
+            if(xmlInputSource != null) {
+                fISCreatedByResolver = true;
+            }
         }
-        
+
         if(xmlInputSource != null){
             //wrap this XMLInputSource to StaxInputSource
-            staxInputSource = new StaxXMLInputSource(xmlInputSource);
+            staxInputSource = new StaxXMLInputSource(xmlInputSource, fISCreatedByResolver);
         }
-        
+
         // do default resolution
         //this works for both stax & Xerces, if staxInputSource is null, it means parser need to revert to default resolution
         if (staxInputSource == null) {
@@ -1032,16 +1015,16 @@ protected static final String PARSER_SETTINGS =
         }else if(staxInputSource.hasXMLStreamOrXMLEventReader()){
             //Waiting for the clarification from EG. - nb
         }
-        
+
         if (DEBUG_RESOLVER) {
             System.err.println("XMLEntityManager.resolveEntity(" + publicId + ")");
             System.err.println(" = " + xmlInputSource);
         }
-        
+
         return staxInputSource;
-        
+
     }
-    
+
     /**
      * Resolves the specified public and system identifiers. This
      * method first attempts to resolve the entity based on the
@@ -1070,8 +1053,7 @@ protected static final String PARSER_SETTINGS =
         String literalSystemId = resourceIdentifier.getLiteralSystemId();
         String baseSystemId = resourceIdentifier.getBaseSystemId();
         String expandedSystemId = resourceIdentifier.getExpandedSystemId();
-        String namespace = resourceIdentifier.getNamespace();
-        
+
         // if no base systemId given, assume that it's relative
         // to the systemId of the current scanned entity
         // Sometimes the system id is not (properly) expanded.
@@ -1089,16 +1071,16 @@ protected static final String PARSER_SETTINGS =
         }
         if (needExpand)
             expandedSystemId = expandSystemId(literalSystemId, baseSystemId,false);
-        
+
         // give the entity resolver a chance
         XMLInputSource xmlInputSource = null;
-        
+
         if (fEntityResolver != null) {
             resourceIdentifier.setBaseSystemId(baseSystemId);
             resourceIdentifier.setExpandedSystemId(expandedSystemId);
             xmlInputSource = fEntityResolver.resolveEntity(resourceIdentifier);
         }
-        
+
         // do default resolution
         // REVISIT: what's the correct behavior if the user provided an entity
         // resolver (fEntityResolver != null), but resolveEntity doesn't return
@@ -1110,19 +1092,20 @@ protected static final String PARSER_SETTINGS =
             //if (systemId != null)
             xmlInputSource = new XMLInputSource(publicId, literalSystemId, baseSystemId);
         }
-        
+
         if (DEBUG_RESOLVER) {
             System.err.println("XMLEntityManager.resolveEntity(" + publicId + ")");
             System.err.println(" = " + xmlInputSource);
         }
-        
+
         return xmlInputSource;
-        
+
     } // resolveEntity(XMLResourceIdentifier):XMLInputSource
-    
+
     /**
      * Starts a named entity.
      *
+     * @param isGE flag to indicate whether the entity is a General Entity
      * @param entityName The name of the entity to start.
      * @param literal    True if this entity is started within a literal
      *                   value.
@@ -1130,11 +1113,11 @@ protected static final String PARSER_SETTINGS =
      * @throws IOException  Thrown on i/o error.
      * @throws XNIException Thrown by entity handler to signal an error.
      */
-    public void startEntity(String entityName, boolean literal)
+    public void startEntity(boolean isGE, String entityName, boolean literal)
     throws IOException, XNIException {
-        
+
         // was entity declared?
-        Entity entity = (Entity)fEntityStorage.getDeclaredEntities().get(entityName);
+        Entity entity = fEntityStorage.getEntity(entityName);
         if (entity == null) {
             if (fEntityHandler != null) {
                 String encoding = null;
@@ -1148,26 +1131,26 @@ protected static final String PARSER_SETTINGS =
             }
             return;
         }
-        
+
         // should we skip external entities?
         boolean external = entity.isExternal();
+        Entity.ExternalEntity externalEntity = null;
+        String extLitSysId = null, extBaseSysId = null, expandedSystemId = null;
         if (external) {
+            externalEntity = (Entity.ExternalEntity)entity;
+            extLitSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getLiteralSystemId() : null);
+            extBaseSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getBaseSystemId() : null);
+            expandedSystemId = expandSystemId(extLitSysId, extBaseSysId);
             boolean unparsed = entity.isUnparsed();
             boolean parameter = entityName.startsWith("%");
             boolean general = !parameter;
             if (unparsed || (general && !fExternalGeneralEntities) ||
-                    (parameter && !fExternalParameterEntities)) {
-                
+                    (parameter && !fExternalParameterEntities) ||
+                    !fSupportDTD || !fSupportExternalEntities) {
+
                 if (fEntityHandler != null) {
                     fResourceIdentifier.clear();
                     final String encoding = null;
-                    Entity.ExternalEntity externalEntity = (Entity.ExternalEntity)entity;
-                    //REVISIT:  since we're storing expandedSystemId in the
-                    // externalEntity, how could this have got here if it wasn't already
-                    // expanded??? - neilg
-                    String extLitSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getLiteralSystemId() : null);
-                    String extBaseSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getBaseSystemId() : null);
-                    String expandedSystemId = expandSystemId(extLitSysId, extBaseSysId);
                     fResourceIdentifier.setValues(
                             (externalEntity.entityLocation != null ? externalEntity.entityLocation.getPublicId() : null),
                             extLitSysId, extBaseSysId, expandedSystemId);
@@ -1181,7 +1164,7 @@ protected static final String PARSER_SETTINGS =
                 return;
             }
         }
-        
+
         // is entity recursive?
         int size = fEntityStack.size();
         for (int i = size; i >= 0; i--) {
@@ -1200,16 +1183,11 @@ protected static final String PARSER_SETTINGS =
                         "RecursiveReference",
                         new Object[] { entityName, path },
                         XMLErrorReporter.SEVERITY_FATAL_ERROR);
-                        
+
                         if (fEntityHandler != null) {
                             fResourceIdentifier.clear();
                             final String encoding = null;
                             if (external) {
-                                Entity.ExternalEntity externalEntity = (Entity.ExternalEntity)entity;
-                                // REVISIT:  for the same reason above...
-                                String extLitSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getLiteralSystemId() : null);
-                                String extBaseSysId = (externalEntity.entityLocation != null ? externalEntity.entityLocation.getBaseSystemId() : null);
-                                String expandedSystemId = expandSystemId(extLitSysId, extBaseSysId);
                                 fResourceIdentifier.setValues(
                                         (externalEntity.entityLocation != null ? externalEntity.entityLocation.getPublicId() : null),
                                         extLitSysId, extBaseSysId, expandedSystemId);
@@ -1221,17 +1199,16 @@ protected static final String PARSER_SETTINGS =
                             fEntityAugs.putItem(Constants.ENTITY_SKIPPED, Boolean.TRUE);
                             fEntityHandler.endEntity(entityName, fEntityAugs);
                         }
-                        
+
                         return;
             }
         }
-        
+
         // resolve external entity
         StaxXMLInputSource staxInputSource = null;
         XMLInputSource xmlInputSource = null ;
-        
+
         if (external) {
-            Entity.ExternalEntity externalEntity = (Entity.ExternalEntity)entity;
             staxInputSource = resolveEntityAsPerStax(externalEntity.entityLocation);
             /** xxx:  Waiting from the EG
              * //simply return if there was entity resolver registered and application
@@ -1239,6 +1216,18 @@ protected static final String PARSER_SETTINGS =
              * if(staxInputSource.hasXMLStreamOrXMLEventReader()) return ;
              */
             xmlInputSource = staxInputSource.getXMLInputSource() ;
+            if (!fISCreatedByResolver) {
+                //let the not-LoadExternalDTD or not-SupportDTD process to handle the situation
+                if (fLoadExternalDTD) {
+                    String accessError = SecuritySupport.checkAccess(expandedSystemId, fAccessExternalDTD, Constants.ACCESS_EXTERNAL_ALL);
+                    if (accessError != null) {
+                        fErrorReporter.reportError(this.getEntityScanner(),XMLMessageFormatter.XML_DOMAIN,
+                                "AccessExternalEntity",
+                                new Object[] { SecuritySupport.sanitizePath(expandedSystemId), accessError },
+                                XMLErrorReporter.SEVERITY_FATAL_ERROR);
+                    }
+                }
+            }
         }
         // wrap internal entity
         else {
@@ -1246,12 +1235,12 @@ protected static final String PARSER_SETTINGS =
             Reader reader = new StringReader(internalEntity.text);
             xmlInputSource = new XMLInputSource(null, null, null, reader, null);
         }
-        
+
         // start the entity
-        startEntity(entityName, xmlInputSource, literal, external);
-        
+        startEntity(isGE, entityName, xmlInputSource, literal, external);
+
     } // startEntity(String,boolean)
-    
+
     /**
      * Starts the document entity. The document entity has the "[xml]"
      * pseudo-name.
@@ -1263,9 +1252,9 @@ protected static final String PARSER_SETTINGS =
      */
     public void startDocumentEntity(XMLInputSource xmlInputSource)
     throws IOException, XNIException {
-        startEntity(XMLEntity, xmlInputSource, false, true);
+        startEntity(false, XMLEntity, xmlInputSource, false, true);
     } // startDocumentEntity(XMLInputSource)
-    
+
     //xxx these methods are not required.
     /**
      * Starts the DTD entity. The DTD entity has the "[dtd]"
@@ -1278,25 +1267,26 @@ protected static final String PARSER_SETTINGS =
      */
     public void startDTDEntity(XMLInputSource xmlInputSource)
     throws IOException, XNIException {
-        startEntity(DTDEntity, xmlInputSource, false, true);
+        startEntity(false, DTDEntity, xmlInputSource, false, true);
     } // startDTDEntity(XMLInputSource)
-    
+
     // indicate start of external subset so that
     // location of entity decls can be tracked
     public void startExternalSubset() {
         fInExternalSubset = true;
     }
-    
+
     public void endExternalSubset() {
         fInExternalSubset = false;
     }
-    
+
     /**
      * Starts an entity.
      * <p>
      * This method can be used to insert an application defined XML
      * entity stream into the parsing stream.
      *
+     * @param isGE flag to indicate whether the entity is a General Entity
      * @param name           The name of the entity.
      * @param xmlInputSource The input source of the entity.
      * @param literal        True if this entity is started within a
@@ -1306,22 +1296,25 @@ protected static final String PARSER_SETTINGS =
      * @throws IOException  Thrown on i/o error.
      * @throws XNIException Thrown by entity handler to signal an error.
      */
-    public void startEntity(String name,
+    public void startEntity(boolean isGE, String name,
             XMLInputSource xmlInputSource,
             boolean literal, boolean isExternal)
             throws IOException, XNIException {
-       
-        String encoding = setupCurrentEntity(name, xmlInputSource, literal, isExternal);
-        
+
+        String encoding = setupCurrentEntity(isGE, name, xmlInputSource, literal, isExternal);
+
         //when entity expansion limit is set by the Application, we need to
         //check for the entity expansion limit set by the parser, if number of entity
         //expansions exceeds the entity expansion limit, parser will throw fatal error.
         // Note that this represents the nesting level of open entities.
         fEntityExpansionCount++;
-        if( fSecurityManager != null && fEntityExpansionCount > fEntityExpansionLimit ){
-            fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN,
-                                             "EntityExpansionLimitExceeded",
-                                             new Object[]{new Integer(fEntityExpansionLimit) },
+        if(fLimitAnalyzer != null) {
+           fLimitAnalyzer.addValue(entityExpansionIndex, name, 1);
+        }
+        if( fSecurityManager != null && fSecurityManager.isOverLimit(entityExpansionIndex, fLimitAnalyzer)){
+            fSecurityManager.debugPrint(fLimitAnalyzer);
+            fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN,"EntityExpansionLimit",
+                    new Object[]{fSecurityManager.getLimitValueByIndex(entityExpansionIndex)},
                                              XMLErrorReporter.SEVERITY_FATAL_ERROR );
             // is there anything better to do than reset the counter?
             // at least one can envision debugging applications where this might
@@ -1333,57 +1326,70 @@ protected static final String PARSER_SETTINGS =
         if (fEntityHandler != null) {
             fEntityHandler.startEntity(name, fResourceIdentifier, encoding, null);
         }
-        
+
     } // startEntity(String,XMLInputSource)
-    
+
     /**
      * Return the current entity being scanned. Current entity is SET using startEntity function.
      * @return Entity.ScannedEntity
      */
-    
+
     public Entity.ScannedEntity getCurrentEntity(){
         return fCurrentEntity ;
     }
-    
+
     /**
      * Return the top level entity handled by this manager, or null
      * if no entity was added.
      */
     public Entity.ScannedEntity getTopLevelEntity() {
-        return (Entity.ScannedEntity) 
+        return (Entity.ScannedEntity)
             (fEntityStack.empty() ? null : fEntityStack.elementAt(0));
     }
-    
-    // a list of Readers ever seen
-    protected Vector fOwnReaders = new Vector();
-    
+
+
     /**
      * Close all opened InputStreams and Readers opened by this parser.
      */
     public void closeReaders() {
-        // close all readers
-        for (int i = fOwnReaders.size()-1; i >= 0; i--) {
-            try {
-                ((Reader)fOwnReaders.elementAt(i)).close();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-        // and clear the list
-        fOwnReaders.removeAllElements();
+        /** this call actually does nothing, readers are closed in the endEntity method
+         * through the current entity.
+         * The change seems to have happened during the jdk6 development with the
+         * addition of StAX
+        **/
     }
-    
+
     public void endEntity() throws IOException, XNIException {
-        
+
         // call handler
         if (DEBUG_BUFFER) {
             System.out.print("(endEntity: ");
             print();
             System.out.println();
-        }                
-        //pop the entity from the stack 
+        }
+        //pop the entity from the stack
         Entity.ScannedEntity entity = fEntityStack.size() > 0 ? (Entity.ScannedEntity)fEntityStack.pop() : null ;
-        
+
+        /** need to close the reader first since the program can end
+         *  prematurely (e.g. fEntityHandler.endEntity may throw exception)
+         *  leaving the reader open
+         */
+        //close the reader
+        if(fCurrentEntity != null){
+            //close the reader
+            try{
+                if (fLimitAnalyzer != null) {
+                    fLimitAnalyzer.endEntity(XMLSecurityManager.Limit.GENERAL_ENTITY_SIZE_LIMIT, fCurrentEntity.name);
+                    if (fCurrentEntity.name.equals("[xml]")) {
+                        fSecurityManager.debugPrint(fLimitAnalyzer);
+                    }
+                }
+                fCurrentEntity.close();
+            }catch(IOException ex){
+                throw new XNIException(ex);
+            }
+        }
+
         if (fEntityHandler != null) {
             //so this is the last opened entity, signal it to current fEntityHandler using Augmentation
             if(entity == null){
@@ -1397,46 +1403,32 @@ protected static final String PARSER_SETTINGS =
         }
         //check if it is a document entity
         boolean documentEntity = fCurrentEntity.name == XMLEntity;
-        
-        //close the reader
-        if(fCurrentEntity != null){
-            //close the reader
-            try{
-                fCurrentEntity.close();
-            }catch(IOException ex){
-                throw new XNIException(ex);
-            }
-        }
-        
+
         //set popped entity as current entity
         fCurrentEntity = entity;
         fEntityScanner.setCurrentEntity(fCurrentEntity);
-        
+
         //check if there are any entity left in the stack -- if there are
-        //no entries EOF has been reached.        
+        //no entries EOF has been reached.
         // throw exception when it is the last entity but it is not a document entity
-        
+
         if(fCurrentEntity == null & !documentEntity){
             throw new EOFException() ;
         }
-         
+
         if (DEBUG_BUFFER) {
             System.out.print(")endEntity: ");
             print();
             System.out.println();
         }
-        
+
     } // endEntity()
-    
-    
+
+
     //
     // XMLComponent methods
     //
     public void reset(PropertyManager propertyManager){
-        //reset fEntityStorage
-        fEntityStorage.reset(propertyManager);
-        //reset XMLEntityReaderImpl
-        fEntityScanner.reset(propertyManager);
         // xerces properties
         fSymbolTable = (SymbolTable)propertyManager.getProperty(Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY);
         fErrorReporter = (XMLErrorReporter)propertyManager.getProperty(Constants.XERCES_PROPERTY_PREFIX + Constants.ERROR_REPORTER_PROPERTY);
@@ -1445,7 +1437,26 @@ protected static final String PARSER_SETTINGS =
         } catch (XMLConfigurationException e) {
             fStaxEntityResolver = null;
         }
-        
+
+        fSupportDTD = ((Boolean)propertyManager.getProperty(XMLInputFactory.SUPPORT_DTD)).booleanValue();
+        fReplaceEntityReferences = ((Boolean)propertyManager.getProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES)).booleanValue();
+        fSupportExternalEntities = ((Boolean)propertyManager.getProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES)).booleanValue();
+
+        // Zephyr feature ignore-external-dtd is the opposite of Xerces' load-external-dtd
+        fLoadExternalDTD = !((Boolean)propertyManager.getProperty(Constants.ZEPHYR_PROPERTY_PREFIX + Constants.IGNORE_EXTERNAL_DTD)).booleanValue();
+
+        // JAXP 1.5 feature
+        XMLSecurityPropertyManager spm = (XMLSecurityPropertyManager) propertyManager.getProperty(XML_SECURITY_PROPERTY_MANAGER);
+        fAccessExternalDTD = spm.getValue(XMLSecurityPropertyManager.Property.ACCESS_EXTERNAL_DTD);
+
+        fSecurityManager = (XMLSecurityManager)propertyManager.getProperty(SECURITY_MANAGER);
+
+        fLimitAnalyzer = new XMLLimitAnalyzer();
+        //reset fEntityStorage
+        fEntityStorage.reset(propertyManager);
+        //reset XMLEntityReaderImpl
+        fEntityScanner.reset(propertyManager);
+
         // initialize state
         //fStandalone = false;
         fEntities.clear();
@@ -1455,10 +1466,8 @@ protected static final String PARSER_SETTINGS =
         fExternalGeneralEntities = true;
         fExternalParameterEntities = true;
         fAllowJavaEncodings = true ;
-        
-        //test();
     }
-    
+
     /**
      * Resets the component. The component can query the component manager
      * about any features and properties that affect the operation of the
@@ -1476,12 +1485,7 @@ protected static final String PARSER_SETTINGS =
     public void reset(XMLComponentManager componentManager)
     throws XMLConfigurationException {
 
-        boolean parser_settings;
-        try {
-                parser_settings = componentManager.getFeature(PARSER_SETTINGS);
-        } catch (XMLConfigurationException e) {
-                parser_settings = true;
-        }
+        boolean parser_settings = componentManager.getFeature(PARSER_SETTINGS, true);
 
         if (!parser_settings) {
             // parser settings have not been changed
@@ -1490,88 +1494,56 @@ protected static final String PARSER_SETTINGS =
                 fEntityScanner.reset(componentManager);
             }
             if(fEntityStorage != null){
-                fEntityStorage.reset(componentManager);            
+                fEntityStorage.reset(componentManager);
             }
             return;
         }
-        
+
         // sax features
-        try {
-            fValidation = componentManager.getFeature(VALIDATION);
-        } catch (XMLConfigurationException e) {
-            fValidation = false;
-        }
-        try {
-            fExternalGeneralEntities = componentManager.getFeature(EXTERNAL_GENERAL_ENTITIES);
-        } catch (XMLConfigurationException e) {
-            fExternalGeneralEntities = true;
-        }
-        try {
-            fExternalParameterEntities = componentManager.getFeature(EXTERNAL_PARAMETER_ENTITIES);
-        } catch (XMLConfigurationException e) {
-            fExternalParameterEntities = true;
-        }
-        
+        fValidation = componentManager.getFeature(VALIDATION, false);
+        fExternalGeneralEntities = componentManager.getFeature(EXTERNAL_GENERAL_ENTITIES, true);
+        fExternalParameterEntities = componentManager.getFeature(EXTERNAL_PARAMETER_ENTITIES, true);
+
         // xerces features
-        try {
-            fAllowJavaEncodings = componentManager.getFeature(ALLOW_JAVA_ENCODINGS);
-        } catch (XMLConfigurationException e) {
-            fAllowJavaEncodings = false;
-        }
-        
-        try {
-            fWarnDuplicateEntityDef = componentManager.getFeature(WARN_ON_DUPLICATE_ENTITYDEF);
-        } catch (XMLConfigurationException e) {
-            fWarnDuplicateEntityDef = false;
-        }
-        try {
-            fStrictURI = componentManager.getFeature(STANDARD_URI_CONFORMANT);
-        } catch (XMLConfigurationException e) {
-            fStrictURI = false;
-        }
-        
+        fAllowJavaEncodings = componentManager.getFeature(ALLOW_JAVA_ENCODINGS, false);
+        fWarnDuplicateEntityDef = componentManager.getFeature(WARN_ON_DUPLICATE_ENTITYDEF, false);
+        fStrictURI = componentManager.getFeature(STANDARD_URI_CONFORMANT, false);
+        fLoadExternalDTD = componentManager.getFeature(LOAD_EXTERNAL_DTD, true);
+
         // xerces properties
         fSymbolTable = (SymbolTable)componentManager.getProperty(SYMBOL_TABLE);
         fErrorReporter = (XMLErrorReporter)componentManager.getProperty(ERROR_REPORTER);
-        try {
-            fEntityResolver = (XMLEntityResolver)componentManager.getProperty(ENTITY_RESOLVER);
-        } catch (XMLConfigurationException e) {
-            fEntityResolver = null;
+        fEntityResolver = (XMLEntityResolver)componentManager.getProperty(ENTITY_RESOLVER, null);
+        fStaxEntityResolver = (StaxEntityResolverWrapper)componentManager.getProperty(STAX_ENTITY_RESOLVER, null);
+        fValidationManager = (ValidationManager)componentManager.getProperty(VALIDATION_MANAGER, null);
+        fSecurityManager = (XMLSecurityManager)componentManager.getProperty(SECURITY_MANAGER, null);
+        entityExpansionIndex = fSecurityManager.getIndex(Constants.JDK_ENTITY_EXPANSION_LIMIT);
+
+        //StAX Property
+        fSupportDTD = true;
+        fReplaceEntityReferences = true;
+        fSupportExternalEntities = true;
+
+        // JAXP 1.5 feature
+        XMLSecurityPropertyManager spm = (XMLSecurityPropertyManager) componentManager.getProperty(XML_SECURITY_PROPERTY_MANAGER, null);
+        if (spm == null) {
+            spm = new XMLSecurityPropertyManager();
         }
-        
-        try {
-            fStaxEntityResolver = (StaxEntityResolverWrapper)componentManager.getProperty(STAX_ENTITY_RESOLVER);
-        } catch (XMLConfigurationException e) {
-            fStaxEntityResolver = null;
-        }
-        
-        try {
-            fValidationManager = (ValidationManager)componentManager.getProperty(VALIDATION_MANAGER);
-        }
-        catch (XMLConfigurationException e) {
-            fValidationManager = null;
-        }
-        try {
-            fSecurityManager = (SecurityManager)componentManager.getProperty(SECURITY_MANAGER);
-        }
-        catch (XMLConfigurationException e) {
-            fSecurityManager = null;
-        }
+        fAccessExternalDTD = spm.getValue(XMLSecurityPropertyManager.Property.ACCESS_EXTERNAL_DTD);
 
         //reset general state
         reset();
-        
+
         fEntityScanner.reset(componentManager);
         fEntityStorage.reset(componentManager);
-        
+
     } // reset(XMLComponentManager)
-    
+
     // reset general state.  Should not be called other than by
     // a class acting as a component manager but not
     // implementing that interface for whatever reason.
     public void reset() {
-        fEntityExpansionLimit = (fSecurityManager != null)?fSecurityManager.getEntityExpansionLimit():0;
-                
+        fLimitAnalyzer = new XMLLimitAnalyzer();
         // initialize state
         fStandalone = false;
         fEntities.clear();
@@ -1609,21 +1581,12 @@ protected static final String PARSER_SETTINGS =
             }
         }
 
-        // copy declared entities
-        if (fDeclaredEntities != null) {
-            java.util.Enumeration keys = fDeclaredEntities.keys();
-            while (keys.hasMoreElements()) {
-                Object key = keys.nextElement();
-                Object value = fDeclaredEntities.get(key);
-                fEntities.put(key, value);
-            }
-        }
         fEntityHandler = null;
-               
+
         // reset scanner
         //if(fEntityScanner!=null)
           //  fEntityScanner.reset(fSymbolTable, this,fErrorReporter);
-        
+
     }
     /**
      * Returns a list of feature identifiers that are recognized by
@@ -1633,7 +1596,7 @@ protected static final String PARSER_SETTINGS =
     public String[] getRecognizedFeatures() {
         return (String[])(RECOGNIZED_FEATURES.clone());
     } // getRecognizedFeatures():String[]
-    
+
     /**
      * Sets the state of a feature. This method is called by the component
      * manager any time after reset when a feature changes state.
@@ -1651,18 +1614,23 @@ protected static final String PARSER_SETTINGS =
      */
     public void setFeature(String featureId, boolean state)
     throws XMLConfigurationException {
-        
+
         // xerces features
         if (featureId.startsWith(Constants.XERCES_FEATURE_PREFIX)) {
             final int suffixLength = featureId.length() - Constants.XERCES_FEATURE_PREFIX.length();
-            if (suffixLength == Constants.ALLOW_JAVA_ENCODINGS_FEATURE.length() && 
+            if (suffixLength == Constants.ALLOW_JAVA_ENCODINGS_FEATURE.length() &&
                 featureId.endsWith(Constants.ALLOW_JAVA_ENCODINGS_FEATURE)) {
                 fAllowJavaEncodings = state;
             }
+            if (suffixLength == Constants.LOAD_EXTERNAL_DTD_FEATURE.length() &&
+                featureId.endsWith(Constants.LOAD_EXTERNAL_DTD_FEATURE)) {
+                fLoadExternalDTD = state;
+                return;
+            }
         }
-        
+
     } // setFeature(String,boolean)
-    
+
     /**
      * Sets the value of a property. This method is called by the component
      * manager any time after reset when a property changes value.
@@ -1682,23 +1650,23 @@ protected static final String PARSER_SETTINGS =
         // Xerces properties
         if (propertyId.startsWith(Constants.XERCES_PROPERTY_PREFIX)) {
             final int suffixLength = propertyId.length() - Constants.XERCES_PROPERTY_PREFIX.length();
-        	
-            if (suffixLength == Constants.SYMBOL_TABLE_PROPERTY.length() && 
+
+            if (suffixLength == Constants.SYMBOL_TABLE_PROPERTY.length() &&
                 propertyId.endsWith(Constants.SYMBOL_TABLE_PROPERTY)) {
                 fSymbolTable = (SymbolTable)value;
                 return;
             }
-            if (suffixLength == Constants.ERROR_REPORTER_PROPERTY.length() && 
+            if (suffixLength == Constants.ERROR_REPORTER_PROPERTY.length() &&
                 propertyId.endsWith(Constants.ERROR_REPORTER_PROPERTY)) {
                 fErrorReporter = (XMLErrorReporter)value;
                 return;
             }
-            if (suffixLength == Constants.ENTITY_RESOLVER_PROPERTY.length() && 
+            if (suffixLength == Constants.ENTITY_RESOLVER_PROPERTY.length() &&
                 propertyId.endsWith(Constants.ENTITY_RESOLVER_PROPERTY)) {
                 fEntityResolver = (XMLEntityResolver)value;
                 return;
             }
-            if (suffixLength == Constants.BUFFER_SIZE_PROPERTY.length() && 
+            if (suffixLength == Constants.BUFFER_SIZE_PROPERTY.length() &&
                 propertyId.endsWith(Constants.BUFFER_SIZE_PROPERTY)) {
                 Integer bufferSize = (Integer)value;
                 if (bufferSize != null &&
@@ -1708,14 +1676,24 @@ protected static final String PARSER_SETTINGS =
                     fBufferPool.setExternalBufferSize(fBufferSize);
                 }
             }
-            if (suffixLength == Constants.SECURITY_MANAGER_PROPERTY.length() && 
+            if (suffixLength == Constants.SECURITY_MANAGER_PROPERTY.length() &&
                 propertyId.endsWith(Constants.SECURITY_MANAGER_PROPERTY)) {
-                fSecurityManager = (SecurityManager)value; 
-                fEntityExpansionLimit = (fSecurityManager != null)?fSecurityManager.getEntityExpansionLimit():0;
+                fSecurityManager = (XMLSecurityManager)value;
             }
         }
-        
+
+        //JAXP 1.5 properties
+        if (propertyId.equals(XML_SECURITY_PROPERTY_MANAGER))
+        {
+            XMLSecurityPropertyManager spm = (XMLSecurityPropertyManager)value;
+            fAccessExternalDTD = spm.getValue(XMLSecurityPropertyManager.Property.ACCESS_EXTERNAL_DTD);
+        }
     }
+
+    public void setLimitAnalyzer(XMLLimitAnalyzer fLimitAnalyzer) {
+        this.fLimitAnalyzer = fLimitAnalyzer;
+    }
+
     /**
      * Returns a list of property identifiers that are recognized by
      * this component. This method may return null if no properties
@@ -1741,7 +1719,7 @@ protected static final String PARSER_SETTINGS =
         }
         return null;
     } // getFeatureDefault(String):Boolean
-    
+
     /**
      * Returns the default state for a property, or null if this
      * component does not want to report a default value for this
@@ -1759,11 +1737,11 @@ protected static final String PARSER_SETTINGS =
         }
         return null;
     } // getPropertyDefault(String):Object
-    
+
     //
     // Public static methods
     //
-    
+
     /**
      * Expands a system id and returns the system id as a URI, if
      * it can be expanded. A return value of null means that the
@@ -1780,7 +1758,7 @@ protected static final String PARSER_SETTINGS =
     public static String expandSystemId(String systemId) {
         return expandSystemId(systemId, null);
     } // expandSystemId(String):String
-    
+
     //
     // Public static methods
     //
@@ -1839,7 +1817,7 @@ protected static final String PARSER_SETTINGS =
         }
 
         // return empty string if property value is empty string.
-        if (userDir.length() == 0) 
+        if (userDir.length() == 0)
             return new URI("file", "", "", null, null);
         // compute the new escaped value if the new property value doesn't
         // match the previous one
@@ -1923,19 +1901,19 @@ protected static final String PARSER_SETTINGS =
 
         return gUserDirURI;
     }
-    
+
     /**
      * Absolutizes a URI using the current value
      * of the "user.dir" property as the base URI. If
      * the URI is already absolute, this is a no-op.
-     * 
+     *
      * @param uri the URI to absolutize
      */
-    public static void absolutizeAgainstUserDir(URI uri) 
+    public static void absolutizeAgainstUserDir(URI uri)
         throws URI.MalformedURIException {
         uri.absolutize(getUserDir());
     }
-    
+
     /**
      * Expands a system id and returns the system id as a URI, if
      * it can be expanded. A return value of null means that the
@@ -2020,8 +1998,8 @@ protected static final String PARSER_SETTINGS =
     public static String expandSystemId(String systemId, String baseSystemId,
                                         boolean strict)
             throws URI.MalformedURIException {
-            
-        // check if there is a system id before 
+
+        // check if there is a system id before
         // trying to expand it.
         if (systemId == null) {
             return null;
@@ -2029,14 +2007,6 @@ protected static final String PARSER_SETTINGS =
 
         // system id has to be a valid URI
         if (strict) {
-
-
-            // check if there is a system id before 
-            // trying to expand it.
-            if (systemId == null) {
-                return null;
-            }
-
             try {
                 // if it's already an absolute one, return it
                 new URI(systemId);
@@ -2071,7 +2041,7 @@ protected static final String PARSER_SETTINGS =
 
         // Assume the URIs are well-formed. If it turns out they're not, try fixing them up.
         try {
-            return expandSystemIdStrictOff(systemId, baseSystemId);
+             return expandSystemIdStrictOff(systemId, baseSystemId);
         }
         catch (URI.MalformedURIException e) {
             /** Xerces URI rejects unicode, try java.net.URI
@@ -2085,7 +2055,6 @@ protected static final String PARSER_SETTINGS =
                 // continue on...
             }
         }
-
         // check for bad parameters id
         if (systemId.length() == 0) {
             return systemId;
@@ -2093,7 +2062,7 @@ protected static final String PARSER_SETTINGS =
 
         // normalize id
         String id = fixURI(systemId);
-        
+
         // normalize base
         URI base = null;
         URI uri = null;
@@ -2122,7 +2091,7 @@ protected static final String PARSER_SETTINGS =
         }
         catch (Exception e) {
             // let it go through
-            
+
         }
 
         if (uri == null) {
@@ -2159,7 +2128,7 @@ protected static final String PARSER_SETTINGS =
 
         // absolutize the system identifier using the base URI
         systemURI.absolutize(baseURI);
-         
+
         // return the string rep of the new uri (an absolute one)
         return systemURI.toString();
 
@@ -2179,6 +2148,7 @@ protected static final String PARSER_SETTINGS =
         // setInstanceFollowRedirects doesn't exist.
         catch (Exception exc) {}
     }
+
 
     /**
      * Helper method for expandSystemId(String,String,boolean):String
@@ -2227,13 +2197,13 @@ protected static final String PARSER_SETTINGS =
     private static String expandSystemIdStrictOff1(String systemId, String baseSystemId)
         throws URISyntaxException, URI.MalformedURIException {
 
-        java.net.URI systemURI = new java.net.URI(systemId);
+            java.net.URI systemURI = new java.net.URI(systemId);
         // If it's already an absolute one, return it
         if (systemURI.isAbsolute()) {
             if (systemURI.getScheme().length() > 1) {
                 return systemId;
             }
-            /** 
+            /**
              * If the scheme's length is only one character,
              * it's likely that this was intended as a file
              * path. Fixing this up in expandSystemId to
@@ -2256,15 +2226,15 @@ protected static final String PARSER_SETTINGS =
         }
 
         // absolutize the system identifier using the base URI
+//        systemURI.absolutize(baseURI);
         systemURI = (new java.net.URI(baseURI.toString())).resolve(systemURI);
-        
+
         // return the string rep of the new uri (an absolute one)
         return systemURI.toString();
 
         // if any exception is thrown, it'll get thrown to the caller.
 
     } // expandSystemIdStrictOff(String,String):String
-
 
     //
     // Protected methods
@@ -2468,7 +2438,7 @@ protected static final String PARSER_SETTINGS =
             System.out.println();
         }
         return new BufferedReader( new InputStreamReader(inputStream, javaEncoding));
-        
+
     } // createReader(InputStream,String, Boolean): Reader
 
 
@@ -2664,7 +2634,7 @@ protected static final String PARSER_SETTINGS =
                 str = "file:" + str;
             }
         }
-        
+
         // replace spaces in file names with %20.
         // Original comment from JDK5: the following algorithm might not be
         // very performant, but people who want to use invalid URI's have to
@@ -2686,12 +2656,13 @@ protected static final String PARSER_SETTINGS =
             }
             str = sb.toString();
         }
-        
+
         // done
         return str;
 
     } // fixURI(String):String
-    
+
+
     //
     // Package visible methods
     //
@@ -2747,36 +2718,36 @@ protected static final String PARSER_SETTINGS =
             }
         }
     } // print()
-    
+
     /**
      * Buffer used in entity manager to reuse character arrays instead
      * of creating new ones every time.
-     * 
+     *
      * @xerces.internal
-     * 
+     *
      * @author Ankit Pasricha, IBM
      */
     private static class CharacterBuffer {
 
         /** character buffer */
         private char[] ch;
-        
+
         /** whether the buffer is for an external or internal scanned entity */
         private boolean isExternal;
-        
+
         public CharacterBuffer(boolean isExternal, int size) {
             this.isExternal = isExternal;
             ch = new char[size];
         }
     }
-    
-    
+
+
      /**
      * Stores a number of character buffers and provides it to the entity
      * manager to use when an entity is seen.
-     * 
-     * @xerces.internal 
-     * 
+     *
+     * @xerces.internal
+     *
      * @author Ankit Pasricha, IBM
      */
     private static class CharacterBufferPool {
@@ -2851,7 +2822,7 @@ protected static final String PARSER_SETTINGS =
             fExternalTop = -1;
         }
     }
-        
+
     /**
     * This class wraps the byte inputstreams we're presented with.
     * We need it because java.io.InputStreams don't provide
@@ -2870,7 +2841,7 @@ protected static final String PARSER_SETTINGS =
     * won't buffer data read this way!</strong>
     *
     * @xerces.internal
-    *  
+    *
     * @author Neil Graham, IBM
     * @author Glenn Marcy, IBM
     */
@@ -2925,37 +2896,37 @@ protected static final String PARSER_SETTINGS =
             fOffset++;
             return b & 0xff;
         }
- 
+
         public int read(byte[] b, int off, int len) throws IOException {
             int bytesLeft = fLength - fOffset;
             if (bytesLeft == 0) {
                 if (fOffset == fEndOffset) {
                     return -1;
                 }
-               
+
                 /**
                  * //System.out.println("fCurrentEntitty = " + fCurrentEntity );
                  * //System.out.println("fInputStream = " + fInputStream );
                  * // better get some more for the voracious reader... */
-                
+
                 if(fCurrentEntity.mayReadChunks || !fCurrentEntity.xmlDeclChunkRead) {
-                    
+
                     if (!fCurrentEntity.xmlDeclChunkRead)
                     {
                         fCurrentEntity.xmlDeclChunkRead = true;
-                        len = fCurrentEntity.DEFAULT_XMLDECL_BUFFER_SIZE;
+                        len = Entity.ScannedEntity.DEFAULT_XMLDECL_BUFFER_SIZE;
                     }
                     return fInputStream.read(b, off, len);
                 }
-                 
+
                 int returnedVal = read();
                 if(returnedVal == -1) {
                   fEndOffset = fOffset;
                   return -1;
                 }
                 b[off] = (byte)returnedVal;
-                return 1; 
-               
+                return 1;
+
             }
             if (len < bytesLeft) {
                 if (len <= 0) {
@@ -3036,7 +3007,7 @@ protected static final String PARSER_SETTINGS =
             }
         }
     } // end of RewindableInputStream class
-            
+
     public void test(){
         //System.out.println("TESTING: Added familytree to entityManager");
         //Usecase1
@@ -3060,5 +3031,5 @@ protected static final String PARSER_SETTINGS =
         fEntityStorage.addInternalEntity("ch1","&#84;");
         fEntityStorage.addInternalEntity("% ch2","param");
     }
-            
+
 } // class XMLEntityManager

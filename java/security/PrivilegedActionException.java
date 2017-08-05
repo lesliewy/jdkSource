@@ -1,21 +1,39 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security;
 
 /**
  * This exception is thrown by
- * <code>doPrivileged(PrivilegedExceptionAction)</code> and
- * <code>doPrivileged(PrivilegedExceptionAction,
- * AccessControlContext context)</code> to indicate
+ * {@code doPrivileged(PrivilegedExceptionAction)} and
+ * {@code doPrivileged(PrivilegedExceptionAction,
+ * AccessControlContext context)} to indicate
  * that the action being performed threw a checked exception.  The exception
  * thrown by the action can be obtained by calling the
- * <code>getException</code> method.  In effect, an
- * <code>PrivilegedActionException</code> is a "wrapper"
+ * {@code getException} method.  In effect, an
+ * {@code PrivilegedActionException} is a "wrapper"
  * for an exception thrown by a privileged action.
  *
  * <p>As of release 1.4, this exception has been retrofitted to conform to
@@ -45,33 +63,33 @@ public class PrivilegedActionException extends Exception {
      * @param exception The exception thrown
      */
     public PrivilegedActionException(Exception exception) {
-	super((Throwable)null);  // Disallow initCause
+        super((Throwable)null);  // Disallow initCause
         this.exception = exception;
     }
 
     /**
      * Returns the exception thrown by the privileged computation that
-     * resulted in this <code>PrivilegedActionException</code>.
+     * resulted in this {@code PrivilegedActionException}.
      *
      * <p>This method predates the general-purpose exception chaining facility.
      * The {@link Throwable#getCause()} method is now the preferred means of
      * obtaining this information.
      *
      * @return the exception thrown by the privileged computation that
-     *         resulted in this <code>PrivilegedActionException</code>.
+     *         resulted in this {@code PrivilegedActionException}.
      * @see PrivilegedExceptionAction
      * @see AccessController#doPrivileged(PrivilegedExceptionAction)
      * @see AccessController#doPrivileged(PrivilegedExceptionAction,
      *                                            AccessControlContext)
      */
     public Exception getException() {
-	return exception;
+        return exception;
     }
 
     /**
-     * Returns the the cause of this exception (the exception thrown by
+     * Returns the cause of this exception (the exception thrown by
      * the privileged computation that resulted in this
-     * <code>PrivilegedActionException</code>).
+     * {@code PrivilegedActionException}).
      *
      * @return  the cause of this exception.
      * @since   1.4

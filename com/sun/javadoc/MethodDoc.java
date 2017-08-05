@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package com.sun.javadoc;
@@ -19,6 +37,11 @@ public interface MethodDoc extends ExecutableMemberDoc {
      * Return true if this method is abstract
      */
     boolean isAbstract();
+
+    /**
+     * Return true if this method is default
+     */
+    boolean isDefault();
 
     /**
      * Get return type.
@@ -74,4 +97,3 @@ public interface MethodDoc extends ExecutableMemberDoc {
      */
     boolean overrides(MethodDoc meth);
 }
-

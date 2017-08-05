@@ -1,9 +1,13 @@
 /*
- * Copyright 2003-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -19,19 +23,19 @@
 
 package com.sun.org.apache.xml.internal.serializer;
 
-import java.util.Hashtable;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * This class extends org.xml.sax.helpers.AttributesImpl which implements org.
- * xml.sax.Attributes. But for optimization this class adds a Hashtable for
+ * xml.sax.Attributes. But for optimization this class adds a Map for
  * faster lookup of an index by qName, which is commonly done in the stream
  * serializer.
- * 
+ *
  * @see org.xml.sax.Attributes
- * 
+ *
  * @xsl.usage internal
  */
 public final class AttributesImplSerializer extends AttributesImpl
@@ -40,23 +44,23 @@ public final class AttributesImplSerializer extends AttributesImpl
      * Hash table of qName/index values to quickly lookup the index
      * of an attributes qName.  qNames are in uppercase in the hash table
      * to make the search case insensitive.
-     * 
+     *
      * The keys to the hashtable to find the index are either
      * "prefix:localName"  or "{uri}localName".
      */
-    private final Hashtable m_indexFromQName = new Hashtable();
-    
+    private final Map<String, Integer> m_indexFromQName = new HashMap<>();
+
     private final StringBuffer m_buff = new StringBuffer();
-    
+
     /**
      * This is the number of attributes before switching to the hash table,
      * and can be tuned, but 12 seems good for now - Brian M.
      */
     private static final int MAX = 12;
-    
+
     /**
      * One less than the number of attributes before switching to
-     * the Hashtable.
+     * the Map.
      */
     private static final int MAXMinus1 = MAX - 1;
 
@@ -78,8 +82,8 @@ public final class AttributesImplSerializer extends AttributesImpl
             return index;
         }
         // we have too many attributes and the super class is slow
-        // so find it quickly using our Hashtable.
-        Integer i = (Integer)m_indexFromQName.get(qname);
+        // so find it quickly using our Map.
+        Integer i = m_indexFromQName.get(qname);
         if (i == null)
             index = -1;
         else
@@ -122,23 +126,22 @@ public final class AttributesImplSerializer extends AttributesImpl
         {
             /* add the key with the format of "prefix:localName" */
             /* we have just added the attibute, its index is the old length */
-            Integer i = new Integer(index);
+            Integer i = index;
             m_indexFromQName.put(qname, i);
-            
+
             /* now add with key of the format "{uri}localName" */
             m_buff.setLength(0);
             m_buff.append('{').append(uri).append('}').append(local);
             String key = m_buff.toString();
             m_indexFromQName.put(key, i);
         }
-        return;
     }
 
     /**
      * We are switching over to having a hash table for quick look
      * up of attributes, but up until now we haven't kept any
-     * information in the Hashtable, so we now update the Hashtable.
-     * Future additional attributes will update the Hashtable as
+     * information in the Map, so we now update the Map.
+     * Future additional attributes will update the Map as
      * they are added.
      * @param numAtts
      */
@@ -147,9 +150,9 @@ public final class AttributesImplSerializer extends AttributesImpl
         for (int index = 0; index < numAtts; index++)
         {
             String qName = super.getQName(index);
-            Integer i = new Integer(index);
+            Integer i = index;
             m_indexFromQName.put(qName, i);
-            
+
             // Add quick look-up to find with uri/local name pair
             String uri = super.getURI(index);
             String local = super.getLocalName(index);
@@ -173,7 +176,7 @@ public final class AttributesImplSerializer extends AttributesImpl
         if (MAX <= len)
         {
             // if we have had enough attributes and are
-            // using the Hashtable, then clear the Hashtable too.
+            // using the Map, then clear the Map too.
             m_indexFromQName.clear();
         }
 
@@ -194,13 +197,13 @@ public final class AttributesImplSerializer extends AttributesImpl
 
         // we've let the super class add the attributes, but
         // we need to keep the hash table up to date ourselves for the
-        // potentially new qName/index pairs for quick lookup. 
+        // potentially new qName/index pairs for quick lookup.
         int numAtts = atts.getLength();
         if (MAX <= numAtts)
             switchOverToHash(numAtts);
 
     }
-    
+
     /**
      * This method gets the index of an attribute given its uri and locanName.
      * @param uri the URI of the attribute name.
@@ -220,16 +223,16 @@ public final class AttributesImplSerializer extends AttributesImpl
             return index;
         }
         // we have too many attributes and the super class is slow
-        // so find it quickly using our Hashtable.
+        // so find it quickly using our Map.
         // Form the key of format "{uri}localName"
         m_buff.setLength(0);
         m_buff.append('{').append(uri).append('}').append(localName);
         String key = m_buff.toString();
-        Integer i = (Integer)m_indexFromQName.get(key);
+        Integer i = m_indexFromQName.get(key);
         if (i == null)
             index = -1;
         else
-            index = i.intValue();
+            index = i;
         return index;
     }
 }

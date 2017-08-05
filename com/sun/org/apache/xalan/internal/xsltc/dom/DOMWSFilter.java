@@ -1,9 +1,13 @@
 /*
- * Copyright 2002-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -22,9 +26,10 @@ import com.sun.org.apache.xalan.internal.xsltc.DOM;
 import com.sun.org.apache.xalan.internal.xsltc.DOMEnhancedForDTM;
 import com.sun.org.apache.xalan.internal.xsltc.StripFilter;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 import com.sun.org.apache.xml.internal.dtm.DTM;
 import com.sun.org.apache.xml.internal.dtm.DTMWSFilter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A wrapper class that adapts the
@@ -35,10 +40,10 @@ public class DOMWSFilter implements DTMWSFilter {
 
     private AbstractTranslet m_translet;
     private StripFilter m_filter;
-    
-    // The Hashtable for DTM to mapping array
-    private Hashtable m_mappings;
-    
+
+    // The Map for DTM to mapping array
+    private Map<DTM, short[]> m_mappings;
+
     // Cache the DTM and mapping that are used last time
     private DTM m_currentDTM;
     private short[] m_currentMapping;
@@ -55,7 +60,7 @@ public class DOMWSFilter implements DTMWSFilter {
      */
     public DOMWSFilter(AbstractTranslet translet) {
         m_translet = translet;
-        m_mappings = new Hashtable();
+        m_mappings = new HashMap<>();
 
         if (translet instanceof StripFilter) {
             m_filter = (StripFilter) translet;
@@ -81,13 +86,13 @@ public class DOMWSFilter implements DTMWSFilter {
 
             if (dtm instanceof DOMEnhancedForDTM) {
                 DOMEnhancedForDTM mappableDOM = (DOMEnhancedForDTM)dtm;
-                
+
                 short[] mapping;
                 if (dtm == m_currentDTM) {
                     mapping = m_currentMapping;
                 }
-                else {  
-                    mapping = (short[])m_mappings.get(dtm);
+                else {
+                    mapping = m_mappings.get(dtm);
                     if (mapping == null) {
                         mapping = mappableDOM.getMapping(
                                      m_translet.getNamesArray(),
@@ -98,9 +103,9 @@ public class DOMWSFilter implements DTMWSFilter {
                         m_currentMapping = mapping;
                     }
                 }
-                
+
                 int expType = mappableDOM.getExpandedTypeID(node);
-                
+
                 // %OPT% The mapping array does not have information about all the
                 // exptypes. However it does contain enough information about all names
                 // in the translet's namesArray. If the expType does not fall into the
@@ -110,8 +115,8 @@ public class DOMWSFilter implements DTMWSFilter {
                   type = mapping[expType];
                 else
                   type = -1;
-                
-            } 
+
+            }
             else {
                 return INHERIT;
             }

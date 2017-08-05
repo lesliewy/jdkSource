@@ -1,9 +1,13 @@
 /*
- * Copyright 1999-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2005, 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,28 +22,24 @@
  */
 package com.sun.org.apache.xalan.internal.lib;
 
-import java.util.Hashtable;
-import java.util.StringTokenizer;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import com.sun.org.apache.xalan.internal.extensions.ExpressionContext;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 import com.sun.org.apache.xalan.internal.xslt.EnvironmentCheck;
 import com.sun.org.apache.xpath.internal.NodeSet;
 import com.sun.org.apache.xpath.internal.objects.XBoolean;
 import com.sun.org.apache.xpath.internal.objects.XNumber;
 import com.sun.org.apache.xpath.internal.objects.XObject;
-import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
-
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.StringTokenizer;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.traversal.NodeIterator;
-
 import org.xml.sax.SAXNotSupportedException;
 
 /**
@@ -52,6 +52,7 @@ import org.xml.sax.SAXNotSupportedException;
  */
 public class Extensions
 {
+    static final String JDK_DEFAULT_DOM = "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl";
   /**
    * Constructor Extensions
    *
@@ -110,34 +111,25 @@ public class Extensions
 
       // This no longer will work right since the DTM.
       // Document myDoc = myProcessor.getContextNode().getOwnerDocument();
-      try
-      {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document myDoc = db.newDocument();
-        
+      Document myDoc = getDocument();
+
         Text textNode = myDoc.createTextNode(textNodeValue);
         DocumentFragment docFrag = myDoc.createDocumentFragment();
-  
+
         docFrag.appendChild(textNode);
-  
-        return new NodeSet(docFrag);
-      }
-      catch(ParserConfigurationException pce)
-      {
-        throw new com.sun.org.apache.xml.internal.utils.WrappedRuntimeException(pce);
-      }
+
+      return new NodeSet(docFrag);
     }
   }
 
   /**
    * Returns the intersection of two node-sets.
-   * 
+   *
    * @param nl1 NodeList for first node-set
    * @param nl2 NodeList for second node-set
    * @return a NodeList containing the nodes in nl1 that are also in nl2
    *
-   * Note: The usage of this extension function in the xalan namespace 
+   * Note: The usage of this extension function in the xalan namespace
    * is deprecated. Please use the same function in the EXSLT sets extension
    * (http://exslt.org/sets).
    */
@@ -148,12 +140,12 @@ public class Extensions
 
   /**
    * Returns the difference between two node-sets.
-   * 
+   *
    * @param nl1 NodeList for first node-set
    * @param nl2 NodeList for second node-set
    * @return a NodeList containing the nodes in nl1 that are not in nl2
-   * 
-   * Note: The usage of this extension function in the xalan namespace 
+   *
+   * Note: The usage of this extension function in the xalan namespace
    * is deprecated. Please use the same function in the EXSLT sets extension
    * (http://exslt.org/sets).
    */
@@ -170,7 +162,7 @@ public class Extensions
    * In other words, if more than one node in nl contains the same string value,
    * only include the first such node found.
    *
-   * Note: The usage of this extension function in the xalan namespace 
+   * Note: The usage of this extension function in the xalan namespace
    * is deprecated. Please use the same function in the EXSLT sets extension
    * (http://exslt.org/sets).
    */
@@ -219,7 +211,7 @@ public class Extensions
    *
    * @throws SAXNotSupportedException
    *
-   * Note: The usage of this extension function in the xalan namespace 
+   * Note: The usage of this extension function in the xalan namespace
    * is deprecated. Please use the same function in the EXSLT dynamic extension
    * (http://exslt.org/dynamic).
    */
@@ -237,7 +229,7 @@ public class Extensions
    * will be an empty NodeSet.
    *
    * Contributed to XalanJ1 by <a href="mailto:benoit.cerrina@writeme.com">Benoit Cerrina</a>.
-   * 
+   *
    * @param toTokenize The string to be split into text tokens.
    * @param delims The delimiters to use.
    * @return a NodeSet as described above.
@@ -245,8 +237,7 @@ public class Extensions
   public static NodeList tokenize(String toTokenize, String delims)
   {
 
-    Document doc = DocumentHolder.m_doc;
-
+    Document doc = getDocument();
 
     StringTokenizer lTokenizer = new StringTokenizer(toTokenize, delims);
     NodeSet resultSet = new NodeSet();
@@ -271,7 +262,7 @@ public class Extensions
    * will be an empty NodeSet.
    *
    * Contributed to XalanJ1 by <a href="mailto:benoit.cerrina@writeme.com">Benoit Cerrina</a>.
-   * 
+   *
    * @param toTokenize The string to be split into text tokens.
    * @return a NodeSet as described above.
    */
@@ -281,20 +272,20 @@ public class Extensions
   }
 
   /**
-   * Return a Node of basic debugging information from the 
+   * Return a Node of basic debugging information from the
    * EnvironmentCheck utility about the Java environment.
    *
    * <p>Simply calls the {@link com.sun.org.apache.xalan.internal.xslt.EnvironmentCheck}
-   * utility to grab info about the Java environment and CLASSPATH, 
-   * etc., and then returns the resulting Node.  Stylesheets can 
-   * then maniuplate this data or simply xsl:copy-of the Node.  Note 
-   * that we first attempt to load the more advanced 
-   * org.apache.env.Which utility by reflection; only if that fails 
-   * to we still use the internal version.  Which is available from 
+   * utility to grab info about the Java environment and CLASSPATH,
+   * etc., and then returns the resulting Node.  Stylesheets can
+   * then maniuplate this data or simply xsl:copy-of the Node.  Note
+   * that we first attempt to load the more advanced
+   * org.apache.env.Which utility by reflection; only if that fails
+   * to we still use the internal version.  Which is available from
    * <a href="http://xml.apache.org/commons/">http://xml.apache.org/commons/</a>.</p>
    *
-   * <p>We throw a WrappedRuntimeException in the unlikely case 
-   * that reading information from the environment throws us an 
+   * <p>We throw a WrappedRuntimeException in the unlikely case
+   * that reading information from the environment throws us an
    * exception. (Is this really the best thing to do?)</p>
    *
    * @param myContext an <code>ExpressionContext</code> passed in by the
@@ -304,22 +295,12 @@ public class Extensions
   public static Node checkEnvironment(ExpressionContext myContext)
   {
 
-    Document factoryDocument;
-    try
-    {
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      DocumentBuilder db = dbf.newDocumentBuilder();
-      factoryDocument = db.newDocument();
-    }
-    catch(ParserConfigurationException pce)
-    {
-      throw new com.sun.org.apache.xml.internal.utils.WrappedRuntimeException(pce);
-    }
+    Document factoryDocument = getDocument();
 
     Node resultNode = null;
     try
     {
-      // First use reflection to try to load Which, which is a 
+      // First use reflection to try to load Which, which is a
       //  better version of EnvironmentCheck
       resultNode = checkEnvironmentUsingWhich(myContext, factoryDocument);
 
@@ -328,7 +309,7 @@ public class Extensions
 
       // If reflection failed, fallback to our internal EnvironmentCheck
       EnvironmentCheck envChecker = new EnvironmentCheck();
-      Hashtable h = envChecker.getEnvironmentHash();
+      Map<String, Object> h = envChecker.getEnvironmentHash();
       resultNode = factoryDocument.createElement("checkEnvironmentExtension");
       envChecker.appendEnvironmentReport(resultNode, factoryDocument, h);
       envChecker = null;
@@ -349,7 +330,7 @@ public class Extensions
    * @param factoryDocument providing createElement services, etc.
    * @return a Node with environment info; null if any error
    */
-  private static Node checkEnvironmentUsingWhich(ExpressionContext myContext, 
+  private static Node checkEnvironmentUsingWhich(ExpressionContext myContext,
         Document factoryDocument)
   {
     final String WHICH_CLASSNAME = "org.apache.env.Which";
@@ -363,7 +344,7 @@ public class Extensions
       Class clazz = ObjectFactory.findProviderClass(WHICH_CLASSNAME, true);
       if (null == clazz)
         return null;
-        
+
       // Fully qualify names since this is the only method they're used in
       java.lang.reflect.Method method = clazz.getMethod(WHICH_METHODNAME, WHICH_METHOD_ARGS);
       Hashtable report = new Hashtable();
@@ -374,7 +355,7 @@ public class Extensions
 
       // Create a parent to hold the report and append hash to it
       Node resultNode = factoryDocument.createElement("checkEnvironmentExtension");
-      com.sun.org.apache.xml.internal.utils.Hashtree2Node.appendHashToNode(report, "whichReport", 
+      com.sun.org.apache.xml.internal.utils.Hashtree2Node.appendHashToNode(report, "whichReport",
             resultNode, factoryDocument);
 
       return resultNode;
@@ -385,32 +366,23 @@ public class Extensions
       return null;
     }
   }
-  
+
     /**
-     * This class is not loaded until first referenced (see Java Language
-     * Specification by Gosling/Joy/Steele, section 12.4.1)
-     *
-     * The static members are created when this class is first referenced, as a
-     * lazy initialization not needing checking against null or any
-     * synchronization.
-     *
+   * @return an instance of DOM Document
      */
-    private static class DocumentHolder
-    {
-        // Reuse the Document object to reduce memory usage.
-        private static final Document m_doc;
-        static 
+   private static Document getDocument()
+   {
+        try
         {
-            try
-            {
-                m_doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            if (System.getSecurityManager() == null) {
+                return DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            } else {
+                return DocumentBuilderFactory.newInstance(JDK_DEFAULT_DOM, null).newDocumentBuilder().newDocument();
             }
-
-            catch(ParserConfigurationException pce)
-            {
-                  throw new com.sun.org.apache.xml.internal.utils.WrappedRuntimeException(pce);
-            }
-
         }
-    }  
+        catch(ParserConfigurationException pce)
+        {
+            throw new com.sun.org.apache.xml.internal.utils.WrappedRuntimeException(pce);
+        }
+    }
 }

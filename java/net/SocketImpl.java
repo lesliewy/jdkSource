@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.net;
@@ -13,15 +31,14 @@ import java.io.OutputStream;
 import java.io.FileDescriptor;
 
 /**
- * The abstract class <code>SocketImpl</code> is a common superclass 
- * of all classes that actually implement sockets. It is used to 
- * create both client and server sockets. 
+ * The abstract class {@code SocketImpl} is a common superclass
+ * of all classes that actually implement sockets. It is used to
+ * create both client and server sockets.
  * <p>
- * A "plain" socket implements these methods exactly as 
- * described, without attempting to go through a firewall or proxy. 
+ * A "plain" socket implements these methods exactly as
+ * described, without attempting to go through a firewall or proxy.
  *
  * @author  unascribed
- * @version %I%, %G%
  * @since   JDK1.0
  */
 public abstract class SocketImpl implements SocketOptions {
@@ -32,29 +49,29 @@ public abstract class SocketImpl implements SocketOptions {
     ServerSocket serverSocket = null;
 
     /**
-     * The file descriptor object for this socket. 
+     * The file descriptor object for this socket.
      */
     protected FileDescriptor fd;
-    
+
     /**
-     * The IP address of the remote end of this socket. 
+     * The IP address of the remote end of this socket.
      */
     protected InetAddress address;
-   
+
     /**
-     * The port number on the remote host to which this socket is connected. 
+     * The port number on the remote host to which this socket is connected.
      */
     protected int port;
 
     /**
-     * The local port number to which this socket is connected. 
+     * The local port number to which this socket is connected.
      */
-    protected int localport;   
+    protected int localport;
 
     /**
-     * Creates either a stream or a datagram socket. 
+     * Creates either a stream or a datagram socket.
      *
-     * @param      stream   if <code>true</code>, create a stream socket;
+     * @param      stream   if {@code true}, create a stream socket;
      *                      otherwise, create a datagram socket.
      * @exception  IOException  if an I/O error occurs while creating the
      *               socket.
@@ -62,7 +79,7 @@ public abstract class SocketImpl implements SocketOptions {
     protected abstract void create(boolean stream) throws IOException;
 
     /**
-     * Connects this socket to the specified port on the named host. 
+     * Connects this socket to the specified port on the named host.
      *
      * @param      host   the name of the remote host.
      * @param      port   the port number.
@@ -87,7 +104,7 @@ public abstract class SocketImpl implements SocketOptions {
      * will then block until established or an error occurs.
      *
      * @param      address   the Socket address of the remote host.
-     * @param	  timeout  the timeout value, in milliseconds, or zero for no timeout.
+     * @param     timeout  the timeout value, in milliseconds, or zero for no timeout.
      * @exception  IOException  if an I/O error occurs when attempting a
      *               connection.
      * @since 1.4
@@ -104,10 +121,10 @@ public abstract class SocketImpl implements SocketOptions {
     protected abstract void bind(InetAddress host, int port) throws IOException;
 
     /**
-     * Sets the maximum queue length for incoming connection indications 
-     * (a request to connect) to the <code>count</code> argument. If a 
-     * connection indication arrives when the queue is full, the 
-     * connection is refused. 
+     * Sets the maximum queue length for incoming connection indications
+     * (a request to connect) to the {@code count} argument. If a
+     * connection indication arrives when the queue is full, the
+     * connection is refused.
      *
      * @param      backlog   the maximum length of the queue.
      * @exception  IOException  if an I/O error occurs when creating the queue.
@@ -115,7 +132,7 @@ public abstract class SocketImpl implements SocketOptions {
     protected abstract void listen(int backlog) throws IOException;
 
     /**
-     * Accepts a connection. 
+     * Accepts a connection.
      *
      * @param      s   the accepted connection.
      * @exception  IOException  if an I/O error occurs when accepting the
@@ -153,7 +170,7 @@ public abstract class SocketImpl implements SocketOptions {
     protected abstract int available() throws IOException;
 
     /**
-     * Closes this socket. 
+     * Closes this socket.
      *
      * @exception  IOException  if an I/O error occurs when closing this socket.
      */
@@ -164,8 +181,9 @@ public abstract class SocketImpl implements SocketOptions {
      * Any data sent to this socket is acknowledged and then
      * silently discarded.
      *
-     * If you read from a socket input stream after invoking 
-     * shutdownInput() on the socket, the stream will return EOF.
+     * If you read from a socket input stream after invoking this method on the
+     * socket, the stream's {@code available} method will return 0, and its
+     * {@code read} methods will return {@code -1} (end of stream).
      *
      * @exception IOException if an I/O error occurs when shutting down this
      * socket.
@@ -177,14 +195,14 @@ public abstract class SocketImpl implements SocketOptions {
     protected void shutdownInput() throws IOException {
       throw new IOException("Method not implemented!");
     }
-    
+
     /**
      * Disables the output stream for this socket.
      * For a TCP socket, any previously written data will be sent
      * followed by TCP's normal connection termination sequence.
      *
-     * If you write to a socket output stream after invoking 
-     * shutdownOutput() on the socket, the stream will throw 
+     * If you write to a socket output stream after invoking
+     * shutdownOutput() on the socket, the stream will throw
      * an IOException.
      *
      * @exception IOException if an I/O error occurs when shutting down this
@@ -196,40 +214,40 @@ public abstract class SocketImpl implements SocketOptions {
      */
     protected void shutdownOutput() throws IOException {
       throw new IOException("Method not implemented!");
-    }  
+    }
 
     /**
-     * Returns the value of this socket's <code>fd</code> field.
+     * Returns the value of this socket's {@code fd} field.
      *
-     * @return  the value of this socket's <code>fd</code> field.
+     * @return  the value of this socket's {@code fd} field.
      * @see     java.net.SocketImpl#fd
      */
     protected FileDescriptor getFileDescriptor() {
-	return fd;
+        return fd;
     }
 
     /**
-     * Returns the value of this socket's <code>address</code> field.
+     * Returns the value of this socket's {@code address} field.
      *
-     * @return  the value of this socket's <code>address</code> field.
+     * @return  the value of this socket's {@code address} field.
      * @see     java.net.SocketImpl#address
      */
     protected InetAddress getInetAddress() {
-	return address;
+        return address;
     }
 
     /**
-     * Returns the value of this socket's <code>port</code> field.
+     * Returns the value of this socket's {@code port} field.
      *
-     * @return  the value of this socket's <code>port</code> field.
+     * @return  the value of this socket's {@code port} field.
      * @see     java.net.SocketImpl#port
      */
     protected int getPort() {
-	return port;
+        return port;
     }
 
     /**
-     * Returns whether or not this SocketImpl supports sending 
+     * Returns whether or not this SocketImpl supports sending
      * urgent data. By default, false is returned
      * unless the method is overridden in a sub-class
      *
@@ -252,45 +270,45 @@ public abstract class SocketImpl implements SocketOptions {
     protected abstract void sendUrgentData (int data) throws IOException;
 
     /**
-     * Returns the value of this socket's <code>localport</code> field.
+     * Returns the value of this socket's {@code localport} field.
      *
-     * @return  the value of this socket's <code>localport</code> field.
+     * @return  the value of this socket's {@code localport} field.
      * @see     java.net.SocketImpl#localport
      */
     protected int getLocalPort() {
-	return localport;
+        return localport;
     }
-    
+
     void setSocket(Socket soc) {
-	this.socket = soc;
+        this.socket = soc;
     }
 
     Socket getSocket() {
-	return socket;
+        return socket;
     }
 
     void setServerSocket(ServerSocket soc) {
-	this.serverSocket = soc;
+        this.serverSocket = soc;
     }
 
     ServerSocket getServerSocket() {
-	return serverSocket;
+        return serverSocket;
     }
 
     /**
-     * Returns the address and port of this socket as a <code>String</code>.
+     * Returns the address and port of this socket as a {@code String}.
      *
      * @return  a string representation of this socket.
      */
     public String toString() {
-	return "Socket[addr=" + getInetAddress() +
-	    ",port=" + getPort() + ",localport=" + getLocalPort()  + "]";
+        return "Socket[addr=" + getInetAddress() +
+            ",port=" + getPort() + ",localport=" + getLocalPort()  + "]";
     }
 
     void reset() throws IOException {
-   	address = null;
-    	port = 0;
-    	localport = 0;
+        address = null;
+        port = 0;
+        localport = 0;
     }
 
     /**
@@ -310,31 +328,71 @@ public abstract class SocketImpl implements SocketOptions {
      * values represent a lower priority than positive values. If the
      * application prefers short connection time over both low latency and high
      * bandwidth, for example, then it could invoke this method with the values
-     * <tt>(1, 0, 0)</tt>.  If the application prefers high bandwidth above low
+     * {@code (1, 0, 0)}.  If the application prefers high bandwidth above low
      * latency, and low latency above short connection time, then it could
-     * invoke this method with the values <tt>(0, 1, 2)</tt>.
+     * invoke this method with the values {@code (0, 1, 2)}.
      *
      * By default, this method does nothing, unless it is overridden in a
      * a sub-class.
      *
      * @param  connectionTime
-     *         An <tt>int</tt> expressing the relative importance of a short
+     *         An {@code int} expressing the relative importance of a short
      *         connection time
      *
      * @param  latency
-     *         An <tt>int</tt> expressing the relative importance of low
+     *         An {@code int} expressing the relative importance of low
      *         latency
      *
      * @param  bandwidth
-     *         An <tt>int</tt> expressing the relative importance of high
+     *         An {@code int} expressing the relative importance of high
      *         bandwidth
-     *  
+     *
      * @since 1.5
      */
     protected void setPerformancePreferences(int connectionTime,
                                           int latency,
                                           int bandwidth)
     {
-	/* Not implemented yet */
+        /* Not implemented yet */
+    }
+
+    <T> void setOption(SocketOption<T> name, T value) throws IOException {
+        if (name == StandardSocketOptions.SO_KEEPALIVE) {
+            setOption(SocketOptions.SO_KEEPALIVE, value);
+        } else if (name == StandardSocketOptions.SO_SNDBUF) {
+            setOption(SocketOptions.SO_SNDBUF, value);
+        } else if (name == StandardSocketOptions.SO_RCVBUF) {
+            setOption(SocketOptions.SO_RCVBUF, value);
+        } else if (name == StandardSocketOptions.SO_REUSEADDR) {
+            setOption(SocketOptions.SO_REUSEADDR, value);
+        } else if (name == StandardSocketOptions.SO_LINGER) {
+            setOption(SocketOptions.SO_LINGER, value);
+        } else if (name == StandardSocketOptions.IP_TOS) {
+            setOption(SocketOptions.IP_TOS, value);
+        } else if (name == StandardSocketOptions.TCP_NODELAY) {
+            setOption(SocketOptions.TCP_NODELAY, value);
+        } else {
+            throw new UnsupportedOperationException("unsupported option");
+        }
+    }
+
+    <T> T getOption(SocketOption<T> name) throws IOException {
+        if (name == StandardSocketOptions.SO_KEEPALIVE) {
+            return (T)getOption(SocketOptions.SO_KEEPALIVE);
+        } else if (name == StandardSocketOptions.SO_SNDBUF) {
+            return (T)getOption(SocketOptions.SO_SNDBUF);
+        } else if (name == StandardSocketOptions.SO_RCVBUF) {
+            return (T)getOption(SocketOptions.SO_RCVBUF);
+        } else if (name == StandardSocketOptions.SO_REUSEADDR) {
+            return (T)getOption(SocketOptions.SO_REUSEADDR);
+        } else if (name == StandardSocketOptions.SO_LINGER) {
+            return (T)getOption(SocketOptions.SO_LINGER);
+        } else if (name == StandardSocketOptions.IP_TOS) {
+            return (T)getOption(SocketOptions.IP_TOS);
+        } else if (name == StandardSocketOptions.TCP_NODELAY) {
+            return (T)getOption(SocketOptions.TCP_NODELAY);
+        } else {
+            throw new UnsupportedOperationException("unsupported option");
+        }
     }
 }

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.sound.midi;
@@ -32,6 +50,7 @@ import java.util.Map;
  * be used in implementations:
  *
  * <table border=1>
+    <caption>MIDI File Format Properties</caption>
  *  <tr>
  *   <th>Property key</th>
  *   <th>Value type</th>
@@ -67,7 +86,6 @@ import java.util.Map;
  * @see MidiSystem#getMidiFileFormat(java.io.File)
  * @see Sequencer#setSequence(java.io.InputStream stream)
  *
- * @version %I%, %E%
  * @author Kara Kytle
  * @author Florian Bomers
  */
@@ -136,12 +154,12 @@ public class MidiFileFormat {
      */
     public MidiFileFormat(int type, float divisionType, int resolution, int bytes, long microseconds) {
 
-	this.type = type;
-	this.divisionType = divisionType;
-	this.resolution = resolution;
-	this.byteLength = bytes;
-	this.microsecondLength = microseconds;
-	this.properties = null;
+        this.type = type;
+        this.divisionType = divisionType;
+        this.resolution = resolution;
+        this.byteLength = bytes;
+        this.microsecondLength = microseconds;
+        this.properties = null;
     }
 
 
@@ -168,10 +186,10 @@ public class MidiFileFormat {
      * @since 1.5
      */
     public MidiFileFormat(int type, float divisionType,
-			  int resolution, int bytes,
-			  long microseconds, Map<String, Object> properties) {
-	this(type, divisionType, resolution, bytes, microseconds);
-	this.properties = new HashMap<String, Object>(properties);
+                          int resolution, int bytes,
+                          long microseconds, Map<String, Object> properties) {
+        this(type, divisionType, resolution, bytes, microseconds);
+        this.properties = new HashMap<String, Object>(properties);
     }
 
 
@@ -181,7 +199,7 @@ public class MidiFileFormat {
      * @return the file's type (0, 1, or 2)
      */
     public int getType() {
-	return type;
+        return type;
     }
 
     /**
@@ -198,7 +216,7 @@ public class MidiFileFormat {
      * @see Sequence#getDivisionType()
      */
     public float getDivisionType() {
-	return divisionType;
+        return divisionType;
     }
 
 
@@ -212,7 +230,7 @@ public class MidiFileFormat {
      * @see Sequence#getResolution()
      */
     public int getResolution() {
-	return resolution;
+        return resolution;
     }
 
 
@@ -222,7 +240,7 @@ public class MidiFileFormat {
      * @see #UNKNOWN_LENGTH
      */
     public int getByteLength() {
-	return byteLength;
+        return byteLength;
     }
 
     /**
@@ -233,7 +251,7 @@ public class MidiFileFormat {
      * @see #UNKNOWN_LENGTH
      */
     public long getMicrosecondLength() {
-	return microsecondLength;
+        return microsecondLength;
     }
 
     /**
@@ -249,13 +267,13 @@ public class MidiFileFormat {
      * @since 1.5
      */
     public Map<String,Object> properties() {
- 	Map<String,Object> ret;
-	if (properties == null) {
-	    ret = new HashMap<String,Object>(0);
-	} else {
-	    ret = (Map<String,Object>) (properties.clone());
-	}
-	return (Map<String,Object>) Collections.unmodifiableMap(ret);
+        Map<String,Object> ret;
+        if (properties == null) {
+            ret = new HashMap<String,Object>(0);
+        } else {
+            ret = (Map<String,Object>) (properties.clone());
+        }
+        return (Map<String,Object>) Collections.unmodifiableMap(ret);
     }
 
 
@@ -272,16 +290,15 @@ public class MidiFileFormat {
      * @return the value of the property with the specified key,
      *         or <code>null</code> if the property does not exist.
      *
-     * @see #properties
+     * @see #properties()
      * @since 1.5
      */
     public Object getProperty(String key) {
-	if (properties == null) {
-	    return null;
-	}
-	return properties.get(key);
+        if (properties == null) {
+            return null;
+        }
+        return properties.get(key);
     }
 
 
 }
-

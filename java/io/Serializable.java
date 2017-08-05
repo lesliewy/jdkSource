@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
@@ -21,7 +39,7 @@ package java.io;
  * package fields.  The subtype may assume this responsibility only if
  * the class it extends has an accessible no-arg constructor to
  * initialize the class's state.  It is an error to declare a class
- * Serializable if this is not the case.  The error will be detected at 
+ * Serializable if this is not the case.  The error will be detected at
  * runtime. <p>
  *
  * During deserialization, the fields of non-serializable classes will
@@ -37,14 +55,14 @@ package java.io;
  *
  * Classes that require special handling during the serialization and
  * deserialization process must implement special methods with these exact
- * signatures: <p>
+ * signatures:
  *
  * <PRE>
  * private void writeObject(java.io.ObjectOutputStream out)
  *     throws IOException
  * private void readObject(java.io.ObjectInputStream in)
  *     throws IOException, ClassNotFoundException;
- * private void readObjectNoData() 
+ * private void readObjectNoData()
  *     throws ObjectStreamException;
  * </PRE>
  *
@@ -60,11 +78,11 @@ package java.io;
  *
  * <p>The readObject method is responsible for reading from the stream and
  * restoring the classes fields. It may call in.defaultReadObject to invoke
- * the default mechanism for restoring the object's non-static and 
- * non-transient fields.  The defaultReadObject method uses information in 
- * the stream to assign the fields of the object saved in the stream with the 
- * correspondingly named fields in the current object.  This handles the case 
- * when the class has evolved to add new fields. The method does not need to 
+ * the default mechanism for restoring the object's non-static and
+ * non-transient fields.  The defaultReadObject method uses information in
+ * the stream to assign the fields of the object saved in the stream with the
+ * correspondingly named fields in the current object.  This handles the case
+ * when the class has evolved to add new fields. The method does not need to
  * concern itself with the state belonging to its superclasses or subclasses.
  * State is saved by writing the individual fields to the
  * ObjectOutputStream using the writeObject method or by using the
@@ -83,7 +101,7 @@ package java.io;
  *
  * <p>Serializable classes that need to designate an alternative object to be
  * used when writing an object to the stream should implement this
- * special method with the exact signature: <p>
+ * special method with the exact signature:
  *
  * <PRE>
  * ANY-ACCESS-MODIFIER Object writeReplace() throws ObjectStreamException;
@@ -97,7 +115,7 @@ package java.io;
  *
  * Classes that need to designate a replacement when an instance of it
  * is read from the stream should implement this special method with the
- * exact signature.<p>
+ * exact signature.
  *
  * <PRE>
  * ANY-ACCESS-MODIFIER Object readResolve() throws ObjectStreamException;
@@ -115,7 +133,7 @@ package java.io;
  * deserialization will result in an {@link InvalidClassException}.  A
  * serializable class can declare its own serialVersionUID explicitly by
  * declaring a field named <code>"serialVersionUID"</code> that must be static,
- * final, and of type <code>long</code>:<p>
+ * final, and of type <code>long</code>:
  *
  * <PRE>
  * ANY-ACCESS-MODIFIER static final long serialVersionUID = 42L;
@@ -141,7 +159,6 @@ package java.io;
  * serialVersionUID values is waived for array classes.
  *
  * @author  unascribed
- * @version %I%, %G%
  * @see java.io.ObjectOutputStream
  * @see java.io.ObjectInputStream
  * @see java.io.ObjectOutput

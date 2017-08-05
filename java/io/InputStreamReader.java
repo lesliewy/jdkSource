@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
@@ -15,7 +33,7 @@ import sun.nio.cs.StreamDecoder;
 /**
  * An InputStreamReader is a bridge from byte streams to character streams: It
  * reads bytes and decodes them into characters using a specified {@link
- * java.nio.charset.Charset <code>charset</code>}.  The charset that it uses
+ * java.nio.charset.Charset charset}.  The charset that it uses
  * may be specified by name or may be given explicitly, or the platform's
  * default charset may be accepted.
  *
@@ -37,7 +55,6 @@ import sun.nio.cs.StreamDecoder;
  * @see InputStream
  * @see java.nio.charset.Charset
  *
- * @version     %I%, %E%
  * @author      Mark Reinhold
  * @since       JDK1.1
  */
@@ -52,13 +69,13 @@ public class InputStreamReader extends Reader {
      * @param  in   An InputStream
      */
     public InputStreamReader(InputStream in) {
-	super(in);
+        super(in);
         try {
-	    sd = StreamDecoder.forInputStreamReader(in, this, (String)null); // ## check lock object
+            sd = StreamDecoder.forInputStreamReader(in, this, (String)null); // ## check lock object
         } catch (UnsupportedEncodingException e) {
-	    // The default encoding should always be available
-	    throw new Error(e);
-	}
+            // The default encoding should always be available
+            throw new Error(e);
+        }
     }
 
     /**
@@ -69,7 +86,7 @@ public class InputStreamReader extends Reader {
      *
      * @param  charsetName
      *         The name of a supported
-     *         {@link java.nio.charset.Charset </code>charset<code>}
+     *         {@link java.nio.charset.Charset charset}
      *
      * @exception  UnsupportedEncodingException
      *             If the named charset is not supported
@@ -77,14 +94,14 @@ public class InputStreamReader extends Reader {
     public InputStreamReader(InputStream in, String charsetName)
         throws UnsupportedEncodingException
     {
-	super(in);
-	if (charsetName == null)
-	    throw new NullPointerException("charsetName");
-	sd = StreamDecoder.forInputStreamReader(in, this, charsetName);
+        super(in);
+        if (charsetName == null)
+            throw new NullPointerException("charsetName");
+        sd = StreamDecoder.forInputStreamReader(in, this, charsetName);
     }
 
     /**
-     * Creates an InputStreamReader that uses the given charset. </p>
+     * Creates an InputStreamReader that uses the given charset.
      *
      * @param  in       An InputStream
      * @param  cs       A charset
@@ -94,13 +111,13 @@ public class InputStreamReader extends Reader {
      */
     public InputStreamReader(InputStream in, Charset cs) {
         super(in);
-	if (cs == null)
-	    throw new NullPointerException("charset");
-	sd = StreamDecoder.forInputStreamReader(in, this, cs);
+        if (cs == null)
+            throw new NullPointerException("charset");
+        sd = StreamDecoder.forInputStreamReader(in, this, cs);
     }
 
     /**
-     * Creates an InputStreamReader that uses the given charset decoder.  </p>
+     * Creates an InputStreamReader that uses the given charset decoder.
      *
      * @param  in       An InputStream
      * @param  dec      A charset decoder
@@ -110,9 +127,9 @@ public class InputStreamReader extends Reader {
      */
     public InputStreamReader(InputStream in, CharsetDecoder dec) {
         super(in);
-	if (dec == null)
-	    throw new NullPointerException("charset decoder");
-	sd = StreamDecoder.forInputStreamReader(in, this, dec);
+        if (dec == null)
+            throw new NullPointerException("charset decoder");
+        sd = StreamDecoder.forInputStreamReader(in, this, dec);
     }
 
     /**
@@ -136,7 +153,7 @@ public class InputStreamReader extends Reader {
      * @spec JSR-51
      */
     public String getEncoding() {
-	return sd.getEncoding();
+        return sd.getEncoding();
     }
 
     /**
@@ -158,13 +175,13 @@ public class InputStreamReader extends Reader {
      * @param      offset   Offset at which to start storing characters
      * @param      length   Maximum number of characters to read
      *
-     * @return     The number of characters read, or -1 if the end of the 
+     * @return     The number of characters read, or -1 if the end of the
      *             stream has been reached
      *
      * @exception  IOException  If an I/O error occurs
      */
     public int read(char cbuf[], int offset, int length) throws IOException {
-	return sd.read(cbuf, offset, length);
+        return sd.read(cbuf, offset, length);
     }
 
     /**
@@ -175,10 +192,10 @@ public class InputStreamReader extends Reader {
      * @exception  IOException  If an I/O error occurs
      */
     public boolean ready() throws IOException {
-	return sd.ready();
+        return sd.ready();
     }
 
     public void close() throws IOException {
-	sd.close();
+        sd.close();
     }
 }

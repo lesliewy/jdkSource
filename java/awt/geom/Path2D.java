@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2015, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.geom;
@@ -45,15 +63,14 @@ import java.util.Arrays;
  * of the types of segments that make up a path and the winding rules
  * that control how to determine which regions are inside or outside
  * the path.
- * 
- * @version %I%, %G%
+ *
  * @author Jim Graham
  * @since 1.6
  */
 public abstract class Path2D implements Shape, Cloneable {
     /**
      * An even-odd winding rule for determining the interior of
-     * a path.  
+     * a path.
      *
      * @see PathIterator#WIND_EVEN_ODD
      * @since 1.6
@@ -62,13 +79,13 @@ public abstract class Path2D implements Shape, Cloneable {
 
     /**
      * A non-zero winding rule for determining the interior of a
-     * path.  
+     * path.
      *
      * @see PathIterator#WIND_NON_ZERO
      * @since 1.6
      */
     public static final int WIND_NON_ZERO = PathIterator.WIND_NON_ZERO;
-    
+
     // For code simplicity, copy these constants to our namespace
     // and cast them to byte constants for easy storage.
     private static final byte SEG_MOVETO  = (byte) PathIterator.SEG_MOVETO;
@@ -84,6 +101,8 @@ public abstract class Path2D implements Shape, Cloneable {
 
     static final int INIT_SIZE = 20;
     static final int EXPAND_MAX = 500;
+    static final int EXPAND_MAX_COORDS = EXPAND_MAX * 2;
+    static final int EXPAND_MIN = 10; // ensure > 6 (cubics)
 
     /**
      * Constructs a new empty {@code Path2D} object.
@@ -113,7 +132,7 @@ public abstract class Path2D implements Shape, Cloneable {
         setWindingRule(rule);
         this.pointTypes = new byte[initialTypes];
     }
- 
+
     abstract float[] cloneCoordsFloat(AffineTransform at);
     abstract double[] cloneCoordsDouble(AffineTransform at);
     abstract void append(float x, float y);
@@ -123,6 +142,42 @@ public abstract class Path2D implements Shape, Cloneable {
     abstract int pointCrossings(double px, double py);
     abstract int rectCrossings(double rxmin, double rymin,
                                double rxmax, double rymax);
+
+    static byte[] expandPointTypes(byte[] oldPointTypes, int needed) {
+        final int oldSize = oldPointTypes.length;
+        final int newSizeMin = oldSize + needed;
+        if (newSizeMin < oldSize) {
+            // hard overflow failure - we can't even accommodate
+            // new items without overflowing
+            throw new ArrayIndexOutOfBoundsException(
+                          "pointTypes exceeds maximum capacity !");
+        }
+        // growth algorithm computation
+        int grow = oldSize;
+        if (grow > EXPAND_MAX) {
+            grow = Math.max(EXPAND_MAX, oldSize >> 3); // 1/8th min
+        } else if (grow < EXPAND_MIN) {
+            grow = EXPAND_MIN;
+        }
+        assert grow > 0;
+
+        int newSize = oldSize + grow;
+        if (newSize < newSizeMin) {
+            // overflow in growth algorithm computation
+            newSize = Integer.MAX_VALUE;
+        }
+        while (true) {
+            try {
+                // try allocating the larger array
+                return Arrays.copyOf(oldPointTypes, newSize);
+            } catch (OutOfMemoryError oome) {
+                if (newSize == newSizeMin) {
+                    throw oome;
+                }
+            }
+            newSize = newSizeMin + (newSize - newSizeMin) / 2;
+        }
+    }
 
     /**
      * The {@code Float} class defines a geometric path with
@@ -207,8 +262,8 @@ public abstract class Path2D implements Shape, Cloneable {
                 Path2D p2d = (Path2D) s;
                 setWindingRule(p2d.windingRule);
                 this.numTypes = p2d.numTypes;
-                this.pointTypes = Arrays.copyOf(p2d.pointTypes,
-                                                p2d.pointTypes.length);
+                // trim arrays:
+                this.pointTypes = Arrays.copyOf(p2d.pointTypes, p2d.numTypes);
                 this.numCoords = p2d.numCoords;
                 this.floatCoords = p2d.cloneCoordsFloat(at);
             } else {
@@ -220,19 +275,23 @@ public abstract class Path2D implements Shape, Cloneable {
             }
         }
 
+        @Override
         float[] cloneCoordsFloat(AffineTransform at) {
+            // trim arrays:
             float ret[];
             if (at == null) {
-                ret = Arrays.copyOf(this.floatCoords, this.floatCoords.length);
+                ret = Arrays.copyOf(floatCoords, numCoords);
             } else {
-                ret = new float[floatCoords.length];
+                ret = new float[numCoords];
                 at.transform(floatCoords, 0, ret, 0, numCoords / 2);
             }
             return ret;
         }
 
+        @Override
         double[] cloneCoordsDouble(AffineTransform at) {
-            double ret[] = new double[floatCoords.length];
+            // trim arrays:
+            double ret[] = new double[numCoords];
             if (at == null) {
                 for (int i = 0; i < numCoords; i++) {
                     ret[i] = floatCoords[i];
@@ -258,29 +317,53 @@ public abstract class Path2D implements Shape, Cloneable {
                                      floatCoords[coordindex+1]);
         }
 
+        @Override
         void needRoom(boolean needMove, int newCoords) {
-            if (needMove && numTypes == 0) {
+            if ((numTypes == 0) && needMove) {
                 throw new IllegalPathStateException("missing initial moveto "+
                                                     "in path definition");
             }
-            int size = pointTypes.length;
-            if (numTypes >= size) {
-                int grow = size;
-                if (grow > EXPAND_MAX) {
-                    grow = EXPAND_MAX;
-                }
-                pointTypes = Arrays.copyOf(pointTypes, size+grow);
+            if (numTypes >= pointTypes.length) {
+                pointTypes = expandPointTypes(pointTypes, 1);
             }
-            size = floatCoords.length;
-            if (numCoords + newCoords > size) {
-                int grow = size;
-                if (grow > EXPAND_MAX * 2) {
-                    grow = EXPAND_MAX * 2;
+            if (numCoords > (floatCoords.length - newCoords)) {
+                floatCoords = expandCoords(floatCoords, newCoords);
+            }
+        }
+
+        static float[] expandCoords(float[] oldCoords, int needed) {
+            final int oldSize = oldCoords.length;
+            final int newSizeMin = oldSize + needed;
+            if (newSizeMin < oldSize) {
+                // hard overflow failure - we can't even accommodate
+                // new items without overflowing
+                throw new ArrayIndexOutOfBoundsException(
+                              "coords exceeds maximum capacity !");
+            }
+            // growth algorithm computation
+            int grow = oldSize;
+            if (grow > EXPAND_MAX_COORDS) {
+                grow = Math.max(EXPAND_MAX_COORDS, oldSize >> 3); // 1/8th min
+            } else if (grow < EXPAND_MIN) {
+                grow = EXPAND_MIN;
+            }
+            assert grow > needed;
+
+            int newSize = oldSize + grow;
+            if (newSize < newSizeMin) {
+                // overflow in growth algorithm computation
+                newSize = Integer.MAX_VALUE;
+            }
+            while (true) {
+                try {
+                    // try allocating the larger array
+                    return Arrays.copyOf(oldCoords, newSize);
+                } catch (OutOfMemoryError oome) {
+                    if (newSize == newSizeMin) {
+                        throw oome;
+                    }
                 }
-                if (grow < newCoords) {
-                    grow = newCoords;
-                }
-                floatCoords = Arrays.copyOf(floatCoords, size+grow);
+                newSize = newSizeMin + (newSize - newSizeMin) / 2;
             }
         }
 
@@ -456,6 +539,9 @@ public abstract class Path2D implements Shape, Cloneable {
         }
 
         int pointCrossings(double px, double py) {
+            if (numTypes == 0) {
+                return 0;
+            }
             double movx, movy, curx, cury, endx, endy;
             float coords[] = floatCoords;
             curx = movx = coords[0];
@@ -533,6 +619,9 @@ public abstract class Path2D implements Shape, Cloneable {
         int rectCrossings(double rxmin, double rymin,
                           double rxmax, double rymax)
         {
+            if (numTypes == 0) {
+                return 0;
+            }
             float coords[] = floatCoords;
             double curx, cury, movx, movy, endx, endy;
             curx = movx = coords[0];
@@ -650,7 +739,8 @@ public abstract class Path2D implements Shape, Cloneable {
                         // Collapse out initial moveto/lineto
                         break;
                     }
-                    // NO BREAK;
+                    lineTo(coords[0], coords[1]);
+                    break;
                 case SEG_LINETO:
                     lineTo(coords[0], coords[1]);
                     break;
@@ -715,7 +805,7 @@ public abstract class Path2D implements Shape, Cloneable {
          *
          * @since 1.6
          */
-        public PathIterator getPathIterator(AffineTransform at) {
+        public final PathIterator getPathIterator(AffineTransform at) {
             if (at == null) {
                 return new CopyIterator(this);
             } else {
@@ -776,7 +866,7 @@ public abstract class Path2D implements Shape, Cloneable {
          * ({@link #WIND_EVEN_ODD WIND_EVEN_ODD} or
          *  {@link #WIND_NON_ZERO WIND_NON_ZERO})
          * <li>followed by
-         * NP (or unlimited if NP < 0) sets of values consisting of
+         * {@code NP} (or unlimited if {@code NP < 0}) sets of values consisting of
          * a single byte indicating a path segment type
          * followed by one or more pairs of float or double
          * values representing the coordinates of the path segment
@@ -1041,8 +1131,8 @@ public abstract class Path2D implements Shape, Cloneable {
                 Path2D p2d = (Path2D) s;
                 setWindingRule(p2d.windingRule);
                 this.numTypes = p2d.numTypes;
-                this.pointTypes = Arrays.copyOf(p2d.pointTypes,
-                                                p2d.pointTypes.length);
+                // trim arrays:
+                this.pointTypes = Arrays.copyOf(p2d.pointTypes, p2d.numTypes);
                 this.numCoords = p2d.numCoords;
                 this.doubleCoords = p2d.cloneCoordsDouble(at);
             } else {
@@ -1054,8 +1144,10 @@ public abstract class Path2D implements Shape, Cloneable {
             }
         }
 
+        @Override
         float[] cloneCoordsFloat(AffineTransform at) {
-            float ret[] = new float[doubleCoords.length];
+            // trim arrays:
+            float ret[] = new float[numCoords];
             if (at == null) {
                 for (int i = 0; i < numCoords; i++) {
                     ret[i] = (float) doubleCoords[i];
@@ -1066,13 +1158,14 @@ public abstract class Path2D implements Shape, Cloneable {
             return ret;
         }
 
+        @Override
         double[] cloneCoordsDouble(AffineTransform at) {
+            // trim arrays:
             double ret[];
             if (at == null) {
-                ret = Arrays.copyOf(this.doubleCoords,
-                                    this.doubleCoords.length);
+                ret = Arrays.copyOf(doubleCoords, numCoords);
             } else {
-                ret = new double[doubleCoords.length];
+                ret = new double[numCoords];
                 at.transform(doubleCoords, 0, ret, 0, numCoords / 2);
             }
             return ret;
@@ -1093,29 +1186,53 @@ public abstract class Path2D implements Shape, Cloneable {
                                       doubleCoords[coordindex+1]);
         }
 
+        @Override
         void needRoom(boolean needMove, int newCoords) {
-            if (needMove && numTypes == 0) {
+            if ((numTypes == 0) && needMove) {
                 throw new IllegalPathStateException("missing initial moveto "+
                                                     "in path definition");
             }
-            int size = pointTypes.length;
-            if (numTypes >= size) {
-                int grow = size;
-                if (grow > EXPAND_MAX) {
-                    grow = EXPAND_MAX;
-                }
-                pointTypes = Arrays.copyOf(pointTypes, size+grow);
+            if (numTypes >= pointTypes.length) {
+                pointTypes = expandPointTypes(pointTypes, 1);
             }
-            size = doubleCoords.length;
-            if (numCoords + newCoords > size) {
-                int grow = size;
-                if (grow > EXPAND_MAX * 2) {
-                    grow = EXPAND_MAX * 2;
+            if (numCoords > (doubleCoords.length - newCoords)) {
+                doubleCoords = expandCoords(doubleCoords, newCoords);
+            }
+        }
+
+        static double[] expandCoords(double[] oldCoords, int needed) {
+            final int oldSize = oldCoords.length;
+            final int newSizeMin = oldSize + needed;
+            if (newSizeMin < oldSize) {
+                // hard overflow failure - we can't even accommodate
+                // new items without overflowing
+                throw new ArrayIndexOutOfBoundsException(
+                              "coords exceeds maximum capacity !");
+            }
+            // growth algorithm computation
+            int grow = oldSize;
+            if (grow > EXPAND_MAX_COORDS) {
+                grow = Math.max(EXPAND_MAX_COORDS, oldSize >> 3); // 1/8th min
+            } else if (grow < EXPAND_MIN) {
+                grow = EXPAND_MIN;
+            }
+            assert grow > needed;
+
+            int newSize = oldSize + grow;
+            if (newSize < newSizeMin) {
+                // overflow in growth algorithm computation
+                newSize = Integer.MAX_VALUE;
+            }
+            while (true) {
+                try {
+                    // try allocating the larger array
+                    return Arrays.copyOf(oldCoords, newSize);
+                } catch (OutOfMemoryError oome) {
+                    if (newSize == newSizeMin) {
+                        throw oome;
+                    }
                 }
-                if (grow < newCoords) {
-                    grow = newCoords;
-                }
-                doubleCoords = Arrays.copyOf(doubleCoords, size+grow);
+                newSize = newSizeMin + (newSize - newSizeMin) / 2;
             }
         }
 
@@ -1180,6 +1297,9 @@ public abstract class Path2D implements Shape, Cloneable {
         }
 
         int pointCrossings(double px, double py) {
+            if (numTypes == 0) {
+                return 0;
+            }
             double movx, movy, curx, cury, endx, endy;
             double coords[] = doubleCoords;
             curx = movx = coords[0];
@@ -1257,6 +1377,9 @@ public abstract class Path2D implements Shape, Cloneable {
         int rectCrossings(double rxmin, double rymin,
                           double rxmax, double rymax)
         {
+            if (numTypes == 0) {
+                return 0;
+            }
             double coords[] = doubleCoords;
             double curx, cury, movx, movy, endx, endy;
             curx = movx = coords[0];
@@ -1375,7 +1498,8 @@ public abstract class Path2D implements Shape, Cloneable {
                         // Collapse out initial moveto/lineto
                         break;
                     }
-                    // NO BREAK;
+                    lineTo(coords[0], coords[1]);
+                    break;
                 case SEG_LINETO:
                     lineTo(coords[0], coords[1]);
                     break;
@@ -1438,13 +1562,13 @@ public abstract class Path2D implements Shape, Cloneable {
          * {@code Path2D} object do not affect any iterations of
          * that geometry that are already in process.
          *
-         * @param at an {@code AffineTransform} 
+         * @param at an {@code AffineTransform}
          * @return a new {@code PathIterator} that iterates along the boundary
          *         of this {@code Shape} and provides access to the geometry
          *         of this {@code Shape}'s outline
          * @since 1.6
          */
-        public PathIterator getPathIterator(AffineTransform at) {
+        public final PathIterator getPathIterator(AffineTransform at) {
             if (at == null) {
                 return new CopyIterator(this);
             } else {
@@ -1501,7 +1625,7 @@ public abstract class Path2D implements Shape, Cloneable {
          * ({@link #WIND_EVEN_ODD WIND_EVEN_ODD} or
          *  {@link #WIND_NON_ZERO WIND_NON_ZERO})
          * <li>followed by
-         * NP (or unlimited if NP < 0) sets of values consisting of
+         * {@code NP} (or unlimited if {@code NP < 0}) sets of values consisting of
          * a single byte indicating a path segment type
          * followed by one or more pairs of float or double
          * values representing the coordinates of the path segment
@@ -1748,17 +1872,17 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final synchronized void closePath() {
-	if (numTypes == 0 || pointTypes[numTypes - 1] != SEG_CLOSE) {
-	    needRoom(true, 0);
-	    pointTypes[numTypes++] = SEG_CLOSE;
-	}
+        if (numTypes == 0 || pointTypes[numTypes - 1] != SEG_CLOSE) {
+            needRoom(true, 0);
+            pointTypes[numTypes++] = SEG_CLOSE;
+        }
     }
 
     /**
      * Appends the geometry of the specified {@code Shape} object to the
      * path, possibly connecting the new geometry to the existing path
      * segments with a line segment.
-     * If the {@code connect} parameter is {@code true} and the 
+     * If the {@code connect} parameter is {@code true} and the
      * path is not empty then any initial {@code moveTo} in the
      * geometry of the appended {@code Shape}
      * is turned into a {@code lineTo} segment.
@@ -1769,7 +1893,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * and the appended geometry is governed by the winding
      * rule specified for this path.
      *
-     * @param s the {@code Shape} whose geometry is appended 
+     * @param s the {@code Shape} whose geometry is appended
      *          to this path
      * @param connect a boolean to control whether or not to turn an initial
      *                {@code moveTo} segment into a {@code lineTo} segment
@@ -1782,10 +1906,10 @@ public abstract class Path2D implements Shape, Cloneable {
 
     /**
      * Appends the geometry of the specified
-     * {@link PathIterator} object 
+     * {@link PathIterator} object
      * to the path, possibly connecting the new geometry to the existing
      * path segments with a line segment.
-     * If the {@code connect} parameter is {@code true} and the 
+     * If the {@code connect} parameter is {@code true} and the
      * path is not empty then any initial {@code moveTo} in the
      * geometry of the appended {@code Shape} is turned into a
      * {@code lineTo} segment.
@@ -1796,7 +1920,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * and the appended geometry is governed by the winding
      * rule specified for this path.
      *
-     * @param pi the {@code PathIterator} whose geometry is appended to 
+     * @param pi the {@code PathIterator} whose geometry is appended to
      *           this path
      * @param connect a boolean to control whether or not to turn an initial
      *                {@code moveTo} segment into a {@code lineTo} segment
@@ -1809,7 +1933,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * Returns the fill style winding rule.
      *
      * @return an integer representing the current winding rule.
-     * @see #WIND_EVEN_ODD  
+     * @see #WIND_EVEN_ODD
      * @see #WIND_NON_ZERO
      * @see #setWindingRule
      * @since 1.6
@@ -1821,22 +1945,22 @@ public abstract class Path2D implements Shape, Cloneable {
     /**
      * Sets the winding rule for this path to the specified value.
      *
-     * @param rule an integer representing the specified 
+     * @param rule an integer representing the specified
      *             winding rule
-     * @exception IllegalArgumentException if 
-     *		{@code rule} is not either 
-     *		{@link #WIND_EVEN_ODD} or
-     *		{@link #WIND_NON_ZERO}
+     * @exception IllegalArgumentException if
+     *          {@code rule} is not either
+     *          {@link #WIND_EVEN_ODD} or
+     *          {@link #WIND_NON_ZERO}
      * @see #getWindingRule
      * @since 1.6
      */
     public final void setWindingRule(int rule) {
-	if (rule != WIND_EVEN_ODD && rule != WIND_NON_ZERO) {
-	    throw new IllegalArgumentException("winding rule must be "+
-					       "WIND_EVEN_ODD or "+
-					       "WIND_NON_ZERO");
-	}
-	windingRule = rule;
+        if (rule != WIND_EVEN_ODD && rule != WIND_NON_ZERO) {
+            throw new IllegalArgumentException("winding rule must be "+
+                                               "WIND_EVEN_ODD or "+
+                                               "WIND_NON_ZERO");
+        }
+        windingRule = rule;
     }
 
     /**
@@ -1848,31 +1972,31 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final synchronized Point2D getCurrentPoint() {
-	int index = numCoords;
-	if (numTypes < 1 || index < 1) {
-	    return null;
-	}
-	if (pointTypes[numTypes - 1] == SEG_CLOSE) {
-	loop:
-	    for (int i = numTypes - 2; i > 0; i--) {
-		switch (pointTypes[i]) {
-		case SEG_MOVETO:
-		    break loop;
-		case SEG_LINETO:
-		    index -= 2;
-		    break;
-		case SEG_QUADTO:
-		    index -= 4;
-		    break;
-		case SEG_CUBICTO:
-		    index -= 6;
-		    break;
-		case SEG_CLOSE:
-		    break;
-		}
-	    }
-	}
-	return getPoint(index - 2);
+        int index = numCoords;
+        if (numTypes < 1 || index < 1) {
+            return null;
+        }
+        if (pointTypes[numTypes - 1] == SEG_CLOSE) {
+        loop:
+            for (int i = numTypes - 2; i > 0; i--) {
+                switch (pointTypes[i]) {
+                case SEG_MOVETO:
+                    break loop;
+                case SEG_LINETO:
+                    index -= 2;
+                    break;
+                case SEG_QUADTO:
+                    index -= 4;
+                    break;
+                case SEG_CUBICTO:
+                    index -= 6;
+                    break;
+                case SEG_CLOSE:
+                    break;
+                }
+            }
+        }
+        return getPoint(index - 2);
     }
 
     /**
@@ -1883,11 +2007,11 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final synchronized void reset() {
-	numTypes = numCoords = 0;
+        numTypes = numCoords = 0;
     }
 
     /**
-     * Transforms the geometry of this path using the specified 
+     * Transforms the geometry of this path using the specified
      * {@link AffineTransform}.
      * The geometry is transformed in place, which permanently changes the
      * boundary defined by this object.
@@ -1912,9 +2036,9 @@ public abstract class Path2D implements Shape, Cloneable {
      * {@link Path2D.Double#Path2D.Double(Shape, AffineTransform) Path2D.Double}
      * subclasses should be used to make the choice explicit.
      *
-     * @param at the {@code AffineTransform} used to transform a 
+     * @param at the {@code AffineTransform} used to transform a
      *           new {@code Shape}.
-     * @return a new {@code Shape}, transformed with the specified 
+     * @return a new {@code Shape}, transformed with the specified
      *         {@code AffineTransform}.
      * @since 1.6
      */
@@ -1931,7 +2055,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final Rectangle getBounds() {
-	return getBounds2D().getBounds();
+        return getBounds2D().getBounds();
     }
 
     /**
@@ -2014,7 +2138,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final boolean contains(Point2D p) {
-	return contains(p.getX(), p.getY());
+        return contains(p.getX(), p.getY());
     }
 
     /**
@@ -2045,7 +2169,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * @param w the width of the specified rectangular area
      * @param h the height of the specified rectangular area
      * @return {@code true} if the specified {@code PathIterator} contains
-     *         the specified rectangluar area; {@code false} otherwise.
+     *         the specified rectangular area; {@code false} otherwise.
      * @since 1.6
      */
     public static boolean contains(PathIterator pi,
@@ -2066,8 +2190,8 @@ public abstract class Path2D implements Shape, Cloneable {
             return false;
         }
         int mask = (pi.getWindingRule() == WIND_NON_ZERO ? -1 : 2);
-	int crossings = Curve.rectCrossingsForPath(pi, x, y, x+w, y+h);
-	return (crossings != Curve.RECT_INTERSECTS &&
+        int crossings = Curve.rectCrossingsForPath(pi, x, y, x+w, y+h);
+        return (crossings != Curve.RECT_INTERSECTS &&
                 (crossings & mask) != 0);
     }
 
@@ -2138,8 +2262,8 @@ public abstract class Path2D implements Shape, Cloneable {
             return false;
         }
         int mask = (windingRule == WIND_NON_ZERO ? -1 : 2);
-	int crossings = rectCrossings(x, y, x+w, y+h);
-	return (crossings != Curve.RECT_INTERSECTS &&
+        int crossings = rectCrossings(x, y, x+w, y+h);
+        return (crossings != Curve.RECT_INTERSECTS &&
                 (crossings & mask) != 0);
     }
 
@@ -2163,7 +2287,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final boolean contains(Rectangle2D r) {
-	return contains(r.getX(), r.getY(), r.getWidth(), r.getHeight());
+        return contains(r.getX(), r.getY(), r.getWidth(), r.getHeight());
     }
 
     /**
@@ -2216,8 +2340,8 @@ public abstract class Path2D implements Shape, Cloneable {
             return false;
         }
         int mask = (pi.getWindingRule() == WIND_NON_ZERO ? -1 : 2);
-	int crossings = Curve.rectCrossingsForPath(pi, x, y, x+w, y+h);
-	return (crossings == Curve.RECT_INTERSECTS ||
+        int crossings = Curve.rectCrossingsForPath(pi, x, y, x+w, y+h);
+        return (crossings == Curve.RECT_INTERSECTS ||
                 (crossings & mask) != 0);
     }
 
@@ -2287,8 +2411,8 @@ public abstract class Path2D implements Shape, Cloneable {
             return false;
         }
         int mask = (windingRule == WIND_NON_ZERO ? -1 : 2);
-	int crossings = rectCrossings(x, y, x+w, y+h);
-	return (crossings == Curve.RECT_INTERSECTS ||
+        int crossings = rectCrossings(x, y, x+w, y+h);
+        return (crossings == Curve.RECT_INTERSECTS ||
                 (crossings & mask) != 0);
     }
 
@@ -2311,7 +2435,7 @@ public abstract class Path2D implements Shape, Cloneable {
      * @since 1.6
      */
     public final boolean intersects(Rectangle2D r) {
-	return intersects(r.getX(), r.getY(), r.getWidth(), r.getHeight());
+        return intersects(r.getX(), r.getY(), r.getWidth(), r.getHeight());
     }
 
     /**
@@ -2321,14 +2445,14 @@ public abstract class Path2D implements Shape, Cloneable {
      * which means that this {@code Path2D} class does not
      * guarantee that modifications to the geometry of this
      * {@code Path2D} object do not affect any iterations of
-     * that geometry that are already in process. 
+     * that geometry that are already in process.
      *
      * @since 1.6
      */
-    public PathIterator getPathIterator(AffineTransform at,
-                                        double flatness)
+    public final PathIterator getPathIterator(AffineTransform at,
+                                              double flatness)
     {
-	return new FlatteningPathIterator(getPathIterator(at), flatness);
+        return new FlatteningPathIterator(getPathIterator(at), flatness);
     }
 
     /**
@@ -2439,7 +2563,7 @@ public abstract class Path2D implements Shape, Cloneable {
                 }
             }
         }
-        s.writeByte((byte) SERIAL_PATH_END);
+        s.writeByte(SERIAL_PATH_END);
     }
 
     final void readObject(java.io.ObjectInputStream s, boolean storedbl)

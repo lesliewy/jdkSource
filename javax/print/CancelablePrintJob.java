@@ -1,22 +1,40 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.print;
 
 /**
  * This interface is used by a printing application to cancel a
- * print job.  This interface extends {@link DocPrintJob}.  A 
+ * print job.  This interface extends {@link DocPrintJob}.  A
  * <code>DocPrintJob</code> implementation returned from a print
  * service implements this interface if the print job can be
  * cancelled.  Before trying to cancel
- * a print job, the client needs to test if the 
+ * a print job, the client needs to test if the
  * <code>DocPrintJob</code> object returned from the print service
  * actually implements this interface.  Clients should never assume
- * that a <code>DocPrintJob</code> implements this interface.  A 
+ * that a <code>DocPrintJob</code> implements this interface.  A
  * print service might support cancellation only for certain types
  * of print data and representation class names.  This means that
  * only some of the <code>DocPrintJob</code> objects returned from
@@ -37,7 +55,7 @@ public interface CancelablePrintJob extends DocPrintJob {
      * Stops further processing of a print job.
      * <p>
      * If a service supports this method it cannot be concluded that
-     * job cancellation will always suceeed. A job may not be able to be
+     * job cancellation will always succeed. A job may not be able to be
      * cancelled once it has reached and passed some point in its processing.
      * A successful cancellation means only that the entire job was not
      * printed, some portion may already have printed when cancel returns.

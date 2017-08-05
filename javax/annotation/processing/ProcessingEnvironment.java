@@ -1,19 +1,35 @@
 /*
- * %W% %E%
+ * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
- * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.annotation.processing;
 
 import java.util.Map;
-import java.util.List;
 import java.util.Locale;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.io.File;
 
 /**
  * An annotation processing tool framework will {@linkplain
@@ -36,11 +52,10 @@ import java.io.File;
  * (Since the facility objects manage shared state, the implementation
  * of a wrapper class must know whether or not the same base facility
  * object has been wrapped before.)
- * 
+ *
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
  * @since 1.6
  */
 public interface ProcessingEnvironment {

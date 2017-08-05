@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -15,14 +33,15 @@ import java.nio.CharBuffer;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.lang.ref.WeakReference;
-import java.nio.charset.CoderMalfunctionError;			// javadoc
+import java.nio.charset.CoderMalfunctionError;                  // javadoc
+import java.util.Arrays;
 
 
 /**
  * An engine that can transform a sequence of sixteen-bit Unicode characters into a sequence of
  * bytes in a specific charset.
  *
- * <a name="steps">
+ * <a name="steps"></a>
  *
  * <p> The input character sequence is provided in a character buffer or a series
  * of such buffers.  The output byte sequence is written to a byte buffer
@@ -57,22 +76,22 @@ import java.nio.charset.CoderMalfunctionError;			// javadoc
  * examine this object and fill the input buffer, flush the output buffer, or
  * attempt to recover from an encoding error, as appropriate, and try again.
  *
- * <a name="ce">
+ * <a name="ce"></a>
  *
  * <p> There are two general types of encoding errors.  If the input character
  * sequence is not a legal sixteen-bit Unicode sequence then the input is considered <i>malformed</i>.  If
  * the input character sequence is legal but cannot be mapped to a valid
  * byte sequence in the given charset then an <i>unmappable character</i> has been encountered.
  *
- * <a name="cae">
+ * <a name="cae"></a>
  *
  * <p> How an encoding error is handled depends upon the action requested for
  * that type of error, which is described by an instance of the {@link
- * CodingErrorAction} class.  The possible error actions are to {@link
- * CodingErrorAction#IGNORE </code>ignore<code>} the erroneous input, {@link
- * CodingErrorAction#REPORT </code>report<code>} the error to the invoker via
- * the returned {@link CoderResult} object, or {@link CodingErrorAction#REPLACE
- * </code>replace<code>} the erroneous input with the current value of the
+ * CodingErrorAction} class.  The possible error actions are to {@linkplain
+ * CodingErrorAction#IGNORE ignore} the erroneous input, {@linkplain
+ * CodingErrorAction#REPORT report} the error to the invoker via
+ * the returned {@link CoderResult} object, or {@linkplain CodingErrorAction#REPLACE
+ * replace} the erroneous input with the current value of the
  * replacement byte array.  The replacement
  *
 
@@ -87,7 +106,7 @@ import java.nio.charset.CoderMalfunctionError;			// javadoc
  * replaceWith} method.
  *
  * <p> The default action for malformed-input and unmappable-character errors
- * is to {@link CodingErrorAction#REPORT </code>report<code>} them.  The
+ * is to {@linkplain CodingErrorAction#REPORT report} them.  The
  * malformed-input error action may be changed via the {@link
  * #onMalformedInput(CodingErrorAction) onMalformedInput} method; the
  * unmappable-character action may be changed via the {@link
@@ -105,7 +124,6 @@ import java.nio.charset.CoderMalfunctionError;			// javadoc
  * threads.  </p>
  *
  *
- * @version %I%, %E%
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
  * @since 1.4
@@ -124,9 +142,9 @@ public abstract class CharsetEncoder {
 
     private byte[] replacement;
     private CodingErrorAction malformedInputAction
-	= CodingErrorAction.REPORT;
+        = CodingErrorAction.REPORT;
     private CodingErrorAction unmappableCharacterAction
-	= CodingErrorAction.REPORT;
+        = CodingErrorAction.REPORT;
 
     // Internal states
     //
@@ -138,12 +156,15 @@ public abstract class CharsetEncoder {
     private int state = ST_RESET;
 
     private static String stateNames[]
-	= { "RESET", "CODING", "CODING_END", "FLUSHED" };
+        = { "RESET", "CODING", "CODING_END", "FLUSHED" };
 
 
     /**
      * Initializes a new encoder.  The new encoder will have the given
-     * bytes-per-char and replacement values. </p>
+     * bytes-per-char and replacement values.
+     *
+     * @param  cs
+     *         The charset that created this encoder
      *
      * @param  averageBytesPerChar
      *         A positive float value indicating the expected number of
@@ -156,40 +177,43 @@ public abstract class CharsetEncoder {
      * @param  replacement
      *         The initial replacement; must not be <tt>null</tt>, must have
      *         non-zero length, must not be longer than maxBytesPerChar,
-     *         and must be {@link #isLegalReplacement </code>legal<code>}
+     *         and must be {@linkplain #isLegalReplacement legal}
      *
      * @throws  IllegalArgumentException
      *          If the preconditions on the parameters do not hold
      */
     protected
     CharsetEncoder(Charset cs,
-		   float averageBytesPerChar,
-		   float maxBytesPerChar,
-		   byte[] replacement)
+                   float averageBytesPerChar,
+                   float maxBytesPerChar,
+                   byte[] replacement)
     {
-	this.charset = cs;
-	if (averageBytesPerChar <= 0.0f)
-	    throw new IllegalArgumentException("Non-positive "
-					       + "averageBytesPerChar");
-	if (maxBytesPerChar <= 0.0f)
-	    throw new IllegalArgumentException("Non-positive "
-					       + "maxBytesPerChar");
-	if (!Charset.atBugLevel("1.4")) {
-	    if (averageBytesPerChar > maxBytesPerChar)
-		throw new IllegalArgumentException("averageBytesPerChar"
-						   + " exceeds "
-						   + "maxBytesPerChar");
-	}
-	this.replacement = replacement;
-	this.averageBytesPerChar = averageBytesPerChar;
-	this.maxBytesPerChar = maxBytesPerChar;
-	replaceWith(replacement);
+        this.charset = cs;
+        if (averageBytesPerChar <= 0.0f)
+            throw new IllegalArgumentException("Non-positive "
+                                               + "averageBytesPerChar");
+        if (maxBytesPerChar <= 0.0f)
+            throw new IllegalArgumentException("Non-positive "
+                                               + "maxBytesPerChar");
+        if (!Charset.atBugLevel("1.4")) {
+            if (averageBytesPerChar > maxBytesPerChar)
+                throw new IllegalArgumentException("averageBytesPerChar"
+                                                   + " exceeds "
+                                                   + "maxBytesPerChar");
+        }
+        this.replacement = replacement;
+        this.averageBytesPerChar = averageBytesPerChar;
+        this.maxBytesPerChar = maxBytesPerChar;
+        replaceWith(replacement);
     }
 
     /**
      * Initializes a new encoder.  The new encoder will have the given
      * bytes-per-char values and its replacement will be the
-     * byte array <tt>{</tt>&nbsp;<tt>(byte)'?'</tt>&nbsp;<tt>}</tt>. </p>
+     * byte array <tt>{</tt>&nbsp;<tt>(byte)'?'</tt>&nbsp;<tt>}</tt>.
+     *
+     * @param  cs
+     *         The charset that created this encoder
      *
      * @param  averageBytesPerChar
      *         A positive float value indicating the expected number of
@@ -203,31 +227,36 @@ public abstract class CharsetEncoder {
      *          If the preconditions on the parameters do not hold
      */
     protected CharsetEncoder(Charset cs,
-			     float averageBytesPerChar,
-			     float maxBytesPerChar)
+                             float averageBytesPerChar,
+                             float maxBytesPerChar)
     {
-	this(cs,
-	     averageBytesPerChar, maxBytesPerChar,
-	     new byte[] { (byte)'?' });
+        this(cs,
+             averageBytesPerChar, maxBytesPerChar,
+             new byte[] { (byte)'?' });
     }
 
     /**
-     * Returns the charset that created this encoder.  </p>
+     * Returns the charset that created this encoder.
      *
      * @return  This encoder's charset
      */
     public final Charset charset() {
-	return charset;
+        return charset;
     }
 
     /**
-     * Returns this encoder's replacement value. </p>
+     * Returns this encoder's replacement value.
      *
      * @return  This encoder's current replacement,
      *          which is never <tt>null</tt> and is never empty
      */
     public final byte[] replacement() {
-	return replacement;
+
+
+
+
+        return Arrays.copyOf(replacement, replacement.length);
+
     }
 
     /**
@@ -237,7 +266,7 @@ public abstract class CharsetEncoder {
      * method, passing the new replacement, after checking that the new
      * replacement is acceptable.  </p>
      *
-     * @param  newReplacement
+     * @param  newReplacement  The replacement value
      *
 
 
@@ -247,7 +276,7 @@ public abstract class CharsetEncoder {
      *         The new replacement; must not be <tt>null</tt>, must have
      *         non-zero length, must not be longer than the value returned by
      *         the {@link #maxBytesPerChar() maxBytesPerChar} method, and
-     *         must be {@link #isLegalReplacement </code>legal<code>}
+     *         must be {@link #isLegalReplacement legal}
 
      *
      * @return  This encoder
@@ -256,20 +285,23 @@ public abstract class CharsetEncoder {
      *          If the preconditions on the parameter do not hold
      */
     public final CharsetEncoder replaceWith(byte[] newReplacement) {
-	if (newReplacement == null)
-	    throw new IllegalArgumentException("Null replacement");
-	int len = newReplacement.length;
-	if (len == 0)
-	    throw new IllegalArgumentException("Empty replacement");
-	if (len > maxBytesPerChar)
-	    throw new IllegalArgumentException("Replacement too long");
+        if (newReplacement == null)
+            throw new IllegalArgumentException("Null replacement");
+        int len = newReplacement.length;
+        if (len == 0)
+            throw new IllegalArgumentException("Empty replacement");
+        if (len > maxBytesPerChar)
+            throw new IllegalArgumentException("Replacement too long");
 
-	if (!isLegalReplacement(newReplacement))
-	    throw new IllegalArgumentException("Illegal replacement");
 
-	this.replacement = newReplacement;
-	implReplaceWith(newReplacement);
-	return this;
+
+
+        if (!isLegalReplacement(newReplacement))
+            throw new IllegalArgumentException("Illegal replacement");
+        this.replacement = Arrays.copyOf(newReplacement, newReplacement.length);
+
+        implReplaceWith(this.replacement);
+        return this;
     }
 
     /**
@@ -279,14 +311,14 @@ public abstract class CharsetEncoder {
      * should be overridden by encoders that require notification of changes to
      * the replacement.  </p>
      *
-     * @param  newReplacement
+     * @param  newReplacement    The replacement value
      */
     protected void implReplaceWith(byte[] newReplacement) {
     }
 
 
 
-    private WeakReference cachedDecoder = null;
+    private WeakReference<CharsetDecoder> cachedDecoder = null;
 
     /**
      * Tells whether or not the given byte array is a legal replacement value
@@ -305,36 +337,36 @@ public abstract class CharsetEncoder {
      *          is a legal replacement value for this encoder
      */
     public boolean isLegalReplacement(byte[] repl) {
-	WeakReference wr = cachedDecoder;
-	CharsetDecoder dec = null;
-	if ((wr == null) || ((dec = (CharsetDecoder)wr.get()) == null)) {
-	    dec = charset().newDecoder();
-	    dec.onMalformedInput(CodingErrorAction.REPORT);
-	    dec.onUnmappableCharacter(CodingErrorAction.REPORT);
-	    cachedDecoder = new WeakReference(dec);
-	} else {
-	    dec.reset();
-	}
-	ByteBuffer bb = ByteBuffer.wrap(repl);
-	CharBuffer cb = CharBuffer.allocate((int)(bb.remaining()
-						  * dec.maxCharsPerByte()));
-	CoderResult cr = dec.decode(bb, cb, true);
-	return !cr.isError();
+        WeakReference<CharsetDecoder> wr = cachedDecoder;
+        CharsetDecoder dec = null;
+        if ((wr == null) || ((dec = wr.get()) == null)) {
+            dec = charset().newDecoder();
+            dec.onMalformedInput(CodingErrorAction.REPORT);
+            dec.onUnmappableCharacter(CodingErrorAction.REPORT);
+            cachedDecoder = new WeakReference<CharsetDecoder>(dec);
+        } else {
+            dec.reset();
+        }
+        ByteBuffer bb = ByteBuffer.wrap(repl);
+        CharBuffer cb = CharBuffer.allocate((int)(bb.remaining()
+                                                  * dec.maxCharsPerByte()));
+        CoderResult cr = dec.decode(bb, cb, true);
+        return !cr.isError();
     }
 
 
 
     /**
-     * Returns this encoder's current action for malformed-input errors.  </p>
+     * Returns this encoder's current action for malformed-input errors.
      *
      * @return The current malformed-input action, which is never <tt>null</tt>
      */
     public CodingErrorAction malformedInputAction() {
-	return malformedInputAction;
+        return malformedInputAction;
     }
 
     /**
-     * Changes this encoder's action for malformed-input errors.  </p>
+     * Changes this encoder's action for malformed-input errors.
      *
      * <p> This method invokes the {@link #implOnMalformedInput
      * implOnMalformedInput} method, passing the new action.  </p>
@@ -347,11 +379,11 @@ public abstract class CharsetEncoder {
      *         If the precondition on the parameter does not hold
      */
     public final CharsetEncoder onMalformedInput(CodingErrorAction newAction) {
-	if (newAction == null)
-	    throw new IllegalArgumentException("Null action");
-	malformedInputAction = newAction;
-	implOnMalformedInput(newAction);
-	return this;
+        if (newAction == null)
+            throw new IllegalArgumentException("Null action");
+        malformedInputAction = newAction;
+        implOnMalformedInput(newAction);
+        return this;
     }
 
     /**
@@ -360,18 +392,19 @@ public abstract class CharsetEncoder {
      * <p> The default implementation of this method does nothing.  This method
      * should be overridden by encoders that require notification of changes to
      * the malformed-input action.  </p>
+     *
+     * @param  newAction  The new action
      */
     protected void implOnMalformedInput(CodingErrorAction newAction) { }
 
     /**
      * Returns this encoder's current action for unmappable-character errors.
-     * </p>
      *
      * @return The current unmappable-character action, which is never
      *         <tt>null</tt>
      */
     public CodingErrorAction unmappableCharacterAction() {
-	return unmappableCharacterAction;
+        return unmappableCharacterAction;
     }
 
     /**
@@ -388,13 +421,13 @@ public abstract class CharsetEncoder {
      *         If the precondition on the parameter does not hold
      */
     public final CharsetEncoder onUnmappableCharacter(CodingErrorAction
-						      newAction)
+                                                      newAction)
     {
-	if (newAction == null)
-	    throw new IllegalArgumentException("Null action");
-	unmappableCharacterAction = newAction;
-	implOnUnmappableCharacter(newAction);
-	return this;
+        if (newAction == null)
+            throw new IllegalArgumentException("Null action");
+        unmappableCharacterAction = newAction;
+        implOnUnmappableCharacter(newAction);
+        return this;
     }
 
     /**
@@ -403,31 +436,33 @@ public abstract class CharsetEncoder {
      * <p> The default implementation of this method does nothing.  This method
      * should be overridden by encoders that require notification of changes to
      * the unmappable-character action.  </p>
+     *
+     * @param  newAction  The new action
      */
     protected void implOnUnmappableCharacter(CodingErrorAction newAction) { }
 
     /**
      * Returns the average number of bytes that will be produced for each
      * character of input.  This heuristic value may be used to estimate the size
-     * of the output buffer required for a given input sequence. </p>
+     * of the output buffer required for a given input sequence.
      *
      * @return  The average number of bytes produced
      *          per character of input
      */
     public final float averageBytesPerChar() {
-	return averageBytesPerChar;
+        return averageBytesPerChar;
     }
 
     /**
      * Returns the maximum number of bytes that will be produced for each
      * character of input.  This value may be used to compute the worst-case size
-     * of the output buffer required for a given input sequence. </p>
+     * of the output buffer required for a given input sequence.
      *
      * @return  The maximum number of bytes that will be produced per
      *          character of input
      */
     public final float maxBytesPerChar() {
-	return maxBytesPerChar;
+        return maxBytesPerChar;
     }
 
     /**
@@ -460,24 +495,24 @@ public abstract class CharsetEncoder {
      *   typically done by draining any encoded bytes from the output
      *   buffer.  </p></li>
      *
-     *   <li><p> A {@link CoderResult#malformedForLength
-     *   </code>malformed-input<code>} result indicates that a malformed-input
+     *   <li><p> A {@linkplain CoderResult#malformedForLength
+     *   malformed-input} result indicates that a malformed-input
      *   error has been detected.  The malformed characters begin at the input
      *   buffer's (possibly incremented) position; the number of malformed
      *   characters may be determined by invoking the result object's {@link
      *   CoderResult#length() length} method.  This case applies only if the
-     *   {@link #onMalformedInput </code>malformed action<code>} of this encoder
+     *   {@linkplain #onMalformedInput malformed action} of this encoder
      *   is {@link CodingErrorAction#REPORT}; otherwise the malformed input
      *   will be ignored or replaced, as requested.  </p></li>
      *
-     *   <li><p> An {@link CoderResult#unmappableForLength
-     *   </code>unmappable-character<code>} result indicates that an
+     *   <li><p> An {@linkplain CoderResult#unmappableForLength
+     *   unmappable-character} result indicates that an
      *   unmappable-character error has been detected.  The characters that
      *   encode the unmappable character begin at the input buffer's (possibly
      *   incremented) position; the number of such characters may be determined
      *   by invoking the result object's {@link CoderResult#length() length}
-     *   method.  This case applies only if the {@link #onUnmappableCharacter
-     *   </code>unmappable action<code>} of this encoder is {@link
+     *   method.  This case applies only if the {@linkplain #onUnmappableCharacter
+     *   unmappable action} of this encoder is {@link
      *   CodingErrorAction#REPORT}; otherwise the unmappable character will be
      *   ignored or replaced, as requested.  </p></li>
      *
@@ -529,63 +564,63 @@ public abstract class CharsetEncoder {
      *          an unexpected exception
      */
     public final CoderResult encode(CharBuffer in, ByteBuffer out,
-				    boolean endOfInput)
+                                    boolean endOfInput)
     {
-	int newState = endOfInput ? ST_END : ST_CODING;
-	if ((state != ST_RESET) && (state != ST_CODING)
-	    && !(endOfInput && (state == ST_END)))
-	    throwIllegalStateException(state, newState);
-	state = newState;
+        int newState = endOfInput ? ST_END : ST_CODING;
+        if ((state != ST_RESET) && (state != ST_CODING)
+            && !(endOfInput && (state == ST_END)))
+            throwIllegalStateException(state, newState);
+        state = newState;
 
-	for (;;) {
+        for (;;) {
 
-	    CoderResult cr;
-	    try {
-		cr = encodeLoop(in, out);
-	    } catch (BufferUnderflowException x) {
-		throw new CoderMalfunctionError(x);
-	    } catch (BufferOverflowException x) {
-		throw new CoderMalfunctionError(x);
-	    }
+            CoderResult cr;
+            try {
+                cr = encodeLoop(in, out);
+            } catch (BufferUnderflowException x) {
+                throw new CoderMalfunctionError(x);
+            } catch (BufferOverflowException x) {
+                throw new CoderMalfunctionError(x);
+            }
 
-	    if (cr.isOverflow())
-		return cr;
+            if (cr.isOverflow())
+                return cr;
 
-	    if (cr.isUnderflow()) {
-		if (endOfInput && in.hasRemaining()) {
-		    cr = CoderResult.malformedForLength(in.remaining());
-		    // Fall through to malformed-input case
-		} else {
-		    return cr;
-		}
-	    }
+            if (cr.isUnderflow()) {
+                if (endOfInput && in.hasRemaining()) {
+                    cr = CoderResult.malformedForLength(in.remaining());
+                    // Fall through to malformed-input case
+                } else {
+                    return cr;
+                }
+            }
 
-	    CodingErrorAction action = null;
-	    if (cr.isMalformed())
-		action = malformedInputAction;
-	    else if (cr.isUnmappable())
-		action = unmappableCharacterAction;
-	    else
-		assert false : cr.toString();
+            CodingErrorAction action = null;
+            if (cr.isMalformed())
+                action = malformedInputAction;
+            else if (cr.isUnmappable())
+                action = unmappableCharacterAction;
+            else
+                assert false : cr.toString();
 
-	    if (action == CodingErrorAction.REPORT)
-		return cr;
+            if (action == CodingErrorAction.REPORT)
+                return cr;
 
-	    if (action == CodingErrorAction.REPLACE) {
-		if (out.remaining() < replacement.length)
-		    return CoderResult.OVERFLOW;
-		out.put(replacement);
-	    }
+            if (action == CodingErrorAction.REPLACE) {
+                if (out.remaining() < replacement.length)
+                    return CoderResult.OVERFLOW;
+                out.put(replacement);
+            }
 
-	    if ((action == CodingErrorAction.IGNORE)
-		|| (action == CodingErrorAction.REPLACE)) {
-		// Skip erroneous input either way
-		in.position(in.position() + cr.length());
-		continue;
-	    }
+            if ((action == CodingErrorAction.IGNORE)
+                || (action == CodingErrorAction.REPLACE)) {
+                // Skip erroneous input either way
+                in.position(in.position() + cr.length());
+                continue;
+            }
 
-	    assert false;
-	}
+            assert false;
+        }
 
     }
 
@@ -629,17 +664,17 @@ public abstract class CharsetEncoder {
      *          parameter
      */
     public final CoderResult flush(ByteBuffer out) {
-	if (state == ST_END) {
-	    CoderResult cr = implFlush(out);
-	    if (cr.isUnderflow())
-		state = ST_FLUSHED;
-	    return cr;
-	}
+        if (state == ST_END) {
+            CoderResult cr = implFlush(out);
+            if (cr.isUnderflow())
+                state = ST_FLUSHED;
+            return cr;
+        }
 
-	if (state != ST_FLUSHED)
-	    throwIllegalStateException(state, ST_FLUSHED);
+        if (state != ST_FLUSHED)
+            throwIllegalStateException(state, ST_FLUSHED);
 
-	return CoderResult.UNDERFLOW; // Already flushed
+        return CoderResult.UNDERFLOW; // Already flushed
     }
 
     /**
@@ -657,7 +692,7 @@ public abstract class CharsetEncoder {
      *          {@link CoderResult#OVERFLOW}
      */
     protected CoderResult implFlush(ByteBuffer out) {
-	return CoderResult.UNDERFLOW;
+        return CoderResult.UNDERFLOW;
     }
 
     /**
@@ -671,9 +706,9 @@ public abstract class CharsetEncoder {
      *
      */
     public final CharsetEncoder reset() {
-	implReset();
-	state = ST_RESET;
-	return this;
+        implReset();
+        state = ST_RESET;
+        return this;
     }
 
     /**
@@ -720,7 +755,7 @@ public abstract class CharsetEncoder {
      * @return  A coder-result object describing the reason for termination
      */
     protected abstract CoderResult encodeLoop(CharBuffer in,
-					      ByteBuffer out);
+                                              ByteBuffer out);
 
     /**
      * Convenience method that encodes the remaining content of a single input
@@ -754,34 +789,34 @@ public abstract class CharsetEncoder {
      *          CodingErrorAction#REPORT}
      */
     public final ByteBuffer encode(CharBuffer in)
-	throws CharacterCodingException
+        throws CharacterCodingException
     {
-	int n = (int)(in.remaining() * averageBytesPerChar());
-	ByteBuffer out = ByteBuffer.allocate(n);
+        int n = (int)(in.remaining() * averageBytesPerChar());
+        ByteBuffer out = ByteBuffer.allocate(n);
 
-	if ((n == 0) && (in.remaining() == 0))
-	    return out;
-	reset();
-	for (;;) {
-	    CoderResult cr = in.hasRemaining() ?
-		encode(in, out, true) : CoderResult.UNDERFLOW;
-	    if (cr.isUnderflow())
-		cr = flush(out);
+        if ((n == 0) && (in.remaining() == 0))
+            return out;
+        reset();
+        for (;;) {
+            CoderResult cr = in.hasRemaining() ?
+                encode(in, out, true) : CoderResult.UNDERFLOW;
+            if (cr.isUnderflow())
+                cr = flush(out);
 
-	    if (cr.isUnderflow())
-		break;
-	    if (cr.isOverflow()) {
-		n = 2*n + 1;	// Ensure progress; n might be 0!
-		ByteBuffer o = ByteBuffer.allocate(n);
-		out.flip();
-		o.put(out);
-		out = o;
-		continue;
-	    }
-	    cr.throwException();
-	}
-	out.flip();
-	return out;
+            if (cr.isUnderflow())
+                break;
+            if (cr.isOverflow()) {
+                n = 2*n + 1;    // Ensure progress; n might be 0!
+                ByteBuffer o = ByteBuffer.allocate(n);
+                out.flip();
+                o.put(out);
+                out = o;
+                continue;
+            }
+            cr.throwException();
+        }
+        out.flip();
+        return out;
     }
 
 
@@ -863,24 +898,24 @@ public abstract class CharsetEncoder {
 
 
     private boolean canEncode(CharBuffer cb) {
-	if (state == ST_FLUSHED)
-	    reset();
-	else if (state != ST_RESET)
-	    throwIllegalStateException(state, ST_CODING);
-	CodingErrorAction ma = malformedInputAction();
-	CodingErrorAction ua = unmappableCharacterAction();
-	try {
-	    onMalformedInput(CodingErrorAction.REPORT);
-	    onUnmappableCharacter(CodingErrorAction.REPORT);
-	    encode(cb);
-	} catch (CharacterCodingException x) {
-	    return false;
-	} finally {
-	    onMalformedInput(ma);
-	    onUnmappableCharacter(ua);
-	    reset();
-	}
-	return true;
+        if (state == ST_FLUSHED)
+            reset();
+        else if (state != ST_RESET)
+            throwIllegalStateException(state, ST_CODING);
+        CodingErrorAction ma = malformedInputAction();
+        CodingErrorAction ua = unmappableCharacterAction();
+        try {
+            onMalformedInput(CodingErrorAction.REPORT);
+            onUnmappableCharacter(CodingErrorAction.REPORT);
+            encode(cb);
+        } catch (CharacterCodingException x) {
+            return false;
+        } finally {
+            onMalformedInput(ma);
+            onUnmappableCharacter(ua);
+            reset();
+        }
+        return true;
     }
 
     /**
@@ -900,6 +935,9 @@ public abstract class CharsetEncoder {
      * <p> The default implementation of this method is not very efficient; it
      * should generally be overridden to improve performance.  </p>
      *
+     * @param   c
+     *          The given character
+     *
      * @return  <tt>true</tt> if, and only if, this encoder can encode
      *          the given character
      *
@@ -907,10 +945,10 @@ public abstract class CharsetEncoder {
      *          If an encoding operation is already in progress
      */
     public boolean canEncode(char c) {
-	CharBuffer cb = CharBuffer.allocate(1);
-	cb.put(c);
-	cb.flip();
-	return canEncode(cb);
+        CharBuffer cb = CharBuffer.allocate(1);
+        cb.put(c);
+        cb.flip();
+        return canEncode(cb);
     }
 
     /**
@@ -928,6 +966,9 @@ public abstract class CharsetEncoder {
      * <p> The default implementation of this method is not very efficient; it
      * should generally be overridden to improve performance.  </p>
      *
+     * @param   cs
+     *          The given character sequence
+     *
      * @return  <tt>true</tt> if, and only if, this encoder can encode
      *          the given character without throwing any exceptions and without
      *          performing any replacements
@@ -936,20 +977,20 @@ public abstract class CharsetEncoder {
      *          If an encoding operation is already in progress
      */
     public boolean canEncode(CharSequence cs) {
-	CharBuffer cb;
-	if (cs instanceof CharBuffer)
-	    cb = ((CharBuffer)cs).duplicate();
-	else
-	    cb = CharBuffer.wrap(cs.toString());
-	return canEncode(cb);
+        CharBuffer cb;
+        if (cs instanceof CharBuffer)
+            cb = ((CharBuffer)cs).duplicate();
+        else
+            cb = CharBuffer.wrap(cs.toString());
+        return canEncode(cb);
     }
 
 
 
 
     private void throwIllegalStateException(int from, int to) {
-	throw new IllegalStateException("Current state = " + stateNames[from]
-					+ ", new state = " + stateNames[to]);
+        throw new IllegalStateException("Current state = " + stateNames[from]
+                                        + ", new state = " + stateNames[to]);
     }
 
 }

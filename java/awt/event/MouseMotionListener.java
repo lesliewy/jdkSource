@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.event;
@@ -19,33 +37,32 @@ import java.util.EventListener;
  * (overriding only the methods of interest).
  * <P>
  * The listener object created from that class is then registered with a
- * component using the component's <code>addMouseMotionListener</code> 
+ * component using the component's <code>addMouseMotionListener</code>
  * method. A mouse motion event is generated when the mouse is moved
  * or dragged. (Many such events will be generated). When a mouse motion event
- * occurs, the relevant method in the listener object is invoked, and 
+ * occurs, the relevant method in the listener object is invoked, and
  * the <code>MouseEvent</code> is passed to it.
  *
  * @author Amy Fowler
- * @version %I%, %G%
  *
  * @see MouseMotionAdapter
  * @see MouseEvent
- * @see <a href="http://java.sun.com/docs/books/tutorial/post1.0/ui/mousemotionlistener.html">Tutorial: Writing a Mouse Motion Listener</a>
+ * @see <a href="https://docs.oracle.com/javase/tutorial/uiswing/events/mousemotionlistener.html">Tutorial: Writing a Mouse Motion Listener</a>
  *
  * @since 1.1
  */
 public interface MouseMotionListener extends EventListener {
 
     /**
-     * Invoked when a mouse button is pressed on a component and then 
-     * dragged.  <code>MOUSE_DRAGGED</code> events will continue to be 
-     * delivered to the component where the drag originated until the 
-     * mouse button is released (regardless of whether the mouse position 
+     * Invoked when a mouse button is pressed on a component and then
+     * dragged.  <code>MOUSE_DRAGGED</code> events will continue to be
+     * delivered to the component where the drag originated until the
+     * mouse button is released (regardless of whether the mouse position
      * is within the bounds of the component).
-     * <p> 
-     * Due to platform-dependent Drag&Drop implementations, 
-     * <code>MOUSE_DRAGGED</code> events may not be delivered during a native 
-     * Drag&Drop operation.  
+     * <p>
+     * Due to platform-dependent Drag&amp;Drop implementations,
+     * <code>MOUSE_DRAGGED</code> events may not be delivered during a native
+     * Drag&amp;Drop operation.
      */
     public void mouseDragged(MouseEvent e);
 

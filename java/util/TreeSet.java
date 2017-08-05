@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.util;
@@ -62,13 +80,12 @@ package java.util;
  * @param <E> the type of elements maintained by this set
  *
  * @author  Josh Bloch
- * @version %I%, %G%
- * @see	    Collection
- * @see	    Set
- * @see	    HashSet
+ * @see     Collection
+ * @see     Set
+ * @see     HashSet
  * @see     Comparable
  * @see     Comparator
- * @see	    TreeMap
+ * @see     TreeMap
  * @since   1.2
  */
 
@@ -104,7 +121,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * {@code ClassCastException}.
      */
     public TreeSet() {
-	this(new TreeMap<E,Object>());
+        this(new TreeMap<E,Object>());
     }
 
     /**
@@ -121,7 +138,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *        ordering} of the elements will be used.
      */
     public TreeSet(Comparator<? super E> comparator) {
-	this(new TreeMap<E,Object>(comparator));
+        this(new TreeMap<>(comparator));
     }
 
     /**
@@ -152,7 +169,7 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     public TreeSet(SortedSet<E> s) {
         this(s.comparator());
-	addAll(s);
+        addAll(s);
     }
 
     /**
@@ -171,14 +188,14 @@ public class TreeSet<E> extends AbstractSet<E>
      * @since 1.6
      */
     public Iterator<E> descendingIterator() {
-	return m.descendingKeySet().iterator();
+        return m.descendingKeySet().iterator();
     }
 
     /**
      * @since 1.6
      */
     public NavigableSet<E> descendingSet() {
-	return new TreeSet(m.descendingMap());
+        return new TreeSet<>(m.descendingMap());
     }
 
     /**
@@ -187,7 +204,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @return the number of elements in this set (its cardinality)
      */
     public int size() {
-	return m.size();
+        return m.size();
     }
 
     /**
@@ -196,7 +213,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @return {@code true} if this set contains no elements
      */
     public boolean isEmpty() {
-	return m.isEmpty();
+        return m.isEmpty();
     }
 
     /**
@@ -214,7 +231,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         does not permit null elements
      */
     public boolean contains(Object o) {
-	return m.containsKey(o);
+        return m.containsKey(o);
     }
 
     /**
@@ -235,7 +252,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         does not permit null elements
      */
     public boolean add(E e) {
-	return m.put(e, PRESENT)==null;
+        return m.put(e, PRESENT)==null;
     }
 
     /**
@@ -256,7 +273,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         does not permit null elements
      */
     public boolean remove(Object o) {
-	return m.remove(o)==PRESENT;
+        return m.remove(o)==PRESENT;
     }
 
     /**
@@ -264,7 +281,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * The set will be empty after this call returns.
      */
     public void clear() {
-	m.clear();
+        m.clear();
     }
 
     /**
@@ -281,11 +298,11 @@ public class TreeSet<E> extends AbstractSet<E>
     public  boolean addAll(Collection<? extends E> c) {
         // Use linear-time version if applicable
         if (m.size()==0 && c.size() > 0 &&
-	    c instanceof SortedSet &&
+            c instanceof SortedSet &&
             m instanceof TreeMap) {
             SortedSet<? extends E> set = (SortedSet<? extends E>) c;
             TreeMap<E,Object> map = (TreeMap<E, Object>) m;
-            Comparator<? super E> cc = (Comparator<? super E>) set.comparator();
+            Comparator<?> cc = set.comparator();
             Comparator<? super E> mc = map.comparator();
             if (cc==mc || (cc != null && cc.equals(mc))) {
                 map.addAllForTreeSet(set, PRESENT);
@@ -305,7 +322,7 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     public NavigableSet<E> subSet(E fromElement, boolean fromInclusive,
                                   E toElement,   boolean toInclusive) {
-	return new TreeSet<E>(m.subMap(fromElement, fromInclusive,
+        return new TreeSet<>(m.subMap(fromElement, fromInclusive,
                                        toElement,   toInclusive));
     }
 
@@ -318,7 +335,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @since 1.6
      */
     public NavigableSet<E> headSet(E toElement, boolean inclusive) {
-	return new TreeSet<E>(m.headMap(toElement, inclusive));
+        return new TreeSet<>(m.headMap(toElement, inclusive));
     }
 
     /**
@@ -330,7 +347,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @since 1.6
      */
     public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
-	return new TreeSet<E>(m.tailMap(fromElement, inclusive));
+        return new TreeSet<>(m.tailMap(fromElement, inclusive));
     }
 
     /**
@@ -341,7 +358,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> subSet(E fromElement, E toElement) {
-	return subSet(fromElement, true, toElement, false);
+        return subSet(fromElement, true, toElement, false);
     }
 
     /**
@@ -352,7 +369,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> headSet(E toElement) {
-	return headSet(toElement, false);
+        return headSet(toElement, false);
     }
 
     /**
@@ -363,7 +380,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> tailSet(E fromElement) {
-	return tailSet(fromElement, true);
+        return tailSet(fromElement, true);
     }
 
     public Comparator<? super E> comparator() {
@@ -435,7 +452,7 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     public E pollFirst() {
         Map.Entry<E,?> e = m.pollFirstEntry();
-        return (e == null)? null : e.getKey();
+        return (e == null) ? null : e.getKey();
     }
 
     /**
@@ -443,7 +460,7 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     public E pollLast() {
         Map.Entry<E,?> e = m.pollLastEntry();
-        return (e == null)? null : e.getKey();
+        return (e == null) ? null : e.getKey();
     }
 
     /**
@@ -452,15 +469,16 @@ public class TreeSet<E> extends AbstractSet<E>
      *
      * @return a shallow copy of this set
      */
+    @SuppressWarnings("unchecked")
     public Object clone() {
-        TreeSet<E> clone = null;
-	try {
-	    clone = (TreeSet<E>) super.clone();
-	} catch (CloneNotSupportedException e) {
-	    throw new InternalError();
-	}
+        TreeSet<E> clone;
+        try {
+            clone = (TreeSet<E>) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
 
-        clone.m = new TreeMap<E,Object>(m);
+        clone.m = new TreeMap<>(m);
         return clone;
     }
 
@@ -478,8 +496,8 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
-	// Write out any hidden stuff
-	s.defaultWriteObject();
+        // Write out any hidden stuff
+        s.defaultWriteObject();
 
         // Write out Comparator
         s.writeObject(m.comparator());
@@ -487,9 +505,9 @@ public class TreeSet<E> extends AbstractSet<E>
         // Write out size
         s.writeInt(m.size());
 
-	// Write out all elements in the proper order.
-	for (Iterator i=m.keySet().iterator(); i.hasNext(); )
-            s.writeObject(i.next());
+        // Write out all elements in the proper order.
+        for (E e : m.keySet())
+            s.writeObject(e);
     }
 
     /**
@@ -498,24 +516,44 @@ public class TreeSet<E> extends AbstractSet<E>
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in any hidden stuff
-	s.defaultReadObject();
+        // Read in any hidden stuff
+        s.defaultReadObject();
 
         // Read in Comparator
-        Comparator<? super E> c = (Comparator<? super E>) s.readObject();
+        @SuppressWarnings("unchecked")
+            Comparator<? super E> c = (Comparator<? super E>) s.readObject();
 
         // Create backing TreeMap
-	TreeMap<E,Object> tm;
-	if (c==null)
-	    tm = new TreeMap<E,Object>();
-	else
-	    tm = new TreeMap<E,Object>(c);
-	m = tm;
+        TreeMap<E,Object> tm = new TreeMap<>(c);
+        m = tm;
 
         // Read in size
         int size = s.readInt();
 
         tm.readTreeSet(size, s, PRESENT);
+    }
+
+    /**
+     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
+     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
+     * set.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#SIZED},
+     * {@link Spliterator#DISTINCT}, {@link Spliterator#SORTED}, and
+     * {@link Spliterator#ORDERED}.  Overriding implementations should document
+     * the reporting of additional characteristic values.
+     *
+     * <p>The spliterator's comparator (see
+     * {@link java.util.Spliterator#getComparator()}) is {@code null} if
+     * the tree set's comparator (see {@link #comparator()}) is {@code null}.
+     * Otherwise, the spliterator's comparator is the same as or imposes the
+     * same total ordering as the tree set's comparator.
+     *
+     * @return a {@code Spliterator} over the elements in this set
+     * @since 1.8
+     */
+    public Spliterator<E> spliterator() {
+        return TreeMap.keySpliteratorFor(m);
     }
 
     private static final long serialVersionUID = -2479143000061671589L;

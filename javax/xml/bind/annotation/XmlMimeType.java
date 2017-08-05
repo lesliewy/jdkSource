@@ -1,13 +1,32 @@
 /*
- * Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.xml.bind.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.awt.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -20,12 +39,12 @@ import javax.xml.transform.Source;
  *
  * <p>
  * This annotation is used in conjunction with datatypes such as
- * {@link Image} or {@link Source} that are bound to base64-encoded binary in XML.
+ * {@link java.awt.Image} or {@link Source} that are bound to base64-encoded binary in XML.
  *
  * <p>
  * If a property that has this annotation has a sibling property bound to
  * the xmime:contentType attribute, and if in the instance the property has a value,
- * the value of the attribute takes precedence and that will control the marshalling. 
+ * the value of the attribute takes precedence and that will control the marshalling.
  *
  * @author Kohsuke Kawaguchi
  * @since JAXB2.0

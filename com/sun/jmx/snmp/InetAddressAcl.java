@@ -1,11 +1,25 @@
 /*
- * %Z%file      %M%
- * %Z%author    Sun Microsystems, Inc.
- * %Z%version   %I%
- * %Z%date      %D%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  *
  */
 
@@ -19,7 +33,7 @@ import java.util.Enumeration;
 /**
  * Defines the IP address based ACL used by the SNMP protocol adaptor.
  * <p>
- * <p><b>This API is a Sun Microsystems internal API  and is subject 
+ * <p><b>This API is a Sun Microsystems internal API  and is subject
  * to change without notice.</b></p>
  * @since 1.5
  */
@@ -85,7 +99,7 @@ public interface InetAddressAcl {
      *
      * @return An enumeration of the trap destinations (enumeration of <CODE>InetAddress</CODE>).
      */
-    public Enumeration getTrapDestinations();
+    public Enumeration<InetAddress> getTrapDestinations();
 
     /**
      * Returns an enumeration of trap communities for a given host.
@@ -94,14 +108,14 @@ public interface InetAddressAcl {
      *
      * @return An enumeration of trap communities for a given host (enumeration of <CODE>String</CODE>).
      */
-    public Enumeration getTrapCommunities(InetAddress address);
+    public Enumeration<String> getTrapCommunities(InetAddress address);
 
     /**
      * Returns an enumeration of inform destinations.
      *
      * @return An enumeration of the inform destinations (enumeration of <CODE>InetAddress</CODE>).
      */
-    public Enumeration getInformDestinations();
+    public Enumeration<InetAddress> getInformDestinations();
 
     /**
      * Returns an enumeration of inform communities for a given host.
@@ -110,5 +124,5 @@ public interface InetAddressAcl {
      *
      * @return An enumeration of inform communities for a given host (enumeration of <CODE>String</CODE>).
      */
-    public Enumeration getInformCommunities(InetAddress address);
+    public Enumeration<String> getInformCommunities(InetAddress address);
 }

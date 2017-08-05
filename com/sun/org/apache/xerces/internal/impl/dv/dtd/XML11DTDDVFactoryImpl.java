@@ -1,12 +1,16 @@
 /*
- * Copyright 2001, 2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,65 +20,60 @@
 
 package com.sun.org.apache.xerces.internal.impl.dv.dtd;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-
 import com.sun.org.apache.xerces.internal.impl.dv.DatatypeValidator;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * the factory to create/return built-in XML 1.1 DVs and create user-defined DVs
- * 
- * @xerces.internal  
+ *
+ * @xerces.internal
  *
  * @author Neil Graham, IBM
  *
- * @version $Id: XML11DTDDVFactoryImpl.java,v 1.4 2007/07/19 04:38:32 ofung Exp $
  */
 public class XML11DTDDVFactoryImpl extends DTDDVFactoryImpl {
 
-    static Hashtable fXML11BuiltInTypes = new Hashtable();
+    static Map<String, DatatypeValidator> XML11BUILTINTYPES;
+    static {
+        Map<String, DatatypeValidator> xml11BuiltInTypes = new HashMap<>();
+        xml11BuiltInTypes.put("XML11ID", new XML11IDDatatypeValidator());
+        DatatypeValidator dvTemp = new XML11IDREFDatatypeValidator();
+        xml11BuiltInTypes.put("XML11IDREF", dvTemp);
+        xml11BuiltInTypes.put("XML11IDREFS", new ListDatatypeValidator(dvTemp));
+        dvTemp = new XML11NMTOKENDatatypeValidator();
+        xml11BuiltInTypes.put("XML11NMTOKEN", dvTemp);
+        xml11BuiltInTypes.put("XML11NMTOKENS", new ListDatatypeValidator(dvTemp));
+        XML11BUILTINTYPES = Collections.unmodifiableMap(xml11BuiltInTypes);
+    } // <clinit>
 
     /**
      * return a dtd type of the given name
      * This will call the super class if and only if it does not
-     * recognize the passed-in name.  
+     * recognize the passed-in name.
      *
      * @param name  the name of the datatype
      * @return      the datatype validator of the given name
      */
+    @Override
     public DatatypeValidator getBuiltInDV(String name) {
-        if(fXML11BuiltInTypes.get(name) != null) {
-            return (DatatypeValidator)fXML11BuiltInTypes.get(name);
+        if(XML11BUILTINTYPES.get(name) != null) {
+            return XML11BUILTINTYPES.get(name);
         }
-        return (DatatypeValidator)fBuiltInTypes.get(name);
+        return fBuiltInTypes.get(name);
     }
 
     /**
-     * get all built-in DVs, which are stored in a hashtable keyed by the name
+     * get all built-in DVs, which are stored in a Map keyed by the name
      * New XML 1.1 datatypes are inserted.
      *
-     * @return      a hashtable which contains all datatypes
+     * @return      a Map which contains all datatypes
      */
-    public Hashtable getBuiltInTypes() {
-        Hashtable toReturn = (Hashtable)fBuiltInTypes.clone();
-        Enumeration xml11Keys = fXML11BuiltInTypes.keys();
-        while (xml11Keys.hasMoreElements()) {
-            Object key = xml11Keys.nextElement();
-            toReturn.put(key, fXML11BuiltInTypes.get(key));
-        }
+    @Override
+    public Map<String, DatatypeValidator> getBuiltInTypes() {
+        final HashMap<String, DatatypeValidator> toReturn = new HashMap<>(fBuiltInTypes);
+        toReturn.putAll(XML11BUILTINTYPES);
         return toReturn;
     }
-
-    static {
-        fXML11BuiltInTypes.put("XML11ID", new XML11IDDatatypeValidator());
-        DatatypeValidator dvTemp = new XML11IDREFDatatypeValidator();
-        fXML11BuiltInTypes.put("XML11IDREF", dvTemp);
-        fXML11BuiltInTypes.put("XML11IDREFS", new ListDatatypeValidator(dvTemp));
-        dvTemp = new XML11NMTOKENDatatypeValidator();
-        fXML11BuiltInTypes.put("XML11NMTOKEN", dvTemp);
-        fXML11BuiltInTypes.put("XML11NMTOKENS", new ListDatatypeValidator(dvTemp));
-    } // <clinit>
-
-
 }//XML11DTDDVFactoryImpl
-

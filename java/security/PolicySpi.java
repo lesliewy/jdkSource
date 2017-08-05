@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 
@@ -10,17 +28,16 @@ package java.security;
 
 /**
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)
- * for the <code>Policy</code> class.
+ * for the {@code Policy} class.
  * All the abstract methods in this class must be implemented by each
  * service provider who wishes to supply a Policy implementation.
  *
  * <p> Subclass implementations of this abstract class must provide
- * a public constructor that takes a <code>Policy.Parameters</code>
+ * a public constructor that takes a {@code Policy.Parameters}
  * object as an input parameter.  This constructor also must throw
  * an IllegalArgumentException if it does not understand the
- * <code>Policy.Parameters</code> input.
+ * {@code Policy.Parameters} input.
  *
- * @version %I%, %G%
  *
  * @since 1.6
  */
@@ -33,16 +50,16 @@ public abstract class PolicySpi {
      * @param domain the ProtectionDomain to check.
      *
      * @param permission check whether this permission is granted to the
-     *		specified domain.
+     *          specified domain.
      *
      * @return boolean true if the permission is granted to the domain.
      */
     protected abstract boolean engineImplies
-	(ProtectionDomain domain, Permission permission);
+        (ProtectionDomain domain, Permission permission);
 
     /**
      * Refreshes/reloads the policy configuration. The behavior of this method
-     * depends on the implementation. For example, calling <code>refresh</code>
+     * depends on the implementation. For example, calling {@code refresh}
      * on a file-based policy will cause the file to be re-read.
      *
      * <p> The default implementation of this method does nothing.
@@ -61,18 +78,18 @@ public abstract class PolicySpi {
      * permissions granted to a CodeSource.
      *
      * @param codesource the CodeSource to which the returned
-     *		PermissionCollection has been granted.
+     *          PermissionCollection has been granted.
      *
      * @return a set of permissions granted to the specified CodeSource.
-     *		If this operation is supported, the returned
-     *		set of permissions must be a new mutable instance
-     *		and it must support heterogeneous Permission types.
-     *		If this operation is not supported,
-     *		Policy.UNSUPPORTED_EMPTY_COLLECTION is returned.
+     *          If this operation is supported, the returned
+     *          set of permissions must be a new mutable instance
+     *          and it must support heterogeneous Permission types.
+     *          If this operation is not supported,
+     *          Policy.UNSUPPORTED_EMPTY_COLLECTION is returned.
      */
     protected PermissionCollection engineGetPermissions
-					(CodeSource codesource) {
-	return Policy.UNSUPPORTED_EMPTY_COLLECTION;
+                                        (CodeSource codesource) {
+        return Policy.UNSUPPORTED_EMPTY_COLLECTION;
     }
 
     /**
@@ -85,17 +102,17 @@ public abstract class PolicySpi {
      * permissions granted to a ProtectionDomain.
      *
      * @param domain the ProtectionDomain to which the returned
-     *		PermissionCollection has been granted.
+     *          PermissionCollection has been granted.
      *
      * @return a set of permissions granted to the specified ProtectionDomain.
-     *		If this operation is supported, the returned
-     *		set of permissions must be a new mutable instance
-     *		and it must support heterogeneous Permission types.
-     *		If this operation is not supported,
-     *		Policy.UNSUPPORTED_EMPTY_COLLECTION is returned.
+     *          If this operation is supported, the returned
+     *          set of permissions must be a new mutable instance
+     *          and it must support heterogeneous Permission types.
+     *          If this operation is not supported,
+     *          Policy.UNSUPPORTED_EMPTY_COLLECTION is returned.
      */
     protected PermissionCollection engineGetPermissions
-					(ProtectionDomain domain) {
-	return Policy.UNSUPPORTED_EMPTY_COLLECTION;
+                                        (ProtectionDomain domain) {
+        return Policy.UNSUPPORTED_EMPTY_COLLECTION;
     }
 }

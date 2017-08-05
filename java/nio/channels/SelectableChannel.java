@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.nio.channels;
@@ -46,8 +64,8 @@ import java.nio.channels.spi.SelectorProvider;
  * threads. </p>
  *
  *
- * <a name="bm">
- * <h4>Blocking mode</h4>
+ * <a name="bm"></a>
+ * <h2>Blocking mode</h2>
  *
  * A selectable channel is either in <i>blocking</i> mode or in
  * <i>non-blocking</i> mode.  In blocking mode, every I/O operation invoked
@@ -65,7 +83,6 @@ import java.nio.channels.spi.SelectorProvider;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version %I%, %E%
  * @since 1.4
  *
  * @see SelectionKey
@@ -94,7 +111,7 @@ public abstract class SelectableChannel
      * identifying this channel's supported operations.  The bits that are set
      * in this integer value denote exactly the operations that are valid for
      * this channel.  This method always returns the same value for a given
-     * concrete channel class. </p>
+     * concrete channel class.
      *
      * @return  The valid-operation set
      */
@@ -123,7 +140,10 @@ public abstract class SelectableChannel
 
     /**
      * Retrieves the key representing the channel's registration with the given
-     * selector.  </p>
+     * selector.
+     *
+     * @param   sel
+     *          The selector
      *
      * @return  The key returned when this channel was last registered with the
      *          given selector, or <tt>null</tt> if this channel is not
@@ -174,6 +194,9 @@ public abstract class SelectableChannel
      * @throws  ClosedChannelException
      *          If this channel is closed
      *
+     * @throws  ClosedSelectorException
+     *          If the selector is closed
+     *
      * @throws  IllegalBlockingModeException
      *          If this channel is in blocking mode
      *
@@ -188,13 +211,13 @@ public abstract class SelectableChannel
      * @throws  IllegalArgumentException
      *          If a bit in the <tt>ops</tt> set does not correspond to an
      *          operation that is supported by this channel, that is, if
-     *          <tt>set & ~validOps() != 0</tt>
+     *          {@code set & ~validOps() != 0}
      *
      * @return  A key representing the registration of this channel with
      *          the given selector
      */
     public abstract SelectionKey register(Selector sel, int ops, Object att)
-	throws ClosedChannelException;
+        throws ClosedChannelException;
     //
     // sync(regLock) {
     //   sync(keySet) { look for selector }
@@ -219,7 +242,7 @@ public abstract class SelectableChannel
      * <blockquote><tt>sc.{@link
      * #register(java.nio.channels.Selector,int,java.lang.Object)
      * register}(sel, ops, null)</tt></blockquote>
-     * 
+     *
      * @param  sel
      *         The selector with which this channel is to be registered
      *
@@ -228,6 +251,9 @@ public abstract class SelectableChannel
      *
      * @throws  ClosedChannelException
      *          If this channel is closed
+     *
+     * @throws  ClosedSelectorException
+     *          If the selector is closed
      *
      * @throws  IllegalBlockingModeException
      *          If this channel is in blocking mode
@@ -242,16 +268,16 @@ public abstract class SelectableChannel
      *
      * @throws  IllegalArgumentException
      *          If a bit in <tt>ops</tt> does not correspond to an operation
-     *          that is supported by this channel, that is, if <tt>set &
-     *          ~validOps() != 0</tt>
+     *          that is supported by this channel, that is, if {@code set &
+     *          ~validOps() != 0}
      *
      * @return  A key representing the registration of this channel with
      *          the given selector
      */
     public final SelectionKey register(Selector sel, int ops)
-	throws ClosedChannelException
+        throws ClosedChannelException
     {
-	return register(sel, ops, null);
+        return register(sel, ops, null);
     }
 
     /**
@@ -287,7 +313,7 @@ public abstract class SelectableChannel
      *         If an I/O error occurs
      */
     public abstract SelectableChannel configureBlocking(boolean block)
-	throws IOException;
+        throws IOException;
     //
     // sync(regLock) {
     //   sync(keySet) { throw IBME if block && isRegistered; }
@@ -310,7 +336,6 @@ public abstract class SelectableChannel
      * configureBlocking} and {@link #register register} methods synchronize.
      * This is often useful in the implementation of adaptors that require a
      * specific blocking mode to be maintained for a short period of time.
-     * </p>
      *
      * @return  The blocking-mode lock object
      */

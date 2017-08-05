@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -22,7 +40,7 @@ import javax.swing.event.ChangeListener;
  * no selection the dot and mark will be equal.  If a selection
  * exists, the two values will be different.
  * <p>
- * The dot can be placed by either calling 
+ * The dot can be placed by either calling
  * <code>setDot</code> or <code>moveDot</code>.  Setting
  * the dot has the effect of removing any selection that may
  * have previously existed.  The dot and mark will be equal.
@@ -30,7 +48,6 @@ import javax.swing.event.ChangeListener;
  * the mark is left at whatever position it previously had.
  *
  * @author  Timothy Prinzing
- * @version %I% %G%
  */
 public interface Caret {
 
@@ -38,7 +55,7 @@ public interface Caret {
      * Called when the UI is being installed into the
      * interface of a JTextComponent.  This can be used
      * to gain access to the model that is being navigated
-     * by the implementation of this interface. 
+     * by the implementation of this interface.
      *
      * @param c the JTextComponent
      */
@@ -46,7 +63,7 @@ public interface Caret {
 
     /**
      * Called when the UI is being removed from the
-     * interface of a JTextComponent.  This is used to 
+     * interface of a JTextComponent.  This is used to
      * unregister any listeners that were attached.
      *
      * @param c the JTextComponent
@@ -106,7 +123,7 @@ public interface Caret {
     public void setSelectionVisible(boolean v);
 
     /**
-     * Set the current caret visual location.  This can be used when 
+     * Set the current caret visual location.  This can be used when
      * moving between lines that have uneven end positions (such as
      * when caret up or down actions occur).  If text flows
      * left-to-right or right-to-left the x-coordinate will indicate
@@ -120,7 +137,7 @@ public interface Caret {
     public void setMagicCaretPosition(Point p);
 
     /**
-     * Gets the current caret visual location. 
+     * Gets the current caret visual location.
      *
      * @return the visual position.
      * @see #setMagicCaretPosition
@@ -132,7 +149,7 @@ public interface Caret {
      * and how fast the caret blinks, commonly used as one
      * way to attract attention to the caret.
      *
-     * @param rate  the delay in milliseconds >= 0.  If this is
+     * @param rate  the delay in milliseconds &gt;=0.  If this is
      *  zero the caret will not blink.
      */
     public void setBlinkRate(int rate);
@@ -142,7 +159,7 @@ public interface Caret {
      * and how fast the caret blinks, commonly used as one
      * way to attract attention to the caret.
      *
-     * @return the delay in milliseconds >= 0.  If this is
+     * @return the delay in milliseconds &gt;=0.  If this is
      *  zero the caret will not blink.
      */
     public int getBlinkRate();
@@ -150,7 +167,7 @@ public interface Caret {
     /**
      * Fetches the current position of the caret.
      *
-     * @return the position >= 0
+     * @return the position &gt;=0
      */
     public int getDot();
 
@@ -159,7 +176,7 @@ public interface Caret {
      * is a selection, the mark will not be the same as
      * the dot.
      *
-     * @return the position >= 0
+     * @return the position &gt;=0
      */
     public int getMark();
 
@@ -180,9 +197,8 @@ public interface Caret {
      * leaving behind the mark.  This is useful for
      * making selections.
      *
-     * @param dot  the new position to move the caret to >= 0
+     * @param dot  the new position to move the caret to &gt;=0
      */
     public void moveDot(int dot);
 
 };
-    

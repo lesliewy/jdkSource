@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.image;
@@ -16,7 +34,7 @@ import java.awt.Image;
  * to organize complex memory on a particular <code>Canvas</code> or
  * <code>Window</code>.  Hardware and software limitations determine whether and
  * how a particular buffer strategy can be implemented.  These limitations
- * are detectible through the capabilities of the
+ * are detectable through the capabilities of the
  * <code>GraphicsConfiguration</code> used when creating the
  * <code>Canvas</code> or <code>Window</code>.
  * <p>
@@ -36,8 +54,7 @@ import java.awt.Image;
  * <p>
  * Alternatively, the contents of the back buffer can be copied, or
  * <i>blitted</i> forward in a chain instead of moving the video pointer.
- * <p>
- * <pre>
+ * <pre>{@code
  * Double buffering:
  *
  *                    ***********         ***********
@@ -54,7 +71,7 @@ import java.awt.Image;
  *          *         * <------ *         * <----- *         *
  *          ***********         ***********        ***********
  *
- * </pre>
+ * }</pre>
  * <p>
  * Here is an example of how buffer strategies can be created and used:
  * <pre><code>
@@ -85,14 +102,14 @@ import java.awt.Image;
  *             // Get a new graphics context every time through the loop
  *             // to make sure the strategy is validated
  *             Graphics graphics = strategy.getDrawGraphics();
- *     
+ *
  *             // Render to graphics
  *             // ...
  *
  *             // Dispose the graphics
  *             graphics.dispose();
  *
- *             // Repeat the rendering if the drawing buffer contents 
+ *             // Repeat the rendering if the drawing buffer contents
  *             // were restored
  *         } while (strategy.contentsRestored());
  *
@@ -108,14 +125,15 @@ import java.awt.Image;
  * w.dispose();
  * </code></pre>
  *
- * @see java.awt.Component
+ * @see java.awt.Window
+ * @see java.awt.Canvas
  * @see java.awt.GraphicsConfiguration
  * @see VolatileImage
  * @author Michael Martak
  * @since 1.4
  */
 public abstract class BufferStrategy {
-    
+
     /**
      * Returns the <code>BufferCapabilities</code> for this
      * <code>BufferStrategy</code>.
@@ -141,7 +159,7 @@ public abstract class BufferStrategy {
      * For a discussion on lost buffers, see <code>VolatileImage</code>.
      *
      * @return Whether or not the drawing buffer was lost since the last call
-     * to <code>getDrawGraphics</code>. 
+     * to <code>getDrawGraphics</code>.
      * @see java.awt.image.VolatileImage
      */
     public abstract boolean contentsLost();
@@ -156,7 +174,7 @@ public abstract class BufferStrategy {
      * For a discussion on lost buffers, see <code>VolatileImage</code>.
      *
      * @return Whether or not the drawing buffer was restored since the last
-     *         call to <code>getDrawGraphics</code>. 
+     *         call to <code>getDrawGraphics</code>.
      * @see java.awt.image.VolatileImage
      */
     public abstract boolean contentsRestored();
@@ -175,11 +193,12 @@ public abstract class BufferStrategy {
      * to use a <code>BufferStrategy</code> after it has been disposed will
      * result in undefined behavior.
      *
-     * @see java.awt.Component#createBufferStrategy
-     * @see java.awt.Component#getBufferStrategy
+     * @see java.awt.Window#createBufferStrategy
+     * @see java.awt.Canvas#createBufferStrategy
+     * @see java.awt.Window#getBufferStrategy
+     * @see java.awt.Canvas#getBufferStrategy
      * @since 1.6
      */
     public void dispose() {
     }
 }
-

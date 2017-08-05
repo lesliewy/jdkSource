@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.sql;
@@ -10,7 +28,7 @@ package java.sql;
 import java.sql.Clob;
 
 /**
- * The mapping in the Java<sup><font size=-2>TM</font></sup> programming language
+ * The mapping in the Java&trade; programming language
  * for the SQL <code>NCLOB</code> type.
  * An SQL <code>NCLOB</code> is a built-in type
  * that stores a Character Large Object using the National Character Set
@@ -28,7 +46,7 @@ import java.sql.Clob;
  * access an SQL <code>NCLOB</code> value.  In addition, this interface
  * has methods for updating a <code>NCLOB</code> value.
  * <p>
- * All methods on the <code>NClob</code> interface must be fully implemented if the 
+ * All methods on the <code>NClob</code> interface must be fully implemented if the
  * JDBC driver supports the data type.
  *
  * @since 1.6

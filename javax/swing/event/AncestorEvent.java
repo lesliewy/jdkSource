@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.event;
 
@@ -19,13 +37,13 @@ import javax.swing.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Dave Moore
  */
+@SuppressWarnings("serial")
 public class AncestorEvent extends AWTEvent {
     /**
      * An ancestor-component was added to the hierarchy of
@@ -49,7 +67,7 @@ public class AncestorEvent extends AWTEvent {
      *
      * @param source          the JComponent that originated the event
      *                        (typically <code>this</code>)
-     * @param id              an int specifying {@link #ANCESTOR_ADDED}, 
+     * @param id              an int specifying {@link #ANCESTOR_ADDED},
      *                        {@link #ANCESTOR_REMOVED} or {@link #ANCESTOR_MOVED}
      * @param ancestor        a Container object specifying the ancestor-component
      *                        whose display-status changed

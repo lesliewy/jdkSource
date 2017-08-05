@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.applet;
@@ -24,8 +42,7 @@ import java.util.Iterator;
  * The methods in this interface can be used by an applet to obtain
  * information about its environment.
  *
- * @author 	Arthur van Hoff
- * @version     %I%, %G%
+ * @author      Arthur van Hoff
  * @since       JDK1.0
  */
 public interface AppletContext {
@@ -39,7 +56,7 @@ public interface AppletContext {
 
     /**
      * Returns an <code>Image</code> object that can then be painted on
-     * the screen. The <code>url</code> argument<code> </code>that is
+     * the screen. The <code>url</code> argument that is
      * passed as an argument must specify an absolute URL.
      * <p>
      * This method always returns immediately, whether or not the image
@@ -74,10 +91,10 @@ public interface AppletContext {
     Enumeration<Applet> getApplets();
 
     /**
-     * Requests that the browser or applet viewer show the Web page 
-     * indicated by the <code>url</code> argument. The browser or 
-     * applet viewer determines which window or frame to display the 
-     * Web page. This method may be ignored by applet contexts that 
+     * Requests that the browser or applet viewer show the Web page
+     * indicated by the <code>url</code> argument. The browser or
+     * applet viewer determines which window or frame to display the
+     * Web page. This method may be ignored by applet contexts that
      * are not browsers.
      *
      * @param   url   an absolute URL giving the location of the document.
@@ -90,7 +107,7 @@ public interface AppletContext {
      * <code>target</code> argument indicates in which HTML frame the
      * document is to be displayed.
      * The target argument is interpreted as follows:
-     * <p>
+     *
      * <center><table border="3" summary="Target arguments and their descriptions">
      * <tr><th>Target Argument</th><th>Description</th></tr>
      * <tr><td><code>"_self"</code>  <td>Show in the window and frame that
@@ -129,18 +146,18 @@ public interface AppletContext {
 
     /**
      * Associates the specified stream with the specified key in this
-     * applet context. If the applet context previously contained a mapping 
-     * for this key, the old value is replaced. 
+     * applet context. If the applet context previously contained a mapping
+     * for this key, the old value is replaced.
      * <p>
-     * For security reasons, mapping of streams and keys exists for each 
-     * codebase. In other words, applet from one codebase cannot access 
+     * For security reasons, mapping of streams and keys exists for each
+     * codebase. In other words, applet from one codebase cannot access
      * the streams created by an applet from a different codebase
      * <p>
      * @param key key with which the specified value is to be associated.
      * @param stream stream to be associated with the specified key. If this
-     *               parameter is <code>null</code>, the specified key is removed 
+     *               parameter is <code>null</code>, the specified key is removed
      *               in this applet context.
-     * @throws <code>IOException</code> if the stream size exceeds a certain
+     * @throws IOException if the stream size exceeds a certain
      *         size limit. Size limit is decided by the implementor of this
      *         interface.
      * @since 1.4
@@ -148,12 +165,12 @@ public interface AppletContext {
     public void setStream(String key, InputStream stream)throws IOException;
 
     /**
-     * Returns the stream to which specified key is associated within this 
-     * applet context. Returns <tt>null</tt> if the applet context contains 
-     * no stream for this key.  
+     * Returns the stream to which specified key is associated within this
+     * applet context. Returns <tt>null</tt> if the applet context contains
+     * no stream for this key.
      * <p>
-     * For security reasons, mapping of streams and keys exists for each 
-     * codebase. In other words, applet from one codebase cannot access 
+     * For security reasons, mapping of streams and keys exists for each
+     * codebase. In other words, applet from one codebase cannot access
      * the streams created by an applet from a different codebase
      * <p>
      * @return the stream to which this applet context maps the key
@@ -165,11 +182,11 @@ public interface AppletContext {
     /**
      * Finds all the keys of the streams in this applet context.
      * <p>
-     * For security reasons, mapping of streams and keys exists for each 
-     * codebase. In other words, applet from one codebase cannot access 
+     * For security reasons, mapping of streams and keys exists for each
+     * codebase. In other words, applet from one codebase cannot access
      * the streams created by an applet from a different codebase
      * <p>
-     * @return  an Iterator of all the names of the streams in this applet 
+     * @return  an Iterator of all the names of the streams in this applet
      *          context.
      * @since 1.4
      */

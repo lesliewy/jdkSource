@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -28,7 +46,6 @@ import java.awt.Shape;
  * @see javax.swing.text.DefaultCaret
  * @see javax.swing.text.View
  *
- * @version %I% %G%
  * @since 1.4
  */
 public class NavigationFilter {
@@ -40,7 +57,7 @@ public class NavigationFilter {
      * on the <code>FilterBypass</code>
      *
      * @param fb FilterBypass that can be used to mutate caret position
-     * @param dot the position >= 0
+     * @param dot the position &gt;= 0
      * @param bias Bias to place the dot at
      */
     public void setDot(FilterBypass fb, int dot, Position.Bias bias) {
@@ -55,7 +72,7 @@ public class NavigationFilter {
      * methods on the <code>FilterBypass</code>.
      *
      * @param fb FilterBypass that can be used to mutate caret position
-     * @param dot the position >= 0
+     * @param dot the position &gt;= 0
      * @param bias Bias for new location
      */
     public void moveDot(FilterBypass fb, int dot, Position.Bias bias) {
@@ -85,7 +102,7 @@ public class NavigationFilter {
      *  location visual position
      * @exception BadLocationException
      * @exception IllegalArgumentException if <code>direction</code>
-     *		doesn't have one of the legal values above
+     *          doesn't have one of the legal values above
      */
     public int getNextVisualPositionFrom(JTextComponent text, int pos,
                                          Position.Bias bias, int direction,
@@ -114,7 +131,7 @@ public class NavigationFilter {
         /**
          * Sets the caret location, bypassing the NavigationFilter.
          *
-         * @param dot the position >= 0
+         * @param dot the position &gt;= 0
          * @param bias Bias to place the dot at
          */
         public abstract void setDot(int dot, Position.Bias bias);
@@ -122,7 +139,7 @@ public class NavigationFilter {
         /**
          * Moves the caret location, bypassing the NavigationFilter.
          *
-         * @param dot the position >= 0
+         * @param dot the position &gt;= 0
          * @param bias Bias for new location
          */
         public abstract void moveDot(int dot, Position.Bias bias);

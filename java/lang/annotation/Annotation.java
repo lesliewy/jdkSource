@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang.annotation;
@@ -12,6 +30,13 @@ package java.lang.annotation;
  * interface that manually extends this one does <i>not</i> define
  * an annotation type.  Also note that this interface does not itself
  * define an annotation type.
+ *
+ * More information about annotation types can be found in section 9.6 of
+ * <cite>The Java&trade; Language Specification</cite>.
+ *
+ * The {@link java.lang.reflect.AnnotatedElement} interface discusses
+ * compatibility concerns when evolving an annotation type from being
+ * non-repeatable to being repeatable.
  *
  * @author  Josh Bloch
  * @since   1.5
@@ -32,7 +57,7 @@ public interface Annotation {
      *    are <tt>x</tt> and <tt>y</tt> are considered equal if
      *    <tt>Float.valueOf(x).equals(Float.valueOf(y))</tt>.
      *    (Unlike the <tt>==</tt> operator, NaN is considered equal
-     *    to itself, and <tt>0.0f</tt> unequal to <tt>-0.0f</tt>.) 
+     *    to itself, and <tt>0.0f</tt> unequal to <tt>-0.0f</tt>.)
      *
      *    <li>Two corresponding <tt>double</tt> members whose values
      *    are <tt>x</tt> and <tt>y</tt> are considered equal if
@@ -105,6 +130,7 @@ public interface Annotation {
 
     /**
      * Returns the annotation type of this annotation.
+     * @return the annotation type of this annotation
      */
     Class<? extends Annotation> annotationType();
 }

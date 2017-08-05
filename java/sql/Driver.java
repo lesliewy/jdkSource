@@ -1,11 +1,31 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.sql;
+
+import java.util.logging.Logger;
 
 /**
  * The interface that every driver class must implement.
@@ -24,13 +44,16 @@ package java.sql;
  *
  * <P>When a Driver class is loaded, it should create an instance of
  * itself and register it with the DriverManager. This means that a
- * user can load and register a driver by calling
- * <pre>
- *   <code>Class.forName("foo.bah.Driver")</code>
- * </pre>
- *
+ * user can load and register a driver by calling:
+ * <p>
+ * {@code Class.forName("foo.bah.Driver")}
+ * <p>
+ * A JDBC driver may create a {@linkplain DriverAction} implementation in order
+ * to receive notifications when {@linkplain DriverManager#deregisterDriver} has
+ * been called.
  * @see DriverManager
- * @see Connection 
+ * @see Connection
+ * @see DriverAction
  */
 public interface Driver {
 
@@ -41,14 +64,19 @@ public interface Driver {
      * the JDBC driver manager is asked to connect to a given URL it passes
      * the URL to each loaded driver in turn.
      *
-     * <P>The driver should throw an <code>SQLException</code> if it is the right 
+     * <P>The driver should throw an <code>SQLException</code> if it is the right
      * driver to connect to the given URL but has trouble connecting to
      * the database.
      *
-     * <P>The <code>java.util.Properties</code> argument can be used to pass
+     * <P>The {@code Properties} argument can be used to pass
      * arbitrary string tag/value pairs as connection arguments.
      * Normally at least "user" and "password" properties should be
-     * included in the <code>Properties</code> object.
+     * included in the {@code Properties} object.
+     * <p>
+     * <B>Note:</B> If a property is specified as part of the {@code url} and
+     * is also specified in the {@code Properties} object, it is
+     * implementation-defined as to which value will take precedence. For
+     * maximum portability, an application should only specify a property once.
      *
      * @param url the URL of the database to which to connect
      * @param info a list of arbitrary string tag/value pairs as
@@ -56,7 +84,8 @@ public interface Driver {
      * "password" property should be included.
      * @return a <code>Connection</code> object that represents a
      *         connection to the URL
-     * @exception SQLException if a database access error occurs
+     * @exception SQLException if a database access error occurs or the url is
+     * {@code null}
      */
     Connection connect(String url, java.util.Properties info)
         throws SQLException;
@@ -64,13 +93,14 @@ public interface Driver {
     /**
      * Retrieves whether the driver thinks that it can open a connection
      * to the given URL.  Typically drivers will return <code>true</code> if they
-     * understand the subprotocol specified in the URL and <code>false</code> if
+     * understand the sub-protocol specified in the URL and <code>false</code> if
      * they do not.
      *
      * @param url the URL of the database
      * @return <code>true</code> if this driver understands the given URL;
-     *         <code>false</code> otherwise  
-     * @exception SQLException if a database access error occurs
+     *         <code>false</code> otherwise
+     * @exception SQLException if a database access error occurs or the url is
+     * {@code null}
      */
     boolean acceptsURL(String url) throws SQLException;
 
@@ -78,9 +108,9 @@ public interface Driver {
     /**
      * Gets information about the possible properties for this driver.
      * <P>
-     * The <code>getPropertyInfo</code> method is intended to allow a generic 
-     * GUI tool to discover what properties it should prompt 
-     * a human for in order to get 
+     * The <code>getPropertyInfo</code> method is intended to allow a generic
+     * GUI tool to discover what properties it should prompt
+     * a human for in order to get
      * enough information to connect to a database.  Note that depending on
      * the values the human has supplied so far, additional values may become
      * necessary, so it may be necessary to iterate though several calls
@@ -89,13 +119,13 @@ public interface Driver {
      * @param url the URL of the database to which to connect
      * @param info a proposed list of tag/value pairs that will be sent on
      *          connect open
-     * @return an array of <code>DriverPropertyInfo</code> objects describing 
-     *          possible properties.  This array may be an empty array if 
+     * @return an array of <code>DriverPropertyInfo</code> objects describing
+     *          possible properties.  This array may be an empty array if
      *          no properties are required.
      * @exception SQLException if a database access error occurs
      */
     DriverPropertyInfo[] getPropertyInfo(String url, java.util.Properties info)
-			 throws SQLException;
+                         throws SQLException;
 
 
     /**
@@ -114,7 +144,7 @@ public interface Driver {
 
     /**
      * Reports whether this driver is a genuine JDBC
-     * Compliant<sup><font size=-2>TM</font></sup> driver.
+     * Compliant&trade; driver.
      * A driver may only report <code>true</code> here if it passes the JDBC
      * compliance tests; otherwise it is required to return <code>false</code>.
      * <P>
@@ -132,5 +162,20 @@ public interface Driver {
      *         otherwise
      */
     boolean jdbcCompliant();
-} 
 
+    //------------------------- JDBC 4.1 -----------------------------------
+
+    /**
+     * Return the parent Logger of all the Loggers used by this driver. This
+     * should be the Logger farthest from the root Logger that is
+     * still an ancestor of all of the Loggers used by this driver. Configuring
+     * this Logger will affect all of the log messages generated by the driver.
+     * In the worst case, this may be the root Logger.
+     *
+     * @return the parent Logger for this driver
+     * @throws SQLFeatureNotSupportedException if the driver does not use
+     * {@code java.util.logging}.
+     * @since 1.7
+     */
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException;
+}

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang.management;
@@ -18,8 +36,7 @@ import sun.management.MemoryUsageCompositeData;
  * the heap or non-heap memory of the Java virtual machine as a whole.
  *
  * <p> A <tt>MemoryUsage</tt> object contains four values:
- * <ul>
- * <table>
+ * <table summary="Describes the MemoryUsage object content">
  * <tr>
  * <td valign=top> <tt>init</tt> </td>
  * <td valign=top> represents the initial amount of memory (in bytes) that
@@ -51,19 +68,18 @@ import sun.management.MemoryUsageCompositeData;
  * <td valign=top> represents the maximum amount of memory (in bytes)
  *      that can be used for memory management. Its value may be undefined.
  *      The maximum amount of memory may change over time if defined.
- *      The amount of used and committed memory will always be less than 
+ *      The amount of used and committed memory will always be less than
  *      or equal to <tt>max</tt> if <tt>max</tt> is defined.
  *      A memory allocation may fail if it attempts to increase the
- *      used memory such that <tt>used &gt committed</tt> even
- *      if <tt>used &lt= max</tt> would still be true (for example,
+ *      used memory such that <tt>used &gt; committed</tt> even
+ *      if <tt>used &lt;= max</tt> would still be true (for example,
  *      when the system is low on virtual memory).
  * </td>
  * </tr>
  * </table>
- * </ul>
  *
  * Below is a picture showing an example of a memory pool:
- * <p>
+ *
  * <pre>
  *        +----------------------------------------------+
  *        +////////////////           |                  +
@@ -75,17 +91,16 @@ import sun.management.MemoryUsageCompositeData;
  *        |---------------|
  *               used
  *        |---------------------------|
- *                  committed 
+ *                  committed
  *        |----------------------------------------------|
- *                            max 
+ *                            max
  * </pre>
  *
- * <h4>MXBean Mapping</h4>
+ * <h3>MXBean Mapping</h3>
  * <tt>MemoryUsage</tt> is mapped to a {@link CompositeData CompositeData}
- * with attributes as specified in the {@link #from from} method. 
+ * with attributes as specified in the {@link #from from} method.
  *
  * @author   Mandy Chung
- * @version %I%, %G%
  * @since   1.5
  */
 public class MemoryUsage {
@@ -113,7 +128,7 @@ public class MemoryUsage {
      *      or</li>
      * <li> <tt>used</tt> is greater than the value of <tt>committed</tt>;
      *      or</li>
-     * <li> <tt>committed</tt> is greater than the value of <tt>max</tt> 
+     * <li> <tt>committed</tt> is greater than the value of <tt>max</tt>
      *      <tt>max</tt> if defined.</li>
      * </ul>
      */
@@ -122,19 +137,19 @@ public class MemoryUsage {
                        long committed,
                        long max) {
         if (init < -1) {
-            throw new IllegalArgumentException( "init parameter = " + 
+            throw new IllegalArgumentException( "init parameter = " +
                 init + " is negative but not -1.");
         }
         if (max < -1) {
-            throw new IllegalArgumentException( "max parameter = " + 
+            throw new IllegalArgumentException( "max parameter = " +
                 max + " is negative but not -1.");
         }
         if (used < 0) {
-            throw new IllegalArgumentException( "used parameter = " + 
+            throw new IllegalArgumentException( "used parameter = " +
                 used + " is negative.");
         }
         if (committed < 0) {
-            throw new IllegalArgumentException( "committed parameter = " + 
+            throw new IllegalArgumentException( "committed parameter = " +
                 committed + " is negative.");
         }
         if (used > committed) {
@@ -153,11 +168,11 @@ public class MemoryUsage {
     }
 
     /**
-     * Constructs a <tt>MemoryUsage</tt> object from a 
-     * {@link CompositeData CompositeData}.  
+     * Constructs a <tt>MemoryUsage</tt> object from a
+     * {@link CompositeData CompositeData}.
      */
     private MemoryUsage(CompositeData cd) {
-        // validate the input composite data  
+        // validate the input composite data
         MemoryUsageCompositeData.validateCompositeData(cd);
 
         this.init = MemoryUsageCompositeData.getInit(cd);
@@ -177,8 +192,8 @@ public class MemoryUsage {
     public long getInit() {
         return init;
     }
-    
-    /** 
+
+    /**
      * Returns the amount of used memory in bytes.
      *
      * @return the amount of used memory in bytes.
@@ -187,11 +202,11 @@ public class MemoryUsage {
     public long getUsed() {
         return used;
     };
-    
-    /** 
+
+    /**
      * Returns the amount of memory in bytes that is committed for
      * the Java virtual machine to use.  This amount of memory is
-     * guaranteed for the Java virtual machine to use. 
+     * guaranteed for the Java virtual machine to use.
      *
      * @return the amount of committed memory in bytes.
      *
@@ -199,25 +214,25 @@ public class MemoryUsage {
     public long getCommitted() {
         return committed;
     };
-       
-    /** 
-     * Returns the maximum amount of memory in bytes that can be 
-     * used for memory management.  This method returns <tt>-1</tt> 
+
+    /**
+     * Returns the maximum amount of memory in bytes that can be
+     * used for memory management.  This method returns <tt>-1</tt>
      * if the maximum memory size is undefined.
      *
-     * <p> This amount of memory is not guaranteed to be available 
-     * for memory management if it is greater than the amount of 
-     * committed memory.  The Java virtual machine may fail to allocate 
-     * memory even if the amount of used memory does not exceed this 
+     * <p> This amount of memory is not guaranteed to be available
+     * for memory management if it is greater than the amount of
+     * committed memory.  The Java virtual machine may fail to allocate
+     * memory even if the amount of used memory does not exceed this
      * maximum size.
-     * 
-     * @return the maximum amount of memory in bytes; 
+     *
+     * @return the maximum amount of memory in bytes;
      * <tt>-1</tt> if undefined.
      */
     public long getMax() {
         return max;
     };
-           
+
     /**
      * Returns a descriptive representation of this memory usage.
      */
@@ -225,7 +240,7 @@ public class MemoryUsage {
         StringBuffer buf = new StringBuffer();
         buf.append("init = " + init + "(" + (init >> 10) + "K) ");
         buf.append("used = " + used + "(" + (used >> 10) + "K) ");
-        buf.append("committed = " + committed + "(" + 
+        buf.append("committed = " + committed + "(" +
                    (committed >> 10) + "K) " );
         buf.append("max = " + max + "(" + (max >> 10) + "K)");
         return buf.toString();
@@ -235,9 +250,9 @@ public class MemoryUsage {
      * Returns a <tt>MemoryUsage</tt> object represented by the
      * given <tt>CompositeData</tt>. The given <tt>CompositeData</tt>
      * must contain the following attributes:
-     * <p>
+     *
      * <blockquote>
-     * <table border>
+     * <table border summary="The attributes and the types the given CompositeData contains">
      * <tr>
      *   <th align=left>Attribute Name</th>
      *   <th align=left>Type</th>

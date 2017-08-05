@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.net;
@@ -16,7 +34,6 @@ package java.net;
  * @see java.net.Authenticator#getPasswordAuthentication()
  *
  * @author  Bill Foote
- * @version %I%, %G%
  * @since   1.2
  */
 
@@ -26,18 +43,18 @@ public final class PasswordAuthentication {
     private char[] password;
 
     /**
-     * Creates a new <code>PasswordAuthentication</code> object from the given
+     * Creates a new {@code PasswordAuthentication} object from the given
      * user name and password.
      *
      * <p> Note that the given user password is cloned before it is stored in
-     * the new <code>PasswordAuthentication</code> object.
+     * the new {@code PasswordAuthentication} object.
      *
      * @param userName the user name
      * @param password the user's password
      */
     public PasswordAuthentication(String userName, char[] password) {
-	this.userName = userName;
-	this.password = (char[])password.clone();
+        this.userName = userName;
+        this.password = password.clone();
     }
 
     /**
@@ -46,7 +63,7 @@ public final class PasswordAuthentication {
      * @return the user name
      */
     public String getUserName() {
-	return userName;
+        return userName;
     }
 
     /**
@@ -59,7 +76,6 @@ public final class PasswordAuthentication {
      * @return the password
      */
     public char[] getPassword() {
-	return password;
+        return password;
     }
 }
-

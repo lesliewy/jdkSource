@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security;
@@ -21,17 +39,17 @@ package java.security;
  * RSA), which will work with those algorithms and with related
  * algorithms (such as MD5 with RSA, SHA-1 with RSA, Raw DSA, etc.)
  * The name of the algorithm of a key is obtained using the
- * {@link #getAlgorithm() getAlgorithm} method.<P>
+ * {@link #getAlgorithm() getAlgorithm} method.
  *
  * <LI>An Encoded Form
  *
  * <P>This is an external encoded form for the key used when a standard
  * representation of the key is needed outside the Java Virtual Machine,
  * as when transmitting the key to some other party. The key
- * is encoded according to a standard format (such as 
- * X.509 <code>SubjectPublicKeyInfo</code> or PKCS#8), and
+ * is encoded according to a standard format (such as
+ * X.509 {@code SubjectPublicKeyInfo} or PKCS#8), and
  * is returned using the {@link #getEncoded() getEncoded} method.
- * Note: The syntax of the ASN.1 type <code>SubjectPublicKeyInfo</code> 
+ * Note: The syntax of the ASN.1 type {@code SubjectPublicKeyInfo}
  * is defined as follows:
  *
  * <pre>
@@ -43,16 +61,15 @@ package java.security;
  *   algorithm OBJECT IDENTIFIER,
  *   parameters ANY DEFINED BY algorithm OPTIONAL }
  * </pre>
- * 
- * For more information, see 
- * <a href="http://www.ietf.org/rfc/rfc2459.txt">RFC 2459: 
+ *
+ * For more information, see
+ * <a href="http://www.ietf.org/rfc/rfc3280.txt">RFC 3280:
  * Internet X.509 Public Key Infrastructure Certificate and CRL Profile</a>.
- * <P>
  *
  * <LI>A Format
  *
  * <P>This is the name of the format of the encoded key. It is returned
- * by the {@link #getFormat() getFormat} method.<P>
+ * by the {@link #getFormat() getFormat} method.
  *
  * </UL>
  *
@@ -79,7 +96,6 @@ package java.security;
  * @see Identity
  * @see Signer
  *
- * @version %I% %E%
  * @author Benjamin Renaud
  */
 
@@ -88,8 +104,8 @@ public interface Key extends java.io.Serializable {
     // Declare serialVersionUID to be compatible with JDK1.1
 
    /**
-    * The class fingerprint that is set to indicate 
-    * serialization compatibility with a previous 
+    * The class fingerprint that is set to indicate
+    * serialization compatibility with a previous
     * version of the class.
     */
     static final long serialVersionUID = 6603384152749567654L;
@@ -115,11 +131,11 @@ public interface Key extends java.io.Serializable {
      * For example, the name of the ASN.1 data format for public
      * keys is <I>SubjectPublicKeyInfo</I>, as
      * defined by the X.509 standard; in this case, the returned format is
-     * <code>"X.509"</code>. Similarly,
+     * {@code "X.509"}. Similarly,
      * the name of the ASN.1 data format for private keys is
      * <I>PrivateKeyInfo</I>,
      * as defined by the PKCS #8 standard; in this case, the returned format is
-     * <code>"PKCS#8"</code>.
+     * {@code "PKCS#8"}.
      *
      * @return the primary encoding format of the key.
      */

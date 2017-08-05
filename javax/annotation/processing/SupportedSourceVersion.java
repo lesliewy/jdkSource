@@ -1,8 +1,26 @@
 /*
- * %W% %E%
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
- * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.annotation.processing;
@@ -23,12 +41,15 @@ import javax.lang.model.SourceVersion;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
  * @since 1.6
  */
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface SupportedSourceVersion {
+    /**
+     * Returns the latest supported source version.
+     * @return the latest supported source version
+     */
     SourceVersion value();
 }

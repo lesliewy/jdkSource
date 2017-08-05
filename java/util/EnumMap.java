@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.util;
@@ -55,7 +73,6 @@ import sun.misc.SharedSecrets;
  * Java Collections Framework</a>.
  *
  * @author Josh Bloch
- * @version %I%, %G%
  * @see EnumSet
  * @since 1.5
  */
@@ -89,17 +106,26 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     /**
      * Distinguished non-null value for representing null values.
      */
-    private static final Object NULL = new Object();
+    private static final Object NULL = new Object() {
+        public int hashCode() {
+            return 0;
+        }
+
+        public String toString() {
+            return "java.util.EnumMap.NULL";
+        }
+    };
 
     private Object maskNull(Object value) {
         return (value == null ? NULL : value);
     }
 
+    @SuppressWarnings("unchecked")
     private V unmaskNull(Object value) {
-        return (V) (value == NULL ? null : value);
+        return (V)(value == NULL ? null : value);
     }
 
-    private static Enum[] ZERO_LENGTH_ENUM_ARRAY = new Enum[0];
+    private static final Enum<?>[] ZERO_LENGTH_ENUM_ARRAY = new Enum<?>[0];
 
     /**
      * Creates an empty enum map with the specified key type.
@@ -123,7 +149,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     public EnumMap(EnumMap<K, ? extends V> m) {
         keyType = m.keyType;
         keyUniverse = m.keyUniverse;
-        vals = (Object[]) m.vals.clone();
+        vals = m.vals.clone();
         size = m.size;
     }
 
@@ -144,7 +170,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
             EnumMap<K, ? extends V> em = (EnumMap<K, ? extends V>) m;
             keyType = em.keyType;
             keyUniverse = em.keyUniverse;
-            vals = (Object[]) em.vals.clone();
+            vals = em.vals.clone();
             size = em.size;
         } else {
             if (m.isEmpty())
@@ -193,12 +219,12 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      *            key
      */
     public boolean containsKey(Object key) {
-        return isValidKey(key) && vals[((Enum)key).ordinal()] != null;
+        return isValidKey(key) && vals[((Enum<?>)key).ordinal()] != null;
     }
 
     private boolean containsMapping(Object key, Object value) {
         return isValidKey(key) &&
-            maskNull(value).equals(vals[((Enum)key).ordinal()]);
+            maskNull(value).equals(vals[((Enum<?>)key).ordinal()]);
     }
 
     /**
@@ -218,7 +244,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      */
     public V get(Object key) {
         return (isValidKey(key) ?
-                unmaskNull(vals[((Enum)key).ordinal()]) : null);
+                unmaskNull(vals[((Enum<?>)key).ordinal()]) : null);
     }
 
     // Modification Operations
@@ -240,7 +266,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     public V put(K key, V value) {
         typeCheck(key);
 
-        int index = ((Enum)key).ordinal();
+        int index = key.ordinal();
         Object oldValue = vals[index];
         vals[index] = maskNull(value);
         if (oldValue == null)
@@ -260,7 +286,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     public V remove(Object key) {
         if (!isValidKey(key))
             return null;
-        int index = ((Enum)key).ordinal();
+        int index = ((Enum<?>)key).ordinal();
         Object oldValue = vals[index];
         vals[index] = null;
         if (oldValue != null)
@@ -271,7 +297,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     private boolean removeMapping(Object key, Object value) {
         if (!isValidKey(key))
             return false;
-        int index = ((Enum)key).ordinal();
+        int index = ((Enum<?>)key).ordinal();
         if (maskNull(value).equals(vals[index])) {
             vals[index] = null;
             size--;
@@ -289,7 +315,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
             return false;
 
         // Cheaper than instanceof Enum followed by getDeclaringClass
-        Class keyClass = key.getClass();
+        Class<?> keyClass = key.getClass();
         return keyClass == keyType || keyClass.getSuperclass() == keyType;
     }
 
@@ -306,8 +332,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      */
     public void putAll(Map<? extends K, ? extends V> m) {
         if (m instanceof EnumMap) {
-            EnumMap<? extends K, ? extends V> em =
-                (EnumMap<? extends K, ? extends V>)m;
+            EnumMap<?, ?> em = (EnumMap<?, ?>)m;
             if (em.keyType != keyType) {
                 if (em.isEmpty())
                     return;
@@ -342,7 +367,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      * view the first time this view is requested.  The view is stateless,
      * so there's no reason to create more than one.
      */
-    private transient Set<Map.Entry<K,V>> entrySet = null;
+    private transient Set<Map.Entry<K,V>> entrySet;
 
     /**
      * Returns a {@link Set} view of the keys contained in this map.
@@ -355,10 +380,11 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      */
     public Set<K> keySet() {
         Set<K> ks = keySet;
-        if (ks != null)
-            return ks;
-        else
-            return keySet = new KeySet();
+        if (ks == null) {
+            ks = new KeySet();
+            keySet = ks;
+        }
+        return ks;
     }
 
     private class KeySet extends AbstractSet<K> {
@@ -393,10 +419,11 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      */
     public Collection<V> values() {
         Collection<V> vs = values;
-        if (vs != null)
-            return vs;
-        else
-            return values = new Values();
+        if (vs == null) {
+            vs = new Values();
+            values = vs;
+        }
+        return vs;
     }
 
     private class Values extends AbstractCollection<V> {
@@ -447,16 +474,17 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
         public Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator();
         }
+
         public boolean contains(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry entry = (Map.Entry)o;
+            Map.Entry<?,?> entry = (Map.Entry<?,?>)o;
             return containsMapping(entry.getKey(), entry.getValue());
         }
         public boolean remove(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry entry = (Map.Entry)o;
+            Map.Entry<?,?> entry = (Map.Entry<?,?>)o;
             return removeMapping(entry.getKey(), entry.getValue());
         }
         public int size() {
@@ -468,21 +496,21 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
         public Object[] toArray() {
             return fillEntryArray(new Object[size]);
         }
-	@SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
-	    int size = size();
-	    if (a.length < size)
-		a = (T[])java.lang.reflect.Array
-		    .newInstance(a.getClass().getComponentType(), size);
-	    if (a.length > size)
-		a[size] = null;
+            int size = size();
+            if (a.length < size)
+                a = (T[])java.lang.reflect.Array
+                    .newInstance(a.getClass().getComponentType(), size);
+            if (a.length > size)
+                a[size] = null;
             return (T[]) fillEntryArray(a);
         }
         private Object[] fillEntryArray(Object[] a) {
             int j = 0;
             for (int i = 0; i < vals.length; i++)
                 if (vals[i] != null)
-                    a[j++] = new AbstractMap.SimpleEntry<K,V>(
+                    a[j++] = new AbstractMap.SimpleEntry<>(
                         keyUniverse[i], unmaskNull(vals[i]));
             return a;
         }
@@ -535,70 +563,82 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
         }
     }
 
-    /**
-     * Since we don't use Entry objects, we use the Iterator itself as entry.
-     */
-    private class EntryIterator extends EnumMapIterator<Map.Entry<K,V>>
-        implements Map.Entry<K,V>
-    {
+    private class EntryIterator extends EnumMapIterator<Map.Entry<K,V>> {
+        private Entry lastReturnedEntry;
+
         public Map.Entry<K,V> next() {
             if (!hasNext())
                 throw new NoSuchElementException();
-            lastReturnedIndex = index++;
-            return this;
+            lastReturnedEntry = new Entry(index++);
+            return lastReturnedEntry;
         }
 
-        public K getKey() {
-            checkLastReturnedIndexForEntryUse();
-            return keyUniverse[lastReturnedIndex];
+        public void remove() {
+            lastReturnedIndex =
+                ((null == lastReturnedEntry) ? -1 : lastReturnedEntry.index);
+            super.remove();
+            lastReturnedEntry.index = lastReturnedIndex;
+            lastReturnedEntry = null;
         }
 
-        public V getValue() {
-            checkLastReturnedIndexForEntryUse();
-            return unmaskNull(vals[lastReturnedIndex]);
-        }
+        private class Entry implements Map.Entry<K,V> {
+            private int index;
 
-        public V setValue(V value) {
-            checkLastReturnedIndexForEntryUse();
-            V oldValue = unmaskNull(vals[lastReturnedIndex]);
-            vals[lastReturnedIndex] = maskNull(value);
-            return oldValue;
-        }
+            private Entry(int index) {
+                this.index = index;
+            }
 
-        public boolean equals(Object o) {
-            if (lastReturnedIndex < 0)
-                return o == this;
+            public K getKey() {
+                checkIndexForEntryUse();
+                return keyUniverse[index];
+            }
 
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry e = (Map.Entry)o;
-            V ourValue = unmaskNull(vals[lastReturnedIndex]);
-            Object hisValue = e.getValue();
-            return e.getKey() == keyUniverse[lastReturnedIndex] &&
-                (ourValue == hisValue ||
-                 (ourValue != null && ourValue.equals(hisValue)));
-        }
+            public V getValue() {
+                checkIndexForEntryUse();
+                return unmaskNull(vals[index]);
+            }
 
-        public int hashCode() {
-            if (lastReturnedIndex < 0)
-                return super.hashCode();
+            public V setValue(V value) {
+                checkIndexForEntryUse();
+                V oldValue = unmaskNull(vals[index]);
+                vals[index] = maskNull(value);
+                return oldValue;
+            }
 
-            Object value = vals[lastReturnedIndex];
-            return keyUniverse[lastReturnedIndex].hashCode()
-                ^ (value == NULL ? 0 : value.hashCode());
-        }
+            public boolean equals(Object o) {
+                if (index < 0)
+                    return o == this;
 
-        public String toString() {
-            if (lastReturnedIndex < 0)
-                return super.toString();
+                if (!(o instanceof Map.Entry))
+                    return false;
 
-            return keyUniverse[lastReturnedIndex] + "="
-                + unmaskNull(vals[lastReturnedIndex]);
-        }
+                Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+                V ourValue = unmaskNull(vals[index]);
+                Object hisValue = e.getValue();
+                return (e.getKey() == keyUniverse[index] &&
+                        (ourValue == hisValue ||
+                         (ourValue != null && ourValue.equals(hisValue))));
+            }
 
-        private void checkLastReturnedIndexForEntryUse() {
-            if (lastReturnedIndex < 0)
-                throw new IllegalStateException("Entry was removed");
+            public int hashCode() {
+                if (index < 0)
+                    return super.hashCode();
+
+                return entryHashCode(index);
+            }
+
+            public String toString() {
+                if (index < 0)
+                    return super.toString();
+
+                return keyUniverse[index] + "="
+                    + unmaskNull(vals[index]);
+            }
+
+            private void checkIndexForEntryUse() {
+                if (index < 0)
+                    throw new IllegalStateException("Entry was removed");
+            }
         }
     }
 
@@ -614,10 +654,35 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      * @return <tt>true</tt> if the specified object is equal to this map
      */
     public boolean equals(Object o) {
-        if (!(o instanceof EnumMap))
-            return super.equals(o);
+        if (this == o)
+            return true;
+        if (o instanceof EnumMap)
+            return equals((EnumMap<?,?>)o);
+        if (!(o instanceof Map))
+            return false;
 
-        EnumMap em = (EnumMap)o;
+        Map<?,?> m = (Map<?,?>)o;
+        if (size != m.size())
+            return false;
+
+        for (int i = 0; i < keyUniverse.length; i++) {
+            if (null != vals[i]) {
+                K key = keyUniverse[i];
+                V value = unmaskNull(vals[i]);
+                if (null == value) {
+                    if (!((null == m.get(key)) && m.containsKey(key)))
+                       return false;
+                } else {
+                   if (!value.equals(m.get(key)))
+                      return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean equals(EnumMap<?,?> em) {
         if (em.keyType != keyType)
             return size == 0 && em.size == 0;
 
@@ -633,11 +698,32 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
     }
 
     /**
+     * Returns the hash code value for this map.  The hash code of a map is
+     * defined to be the sum of the hash codes of each entry in the map.
+     */
+    public int hashCode() {
+        int h = 0;
+
+        for (int i = 0; i < keyUniverse.length; i++) {
+            if (null != vals[i]) {
+                h += entryHashCode(i);
+            }
+        }
+
+        return h;
+    }
+
+    private int entryHashCode(int index) {
+        return (keyUniverse[index].hashCode() ^ vals[index].hashCode());
+    }
+
+    /**
      * Returns a shallow copy of this enum map.  (The values themselves
      * are not cloned.
      *
      * @return a shallow copy of this enum map
      */
+    @SuppressWarnings("unchecked")
     public EnumMap<K, V> clone() {
         EnumMap<K, V> result = null;
         try {
@@ -645,7 +731,8 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
         } catch(CloneNotSupportedException e) {
             throw new AssertionError();
         }
-        result.vals = (Object[]) result.vals.clone();
+        result.vals = result.vals.clone();
+        result.entrySet = null;
         return result;
     }
 
@@ -653,7 +740,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      * Throws an exception if e is not of the correct type for this enum set.
      */
     private void typeCheck(K key) {
-        Class keyClass = key.getClass();
+        Class<?> keyClass = key.getClass();
         if (keyClass != keyType && keyClass.getSuperclass() != keyType)
             throw new ClassCastException(keyClass + " != " + keyType);
     }
@@ -664,7 +751,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      */
     private static <K extends Enum<K>> K[] getKeyUniverse(Class<K> keyType) {
         return SharedSecrets.getJavaLangAccess()
-					.getEnumConstantsShared(keyType);
+                                        .getEnumConstantsShared(keyType);
     }
 
     private static final long serialVersionUID = 458661240069192865L;
@@ -688,9 +775,13 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
         s.writeInt(size);
 
         // Write out keys and values (alternating)
-        for (Map.Entry<K,V> e :  entrySet()) {
-            s.writeObject(e.getKey());
-            s.writeObject(e.getValue());
+        int entriesToBeWritten = size;
+        for (int i = 0; entriesToBeWritten > 0; i++) {
+            if (null != vals[i]) {
+                s.writeObject(keyUniverse[i]);
+                s.writeObject(unmaskNull(vals[i]));
+                entriesToBeWritten--;
+            }
         }
     }
 
@@ -698,6 +789,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V>
      * Reconstitute the <tt>EnumMap</tt> instance from a stream (i.e.,
      * deserialize it).
      */
+    @SuppressWarnings("unchecked")
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException
     {

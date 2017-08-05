@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package java.awt;
 
@@ -31,12 +49,12 @@ import java.awt.event.KeyEvent;
  * not recommended.)
  *
  * @author David Mendenhall
- * @version %I%, %G%
  *
  * @see KeyboardFocusManager#addKeyEventPostProcessor
  * @see KeyboardFocusManager#removeKeyEventPostProcessor
  * @since 1.4
  */
+@FunctionalInterface
 public interface KeyEventPostProcessor {
 
     /**

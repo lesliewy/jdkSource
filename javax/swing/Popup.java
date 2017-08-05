@@ -1,14 +1,34 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2011, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing;
 
 import java.awt.*;
+
 import sun.awt.ModalExclude;
+import sun.awt.SunToolkit;
 
 /**
  * Popups are used to display a <code>Component</code> to the user, typically
@@ -33,7 +53,6 @@ import sun.awt.ModalExclude;
  *
  * @see PopupFactory
  *
- * @version %I% %G%
  * @since 1.4
  */
 public class Popup {
@@ -79,6 +98,8 @@ public class Popup {
      * Makes the <code>Popup</code> visible. If the <code>Popup</code> is
      * currently visible, this has no effect.
      */
+
+    @SuppressWarnings("deprecation")
     public void show() {
         Component component = getComponent();
 
@@ -95,6 +116,8 @@ public class Popup {
      * on a <code>disposed</code> <code>Popup</code>, indeterminate
      * behavior will result.
      */
+
+    @SuppressWarnings("deprecation")
     public void hide() {
         Component component = getComponent();
 
@@ -137,7 +160,8 @@ public class Popup {
 
             component.setLocation(ownerX, ownerY);
             component.getContentPane().add(contents, BorderLayout.CENTER);
-            contents.invalidate();
+            component.invalidate();
+            component.validate();
             if(component.isVisible()) {
                 // Do not call pack() if window is not visible to
                 // avoid early native peer creation
@@ -208,7 +232,8 @@ public class Popup {
         HeavyWeightWindow(Window parent) {
             super(parent);
             setFocusableWindowState(false);
-            setName("###overrideRedirect###");
+            setType(Window.Type.POPUP);
+
             // Popups are typically transient and most likely won't benefit
             // from true double buffering.  Turn it off here.
             getRootPane().setUseTrueDoubleBuffering(false);
@@ -227,10 +252,12 @@ public class Popup {
             paint(g);
         }
 
-	public void show() {
-	    this.pack();
-	    super.show();
-	}
+        public void show() {
+            this.pack();
+            if (getWidth() > 0 && getHeight() > 0) {
+                super.show();
+            }
+        }
     }
 
 

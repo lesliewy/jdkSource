@@ -1,12 +1,16 @@
 /*
- * Copyright 2001, 2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,22 +22,39 @@ package com.sun.org.apache.xerces.internal.impl.dv.dtd;
 
 import com.sun.org.apache.xerces.internal.impl.dv.DTDDVFactory;
 import com.sun.org.apache.xerces.internal.impl.dv.DatatypeValidator;
-import java.util.Hashtable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * the factory to create/return built-in schema DVs and create user-defined DVs
- * 
- * @xerces.internal 
+ *
+ * @xerces.internal
  *
  * @author Sandy Gao, IBM
  *
- * @version $Id: DTDDVFactoryImpl.java,v 1.4 2007/07/19 04:38:32 ofung Exp $
  */
 public class DTDDVFactoryImpl extends DTDDVFactory {
 
-    static Hashtable fBuiltInTypes = new Hashtable();
+    static final Map<String, DatatypeValidator> fBuiltInTypes;
     static {
-        createBuiltInTypes();
+        Map<String, DatatypeValidator> builtInTypes = new HashMap<>();
+        DatatypeValidator dvTemp;
+
+        builtInTypes.put("string", new StringDatatypeValidator());
+        builtInTypes.put("ID", new IDDatatypeValidator());
+        dvTemp = new IDREFDatatypeValidator();
+        builtInTypes.put("IDREF", dvTemp);
+        builtInTypes.put("IDREFS", new ListDatatypeValidator(dvTemp));
+        dvTemp = new ENTITYDatatypeValidator();
+        builtInTypes.put("ENTITY", new ENTITYDatatypeValidator());
+        builtInTypes.put("ENTITIES", new ListDatatypeValidator(dvTemp));
+        builtInTypes.put("NOTATION", new NOTATIONDatatypeValidator());
+        dvTemp = new NMTOKENDatatypeValidator();
+        builtInTypes.put("NMTOKEN", dvTemp);
+        builtInTypes.put("NMTOKENS", new ListDatatypeValidator(dvTemp));
+
+        fBuiltInTypes = Collections.unmodifiableMap(builtInTypes);
     }
 
     /**
@@ -42,38 +63,19 @@ public class DTDDVFactoryImpl extends DTDDVFactory {
      * @param name  the name of the datatype
      * @return      the datatype validator of the given name
      */
+    @Override
     public DatatypeValidator getBuiltInDV(String name) {
-        return (DatatypeValidator)fBuiltInTypes.get(name);
+        return fBuiltInTypes.get(name);
     }
 
     /**
-     * get all built-in DVs, which are stored in a hashtable keyed by the name
+     * get all built-in DVs, which are stored in a Map keyed by the name
      *
-     * @return      a hashtable which contains all datatypes
+     * @return      a Map which contains all datatypes
      */
-    public Hashtable getBuiltInTypes() {
-        return (Hashtable)fBuiltInTypes.clone();
+    @Override
+    public Map<String, DatatypeValidator> getBuiltInTypes() {
+        return new HashMap<>(fBuiltInTypes);
     }
 
-    // create all built-in types
-    static void createBuiltInTypes() {
-
-        DatatypeValidator dvTemp;
-
-        fBuiltInTypes.put("string", new StringDatatypeValidator());
-        fBuiltInTypes.put("ID", new IDDatatypeValidator());
-        dvTemp = new IDREFDatatypeValidator();
-        fBuiltInTypes.put("IDREF", dvTemp);
-        fBuiltInTypes.put("IDREFS", new ListDatatypeValidator(dvTemp));
-        dvTemp = new ENTITYDatatypeValidator();
-        fBuiltInTypes.put("ENTITY", new ENTITYDatatypeValidator());
-        fBuiltInTypes.put("ENTITIES", new ListDatatypeValidator(dvTemp));
-        fBuiltInTypes.put("NOTATION", new NOTATIONDatatypeValidator());
-        dvTemp = new NMTOKENDatatypeValidator();
-        fBuiltInTypes.put("NMTOKEN", dvTemp);
-        fBuiltInTypes.put("NMTOKENS", new ListDatatypeValidator(dvTemp));
-
-    }//createBuiltInTypes()
-
 }// DTDDVFactoryImpl
-

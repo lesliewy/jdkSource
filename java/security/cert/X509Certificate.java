@@ -1,15 +1,32 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
- 
+
 package java.security.cert;
 
 import java.math.BigInteger;
-import java.security.Principal;
-import java.security.PublicKey;
+import java.security.*;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -45,12 +62,11 @@ import sun.security.x509.X509CertImpl;
  * CA certificates are either signed by themselves, or by some other
  * CA such as a "root" CA.
  * <p>
- * More information can be found in RFC 2459,
- * "Internet X.509 Public Key Infrastructure Certificate and CRL
- * Profile" at <A HREF="http://www.ietf.org/rfc/rfc2459.txt"> 
- * http://www.ietf.org/rfc/rfc2459.txt </A>.
+ * More information can be found in
+ * <a href="http://www.ietf.org/rfc/rfc3280.txt">RFC 3280: Internet X.509
+ * Public Key Infrastructure Certificate and CRL Profile</a>.
  * <p>
- * The ASN.1 definition of <code>tbsCertificate</code> is:
+ * The ASN.1 definition of {@code tbsCertificate} is:
  * <pre>
  * TBSCertificate  ::=  SEQUENCE  {
  *     version         [0]  EXPLICIT Version DEFAULT v1,
@@ -71,16 +87,15 @@ import sun.security.x509.X509CertImpl;
  * <p>
  * Certificates are instantiated using a certificate factory. The following is
  * an example of how to instantiate an X.509 certificate:
- * <pre> 
- * InputStream inStream = new FileInputStream("fileName-of-cert");
- * CertificateFactory cf = CertificateFactory.getInstance("X.509");
- * X509Certificate cert = (X509Certificate)cf.generateCertificate(inStream);
- * inStream.close();
+ * <pre>
+ * try (InputStream inStream = new FileInputStream("fileName-of-cert")) {
+ *     CertificateFactory cf = CertificateFactory.getInstance("X.509");
+ *     X509Certificate cert = (X509Certificate)cf.generateCertificate(inStream);
+ * }
  * </pre>
  *
  * @author Hemma Prafullchandra
  *
- * @version %I%
  *
  * @see Certificate
  * @see CertificateFactory
@@ -98,7 +113,7 @@ implements X509Extension {
      * Constructor for X.509 certificates.
      */
     protected X509Certificate() {
-	super("X.509");
+        super("X.509");
     }
 
     /**
@@ -106,20 +121,22 @@ implements X509Extension {
      * the current date and time are within the validity period given in the
      * certificate.
      * <p>
-     * The validity period consists of two date/time values: 
-     * the first and last dates (and times) on which the certificate 
+     * The validity period consists of two date/time values:
+     * the first and last dates (and times) on which the certificate
      * is valid. It is defined in
      * ASN.1 as:
      * <pre>
-     * validity             Validity<p>
+     * validity             Validity
+     *
      * Validity ::= SEQUENCE {
      *     notBefore      CertificateValidityDate,
-     *     notAfter       CertificateValidityDate }<p>
+     *     notAfter       CertificateValidityDate }
+     *
      * CertificateValidityDate ::= CHOICE {
      *     utcTime        UTCTime,
      *     generalTime    GeneralizedTime }
      * </pre>
-     * 
+     *
      * @exception CertificateExpiredException if the certificate has expired.
      * @exception CertificateNotYetValidException if the certificate is not
      * yet valid.
@@ -129,28 +146,29 @@ implements X509Extension {
 
     /**
      * Checks that the given date is within the certificate's
-     * validity period. In other words, this determines whether the 
+     * validity period. In other words, this determines whether the
      * certificate would be valid at the given date/time.
      *
      * @param date the Date to check against to see if this certificate
      *        is valid at that date/time.
      *
      * @exception CertificateExpiredException if the certificate has expired
-     * with respect to the <code>date</code> supplied.
+     * with respect to the {@code date} supplied.
      * @exception CertificateNotYetValidException if the certificate is not
-     * yet valid with respect to the <code>date</code> supplied.
-     * 
+     * yet valid with respect to the {@code date} supplied.
+     *
      * @see #checkValidity()
      */
     public abstract void checkValidity(Date date)
         throws CertificateExpiredException, CertificateNotYetValidException;
 
     /**
-     * Gets the <code>version</code> (version number) value from the
+     * Gets the {@code version} (version number) value from the
      * certificate.
      * The ASN.1 definition for this is:
      * <pre>
-     * version  [0] EXPLICIT Version DEFAULT v1<p>
+     * version  [0] EXPLICIT Version DEFAULT v1
+     *
      * Version ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
      * </pre>
      * @return the version number, i.e. 1, 2 or 3.
@@ -158,15 +176,15 @@ implements X509Extension {
     public abstract int getVersion();
 
     /**
-     * Gets the <code>serialNumber</code> value from the certificate.
+     * Gets the {@code serialNumber} value from the certificate.
      * The serial number is an integer assigned by the certification
      * authority to each certificate. It must be unique for each
      * certificate issued by a given CA (i.e., the issuer name and
      * serial number identify a unique certificate).
      * The ASN.1 definition for this is:
      * <pre>
-     * serialNumber     CertificateSerialNumber<p>
-     * 
+     * serialNumber     CertificateSerialNumber
+     *
      * CertificateSerialNumber  ::=  INTEGER
      * </pre>
      *
@@ -176,20 +194,20 @@ implements X509Extension {
 
     /**
      * <strong>Denigrated</strong>, replaced by {@linkplain
-     * #getIssuerX500Principal()}. This method returns the <code>issuer</code>
+     * #getIssuerX500Principal()}. This method returns the {@code issuer}
      * as an implementation specific Principal object, which should not be
      * relied upon by portable code.
      *
      * <p>
-     * Gets the <code>issuer</code> (issuer distinguished name) value from 
+     * Gets the {@code issuer} (issuer distinguished name) value from
      * the certificate. The issuer name identifies the entity that signed (and
-     * issued) the certificate. 
-     * 
+     * issued) the certificate.
+     *
      * <p>The issuer name field contains an
      * X.500 distinguished name (DN).
      * The ASN.1 definition for this is:
      * <pre>
-     * issuer    Name<p>
+     * issuer    Name
      *
      * Name ::= CHOICE { RDNSequence }
      * RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
@@ -202,89 +220,90 @@ implements X509Extension {
      * AttributeType ::= OBJECT IDENTIFIER
      * AttributeValue ::= ANY
      * </pre>
-     * The <code>Name</code> describes a hierarchical name composed of
+     * The {@code Name} describes a hierarchical name composed of
      * attributes,
      * such as country name, and corresponding values, such as US.
-     * The type of the <code>AttributeValue</code> component is determined by
-     * the <code>AttributeType</code>; in general it will be a 
-     * <code>directoryString</code>. A <code>directoryString</code> is usually 
-     * one of <code>PrintableString</code>,
-     * <code>TeletexString</code> or <code>UniversalString</code>.
-     * 
+     * The type of the {@code AttributeValue} component is determined by
+     * the {@code AttributeType}; in general it will be a
+     * {@code directoryString}. A {@code directoryString} is usually
+     * one of {@code PrintableString},
+     * {@code TeletexString} or {@code UniversalString}.
+     *
      * @return a Principal whose name is the issuer distinguished name.
      */
     public abstract Principal getIssuerDN();
 
     /**
      * Returns the issuer (issuer distinguished name) value from the
-     * certificate as an <code>X500Principal</code>. 
+     * certificate as an {@code X500Principal}.
      * <p>
      * It is recommended that subclasses override this method.
      *
-     * @return an <code>X500Principal</code> representing the issuer
-     *		distinguished name
+     * @return an {@code X500Principal} representing the issuer
+     *          distinguished name
      * @since 1.4
      */
     public X500Principal getIssuerX500Principal() {
         if (issuerX500Principal == null) {
-	    issuerX500Principal = X509CertImpl.getIssuerX500Principal(this);
-	}
-	return issuerX500Principal;
+            issuerX500Principal = X509CertImpl.getIssuerX500Principal(this);
+        }
+        return issuerX500Principal;
     }
 
     /**
      * <strong>Denigrated</strong>, replaced by {@linkplain
-     * #getSubjectX500Principal()}. This method returns the <code>subject</code>
+     * #getSubjectX500Principal()}. This method returns the {@code subject}
      * as an implementation specific Principal object, which should not be
      * relied upon by portable code.
      *
      * <p>
-     * Gets the <code>subject</code> (subject distinguished name) value 
-     * from the certificate.  If the <code>subject</code> value is empty,
-     * then the <code>getName()</code> method of the returned
-     * <code>Principal</code> object returns an empty string ("").
+     * Gets the {@code subject} (subject distinguished name) value
+     * from the certificate.  If the {@code subject} value is empty,
+     * then the {@code getName()} method of the returned
+     * {@code Principal} object returns an empty string ("").
      *
      * <p> The ASN.1 definition for this is:
      * <pre>
      * subject    Name
      * </pre>
-     * 
-     * <p>See {@link #getIssuerDN() getIssuerDN} for <code>Name</code> 
+     *
+     * <p>See {@link #getIssuerDN() getIssuerDN} for {@code Name}
      * and other relevant definitions.
-     * 
+     *
      * @return a Principal whose name is the subject name.
      */
     public abstract Principal getSubjectDN();
 
     /**
      * Returns the subject (subject distinguished name) value from the
-     * certificate as an <code>X500Principal</code>.  If the subject value
-     * is empty, then the <code>getName()</code> method of the returned
-     * <code>X500Principal</code> object returns an empty string ("").
+     * certificate as an {@code X500Principal}.  If the subject value
+     * is empty, then the {@code getName()} method of the returned
+     * {@code X500Principal} object returns an empty string ("").
      * <p>
      * It is recommended that subclasses override this method.
      *
-     * @return an <code>X500Principal</code> representing the subject
-     *		distinguished name
+     * @return an {@code X500Principal} representing the subject
+     *          distinguished name
      * @since 1.4
      */
     public X500Principal getSubjectX500Principal() {
         if (subjectX500Principal == null) {
-	    subjectX500Principal = X509CertImpl.getSubjectX500Principal(this);
-	}
-	return subjectX500Principal;
+            subjectX500Principal = X509CertImpl.getSubjectX500Principal(this);
+        }
+        return subjectX500Principal;
     }
 
     /**
-     * Gets the <code>notBefore</code> date from the validity period of 
+     * Gets the {@code notBefore} date from the validity period of
      * the certificate.
      * The relevant ASN.1 definitions are:
      * <pre>
-     * validity             Validity<p>
-     * 
+     * validity             Validity
+     *
      * Validity ::= SEQUENCE {
      *     notBefore      CertificateValidityDate,
-     *     notAfter       CertificateValidityDate }<p>
+     *     notAfter       CertificateValidityDate }
+     *
      * CertificateValidityDate ::= CHOICE {
      *     utcTime        UTCTime,
      *     generalTime    GeneralizedTime }
@@ -296,7 +315,7 @@ implements X509Extension {
     public abstract Date getNotBefore();
 
     /**
-     * Gets the <code>notAfter</code> date from the validity period of 
+     * Gets the {@code notAfter} date from the validity period of
      * the certificate. See {@link #getNotBefore() getNotBefore}
      * for relevant ASN.1 definitions.
      *
@@ -307,7 +326,7 @@ implements X509Extension {
 
     /**
      * Gets the DER-encoded certificate information, the
-     * <code>tbsCertificate</code> from this certificate.
+     * {@code tbsCertificate} from this certificate.
      * This can be used to verify the signature independently.
      *
      * @return the DER-encoded certificate information.
@@ -317,11 +336,11 @@ implements X509Extension {
         throws CertificateEncodingException;
 
     /**
-     * Gets the <code>signature</code> value (the raw signature bits) from 
+     * Gets the {@code signature} value (the raw signature bits) from
      * the certificate.
      * The ASN.1 definition for this is:
      * <pre>
-     * signature     BIT STRING  
+     * signature     BIT STRING
      * </pre>
      *
      * @return the signature.
@@ -330,10 +349,11 @@ implements X509Extension {
 
     /**
      * Gets the signature algorithm name for the certificate
-     * signature algorithm. An example is the string "SHA-1/DSA".
+     * signature algorithm. An example is the string "SHA256withRSA".
      * The ASN.1 definition for this is:
      * <pre>
-     * signatureAlgorithm   AlgorithmIdentifier<p>
+     * signatureAlgorithm   AlgorithmIdentifier
+     *
      * AlgorithmIdentifier  ::=  SEQUENCE  {
      *     algorithm               OBJECT IDENTIFIER,
      *     parameters              ANY DEFINED BY algorithm OPTIONAL  }
@@ -341,8 +361,8 @@ implements X509Extension {
      *                             -- registered for use with the
      *                             -- algorithm object identifier value
      * </pre>
-     * 
-     * <p>The algorithm name is determined from the <code>algorithm</code>
+     *
+     * <p>The algorithm name is determined from the {@code algorithm}
      * OID string.
      *
      * @return the signature algorithm name.
@@ -354,9 +374,12 @@ implements X509Extension {
      * An OID is represented by a set of nonnegative whole numbers separated
      * by periods.
      * For example, the string "1.2.840.10040.4.3" identifies the SHA-1
-     * with DSA signature algorithm, as per RFC 2459.
-     * 
-     * <p>See {@link #getSigAlgName() getSigAlgName} for 
+     * with DSA signature algorithm defined in
+     * <a href="http://www.ietf.org/rfc/rfc3279.txt">RFC 3279: Algorithms and
+     * Identifiers for the Internet X.509 Public Key Infrastructure Certificate
+     * and CRL Profile</a>.
+     *
+     * <p>See {@link #getSigAlgName() getSigAlgName} for
      * relevant ASN.1 definitions.
      *
      * @return the signature algorithm OID string.
@@ -372,8 +395,8 @@ implements X509Extension {
      * {@link java.security.AlgorithmParameters AlgorithmParameters}
      * and instantiate with the name returned by
      * {@link #getSigAlgName() getSigAlgName}.
-     * 
-     * <p>See {@link #getSigAlgName() getSigAlgName} for 
+     *
+     * <p>See {@link #getSigAlgName() getSigAlgName} for
      * relevant ASN.1 definitions.
      *
      * @return the DER-encoded signature algorithm parameters, or
@@ -382,17 +405,18 @@ implements X509Extension {
     public abstract byte[] getSigAlgParams();
 
     /**
-     * Gets the <code>issuerUniqueID</code> value from the certificate.
+     * Gets the {@code issuerUniqueID} value from the certificate.
      * The issuer unique identifier is present in the certificate
      * to handle the possibility of reuse of issuer names over time.
-     * RFC 2459 recommends that names not be reused and that
+     * RFC 3280 recommends that names not be reused and that
      * conforming certificates not make use of unique identifiers.
      * Applications conforming to that profile should be capable of
      * parsing unique identifiers and making comparisons.
-     * 
+     *
      * <p>The ASN.1 definition for this is:
      * <pre>
-     * issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL<p>
+     * issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL
+     *
      * UniqueIdentifier  ::=  BIT STRING
      * </pre>
      *
@@ -402,11 +426,12 @@ implements X509Extension {
     public abstract boolean[] getIssuerUniqueID();
 
     /**
-     * Gets the <code>subjectUniqueID</code> value from the certificate.
-     * 
+     * Gets the {@code subjectUniqueID} value from the certificate.
+     *
      * <p>The ASN.1 definition for this is:
      * <pre>
-     * subjectUniqueID  [2]  IMPLICIT UniqueIdentifier OPTIONAL<p>
+     * subjectUniqueID  [2]  IMPLICIT UniqueIdentifier OPTIONAL
+     *
      * UniqueIdentifier  ::=  BIT STRING
      * </pre>
      *
@@ -414,10 +439,10 @@ implements X509Extension {
      * present in the certificate.
      */
     public abstract boolean[] getSubjectUniqueID();
-   
+
     /**
      * Gets a boolean array representing bits of
-     * the <code>KeyUsage</code> extension, (OID = 2.5.29.15).
+     * the {@code KeyUsage} extension, (OID = 2.5.29.15).
      * The key usage extension defines the purpose (e.g., encipherment,
      * signature, certificate signing) of the key contained in the
      * certificate.
@@ -434,7 +459,7 @@ implements X509Extension {
      *     encipherOnly            (7),
      *     decipherOnly            (8) }
      * </pre>
-     * RFC 2459 recommends that when used, this be marked
+     * RFC 3280 recommends that when used, this be marked
      * as a critical extension.
      *
      * @return the KeyUsage extension of this certificate, represented as
@@ -446,19 +471,19 @@ implements X509Extension {
      * contain a KeyUsage extension.
      */
     public abstract boolean[] getKeyUsage();
-    
+
     /**
      * Gets an unmodifiable list of Strings representing the OBJECT
-     * IDENTIFIERs of the <code>ExtKeyUsageSyntax</code> field of the
+     * IDENTIFIERs of the {@code ExtKeyUsageSyntax} field of the
      * extended key usage extension, (OID = 2.5.29.37).  It indicates
      * one or more purposes for which the certified public key may be
      * used, in addition to or in place of the basic purposes
      * indicated in the key usage extension field.  The ASN.1
      * definition for this is:
      * <pre>
-     * ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId<p>
+     * ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
      *
-     * KeyPurposeId ::= OBJECT IDENTIFIER<p>
+     * KeyPurposeId ::= OBJECT IDENTIFIER
      * </pre>
      *
      * Key purposes may be defined by any organization with a
@@ -466,9 +491,9 @@ implements X509Extension {
      * assigned in accordance with IANA or ITU-T Rec. X.660 |
      * ISO/IEC/ITU 9834-1.
      * <p>
-     * This method was added to version 1.4 of the Java 2 Platform Standard 
-     * Edition. In order to maintain backwards compatibility with existing 
-     * service providers, this method is not <code>abstract</code>
+     * This method was added to version 1.4 of the Java 2 Platform Standard
+     * Edition. In order to maintain backwards compatibility with existing
+     * service providers, this method is not {@code abstract}
      * and it provides a default implementation. Subclasses
      * should override this method with a correct implementation.
      *
@@ -480,25 +505,21 @@ implements X509Extension {
      * @since 1.4
      */
     public List<String> getExtendedKeyUsage() throws CertificateParsingException {
-	return X509CertImpl.getExtendedKeyUsage(this);
+        return X509CertImpl.getExtendedKeyUsage(this);
     }
 
     /**
      * Gets the certificate constraints path length from the
-     * critical <code>BasicConstraints</code> extension, (OID = 2.5.29.19).
+     * critical {@code BasicConstraints} extension, (OID = 2.5.29.19).
      * <p>
      * The basic constraints extension identifies whether the subject
-     * of the certificate is a Certificate Authority (CA) and 
-     * how deep a certification path may exist through that CA. The 
-     * <code>pathLenConstraint</code> field (see below) is meaningful
-     * only if <code>cA</code> is set to TRUE. In this case, it gives the
+     * of the certificate is a Certificate Authority (CA) and
+     * how deep a certification path may exist through that CA. The
+     * {@code pathLenConstraint} field (see below) is meaningful
+     * only if {@code cA} is set to TRUE. In this case, it gives the
      * maximum number of CA certificates that may follow this certificate in a
      * certification path. A value of zero indicates that only an end-entity
      * certificate may follow in the path.
-     * <p>
-     * Note that for RFC 2459 this extension is always marked
-     * critical if <code>cA</code> is TRUE, meaning this certificate belongs
-     * to a Certificate Authority.
      * <p>
      * The ASN.1 definition for this is:
      * <pre>
@@ -507,21 +528,21 @@ implements X509Extension {
      *     pathLenConstraint   INTEGER (0..MAX) OPTIONAL }
      * </pre>
      *
-     * @return the value of <code>pathLenConstraint</code> if the
+     * @return the value of {@code pathLenConstraint} if the
      * BasicConstraints extension is present in the certificate and the
      * subject of the certificate is a CA, otherwise -1.
      * If the subject of the certificate is a CA and
-     * <code>pathLenConstraint</code> does not appear,
-     * <code>Integer.MAX_VALUE</code> is returned to indicate that there is no
+     * {@code pathLenConstraint} does not appear,
+     * {@code Integer.MAX_VALUE} is returned to indicate that there is no
      * limit to the allowed length of the certification path.
      */
     public abstract int getBasicConstraints();
 
     /**
      * Gets an immutable collection of subject alternative names from the
-     * <code>SubjectAltName</code> extension, (OID = 2.5.29.17).
+     * {@code SubjectAltName} extension, (OID = 2.5.29.17).
      * <p>
-     * The ASN.1 definition of the <code>SubjectAltName</code> extension is:
+     * The ASN.1 definition of the {@code SubjectAltName} extension is:
      * <pre>
      * SubjectAltName ::= GeneralNames
      *
@@ -539,88 +560,119 @@ implements X509Extension {
      *      registeredID                    [8]     OBJECT IDENTIFIER}
      * </pre>
      * <p>
-     * If this certificate does not contain a <code>SubjectAltName</code>
-     * extension, <code>null</code> is returned. Otherwise, a 
-     * <code>Collection</code> is returned with an entry representing each 
-     * <code>GeneralName</code> included in the extension. Each entry is a 
-     * <code>List</code> whose first entry is an <code>Integer</code> 
-     * (the name type, 0-8) and whose second entry is a <code>String</code> 
-     * or a byte array (the name, in string or ASN.1 DER encoded form, 
+     * If this certificate does not contain a {@code SubjectAltName}
+     * extension, {@code null} is returned. Otherwise, a
+     * {@code Collection} is returned with an entry representing each
+     * {@code GeneralName} included in the extension. Each entry is a
+     * {@code List} whose first entry is an {@code Integer}
+     * (the name type, 0-8) and whose second entry is a {@code String}
+     * or a byte array (the name, in string or ASN.1 DER encoded form,
      * respectively).
      * <p>
-     * RFC 822, DNS, and URI names are returned as <code>String</code>s, 
+     * <a href="http://www.ietf.org/rfc/rfc822.txt">RFC 822</a>, DNS, and URI
+     * names are returned as {@code String}s,
      * using the well-established string formats for those types (subject to
-     * the restrictions included in RFC 2459). IPv4 address names are 
+     * the restrictions included in RFC 3280). IPv4 address names are
      * returned using dotted quad notation. IPv6 address names are returned
-     * in the form "a1:a2:...:a8", where a1-a8 are hexadecimal values 
-     * representing the eight 16-bit pieces of the address. OID names are 
-     * returned as <code>String</code>s represented as a series of nonnegative 
-     * integers separated by periods. And directory names (distinguished names) 
-     * are returned in RFC 2253 string format. No standard string format is 
-     * defined for otherNames, X.400 names, EDI party names, or any 
-     * other type of names. They are returned as byte arrays 
+     * in the form "a1:a2:...:a8", where a1-a8 are hexadecimal values
+     * representing the eight 16-bit pieces of the address. OID names are
+     * returned as {@code String}s represented as a series of nonnegative
+     * integers separated by periods. And directory names (distinguished names)
+     * are returned in <a href="http://www.ietf.org/rfc/rfc2253.txt">
+     * RFC 2253</a> string format. No standard string format is
+     * defined for otherNames, X.400 names, EDI party names, or any
+     * other type of names. They are returned as byte arrays
      * containing the ASN.1 DER encoded form of the name.
      * <p>
-     * Note that the <code>Collection</code> returned may contain more
+     * Note that the {@code Collection} returned may contain more
      * than one name of the same type. Also, note that the returned
-     * <code>Collection</code> is immutable and any entries containing byte 
+     * {@code Collection} is immutable and any entries containing byte
      * arrays are cloned to protect against subsequent modifications.
      * <p>
-     * This method was added to version 1.4 of the Java 2 Platform Standard 
-     * Edition. In order to maintain backwards compatibility with existing 
-     * service providers, this method is not <code>abstract</code>
+     * This method was added to version 1.4 of the Java 2 Platform Standard
+     * Edition. In order to maintain backwards compatibility with existing
+     * service providers, this method is not {@code abstract}
      * and it provides a default implementation. Subclasses
      * should override this method with a correct implementation.
      *
-     * @return an immutable <code>Collection</code> of subject alternative 
-     * names (or <code>null</code>)
+     * @return an immutable {@code Collection} of subject alternative
+     * names (or {@code null})
      * @throws CertificateParsingException if the extension cannot be decoded
      * @since 1.4
      */
     public Collection<List<?>> getSubjectAlternativeNames()
-	throws CertificateParsingException {
-	return X509CertImpl.getSubjectAlternativeNames(this);
+        throws CertificateParsingException {
+        return X509CertImpl.getSubjectAlternativeNames(this);
     }
 
     /**
      * Gets an immutable collection of issuer alternative names from the
-     * <code>IssuerAltName</code> extension, (OID = 2.5.29.18).
+     * {@code IssuerAltName} extension, (OID = 2.5.29.18).
      * <p>
-     * The ASN.1 definition of the <code>IssuerAltName</code> extension is:
+     * The ASN.1 definition of the {@code IssuerAltName} extension is:
      * <pre>
      * IssuerAltName ::= GeneralNames
      * </pre>
-     * The ASN.1 definition of <code>GeneralNames</code> is defined
+     * The ASN.1 definition of {@code GeneralNames} is defined
      * in {@link #getSubjectAlternativeNames getSubjectAlternativeNames}.
      * <p>
-     * If this certificate does not contain an <code>IssuerAltName</code>
-     * extension, <code>null</code> is returned. Otherwise, a 
-     * <code>Collection</code> is returned with an entry representing each 
-     * <code>GeneralName</code> included in the extension. Each entry is a 
-     * <code>List</code> whose first entry is an <code>Integer</code> 
-     * (the name type, 0-8) and whose second entry is a <code>String</code> 
-     * or a byte array (the name, in string or ASN.1 DER encoded form, 
+     * If this certificate does not contain an {@code IssuerAltName}
+     * extension, {@code null} is returned. Otherwise, a
+     * {@code Collection} is returned with an entry representing each
+     * {@code GeneralName} included in the extension. Each entry is a
+     * {@code List} whose first entry is an {@code Integer}
+     * (the name type, 0-8) and whose second entry is a {@code String}
+     * or a byte array (the name, in string or ASN.1 DER encoded form,
      * respectively). For more details about the formats used for each
-     * name type, see the <code>getSubjectAlternativeNames</code> method.
+     * name type, see the {@code getSubjectAlternativeNames} method.
      * <p>
-     * Note that the <code>Collection</code> returned may contain more
+     * Note that the {@code Collection} returned may contain more
      * than one name of the same type. Also, note that the returned
-     * <code>Collection</code> is immutable and any entries containing byte 
+     * {@code Collection} is immutable and any entries containing byte
      * arrays are cloned to protect against subsequent modifications.
      * <p>
-     * This method was added to version 1.4 of the Java 2 Platform Standard 
-     * Edition. In order to maintain backwards compatibility with existing 
-     * service providers, this method is not <code>abstract</code>
+     * This method was added to version 1.4 of the Java 2 Platform Standard
+     * Edition. In order to maintain backwards compatibility with existing
+     * service providers, this method is not {@code abstract}
      * and it provides a default implementation. Subclasses
      * should override this method with a correct implementation.
      *
-     * @return an immutable <code>Collection</code> of issuer alternative 
-     * names (or <code>null</code>)
+     * @return an immutable {@code Collection} of issuer alternative
+     * names (or {@code null})
      * @throws CertificateParsingException if the extension cannot be decoded
      * @since 1.4
      */
     public Collection<List<?>> getIssuerAlternativeNames()
-	throws CertificateParsingException {
-	return X509CertImpl.getIssuerAlternativeNames(this);
+        throws CertificateParsingException {
+        return X509CertImpl.getIssuerAlternativeNames(this);
+    }
+
+     /**
+     * Verifies that this certificate was signed using the
+     * private key that corresponds to the specified public key.
+     * This method uses the signature verification engine
+     * supplied by the specified provider. Note that the specified
+     * Provider object does not have to be registered in the provider list.
+     *
+     * This method was added to version 1.8 of the Java Platform Standard
+     * Edition. In order to maintain backwards compatibility with existing
+     * service providers, this method is not {@code abstract}
+     * and it provides a default implementation.
+     *
+     * @param key the PublicKey used to carry out the verification.
+     * @param sigProvider the signature provider.
+     *
+     * @exception NoSuchAlgorithmException on unsupported signature
+     * algorithms.
+     * @exception InvalidKeyException on incorrect key.
+     * @exception SignatureException on signature errors.
+     * @exception CertificateException on encoding errors.
+     * @exception UnsupportedOperationException if the method is not supported
+     * @since 1.8
+     */
+    public void verify(PublicKey key, Provider sigProvider)
+        throws CertificateException, NoSuchAlgorithmException,
+        InvalidKeyException, SignatureException {
+        X509CertImpl.verify(this, key, sigProvider);
     }
 }

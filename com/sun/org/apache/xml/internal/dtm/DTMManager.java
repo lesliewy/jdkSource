@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+/*
  * Copyright 1999-2004 The Apache Software Foundation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,14 +52,6 @@ import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 public abstract class DTMManager
 {
 
-  /** The default property name to load the manager. */
-  private static final String defaultPropName =
-    "com.sun.org.apache.xml.internal.dtm.DTMManager";
-  
-  /** The default class name to use as the manager. */
-  private static String defaultClassName =
-    "com.sun.org.apache.xml.internal.dtm.ref.DTMManagerDefault";
-
   /**
    * Factory for creating XMLString objects.
    *  %TBD% Make this set by the caller.
@@ -93,29 +89,7 @@ public abstract class DTMManager
   /**
    * Obtain a new instance of a <code>DTMManager</code>.
    * This static method creates a new factory instance
-   * This method uses the following ordered lookup procedure to determine
-   * the <code>DTMManager</code> implementation class to
-   * load:
-   * <ul>
-   * <li>
-   * Use the <code>com.sun.org.apache.xml.internal.dtm.DTMManager</code> system
-   * property.
-   * </li>
-   * <li>
-   * Use the JAVA_HOME(the parent directory where jdk is
-   * installed)/lib/xalan.properties for a property file that contains the
-   * name of the implementation class keyed on the same value as the
-   * system property defined above.
-   * </li>
-   * <li>
-   * Use the Services API (as detailed in the JAR specification), if
-   * available, to determine the classname. The Services API will look
-   * for a classname in the file
-   * <code>META-INF/services/com.sun.org.apache.xml.internal.dtm.DTMManager</code>
-   * in jars available to the runtime.
-   * </li>
-   * <li>
-   * Use the default <code>DTMManager</code> classname, which is
+   * using the default <code>DTMManager</code> implementation, which is
    * <code>com.sun.org.apache.xml.internal.dtm.ref.DTMManagerDefault</code>.
    * </li>
    * </ul>
@@ -129,42 +103,13 @@ public abstract class DTMManager
    * @throws DTMConfigurationException
    * if the implementation is not available or cannot be instantiated.
    */
-  public static DTMManager newInstance(XMLStringFactory xsf) 
+  public static DTMManager newInstance(XMLStringFactory xsf)
            throws DTMConfigurationException
   {
-    return newInstance(xsf, true);
-  }
+      final DTMManager factoryImpl = new com.sun.org.apache.xml.internal.dtm.ref.DTMManagerDefault();
+      factoryImpl.setXMLStringFactory(xsf);
 
-  public static DTMManager newInstance(XMLStringFactory xsf, boolean useServicesMechanism)
-           throws DTMConfigurationException
-  {
-    DTMManager factoryImpl = null;
-    try
-    {
-        if (useServicesMechanism) {
-            factoryImpl = (DTMManager) ObjectFactory
-                .createObject(defaultPropName, defaultClassName);
-        } else {
-            factoryImpl = new com.sun.org.apache.xml.internal.dtm.ref.DTMManagerDefault();
-        }
-    }
-    catch (ConfigurationError e)
-    {
-      throw new DTMConfigurationException(XMLMessages.createXMLMessage(
-        XMLErrorResources.ER_NO_DEFAULT_IMPL, null), e.getException());
-        //"No default implementation found");
-    }
-
-    if (factoryImpl == null)
-    {
-      throw new DTMConfigurationException(XMLMessages.createXMLMessage(
-        XMLErrorResources.ER_NO_DEFAULT_IMPL, null));
-        //"No default implementation found");
-    }
-
-    factoryImpl.setXMLStringFactory(xsf);
-
-    return factoryImpl;
+      return factoryImpl;
   }
 
   /**
@@ -173,7 +118,7 @@ public abstract class DTMManager
    * always be returned.  Otherwise it is up to the DTMManager to return a
    * new instance or an instance that it already created and may be being used
    * by someone else.
-   * 
+   *
    * (More parameters may eventually need to be added for error handling
    * and entity resolution, and to better control selection of implementations.)
    *
@@ -186,7 +131,7 @@ public abstract class DTMManager
    *                         be null.
    * @param incremental true if the DTM should be built incrementally, if
    *                    possible.
-   * @param doIndexing true if the caller considers it worth it to use 
+   * @param doIndexing true if the caller considers it worth it to use
    *                   indexing schemes.
    *
    * @return a non-null DTM reference.
@@ -295,28 +240,28 @@ public abstract class DTMManager
    * @return The newly created <code>DTMIterator</code>.
    */
   public abstract DTMIterator createDTMIterator(int node);
-  
+
   /* Flag indicating whether an incremental transform is desired */
   public boolean m_incremental = false;
-  
+
   /*
    * Flag set by FEATURE_SOURCE_LOCATION.
    * This feature specifies whether the transformation phase should
    * keep track of line and column numbers for the input source
-   * document. 
+   * document.
    */
-  public boolean m_source_location = false; 
-  
+  public boolean m_source_location = false;
+
   /**
-   * Get a flag indicating whether an incremental transform is desired 
+   * Get a flag indicating whether an incremental transform is desired
    * @return incremental boolean.
    *
    */
   public boolean getIncremental()
   {
-    return m_incremental;  
+    return m_incremental;
   }
-  
+
   /**
    * Set a flag indicating whether an incremental transform is desired
    * This flag should have the same value as the FEATURE_INCREMENTAL feature
@@ -327,9 +272,9 @@ public abstract class DTMManager
    */
   public void setIncremental(boolean incremental)
   {
-    m_incremental = incremental;  
+    m_incremental = incremental;
   }
-  
+
   /**
    * Get a flag indicating whether the transformation phase should
    * keep track of line and column numbers for the input source
@@ -339,9 +284,9 @@ public abstract class DTMManager
    */
   public boolean getSource_location()
   {
-    return m_source_location;  
-  }  
-  
+    return m_source_location;
+  }
+
   /**
    * Set a flag indicating whether the transformation phase should
    * keep track of line and column numbers for the input source
@@ -354,7 +299,7 @@ public abstract class DTMManager
   public void setSource_location(boolean sourceLocation){
     m_source_location = sourceLocation;
   }
-  
+
     /**
      * Return the state of the services mechanism feature.
      */
@@ -401,11 +346,11 @@ public abstract class DTMManager
    * complain.)
    * */
   public static final int IDENT_DTM_NODE_BITS = 16;
-    
+
 
   /** When this bitmask is ANDed with a DTM node handle number, the result
    * is the low bits of the node's index number within that DTM. To obtain
-   * the high bits, add the DTM ID portion's offset as assigned in the DTM 
+   * the high bits, add the DTM ID portion's offset as assigned in the DTM
    * Manager.
    */
   public static final int IDENT_NODE_DEFAULT = (1<<IDENT_DTM_NODE_BITS)-1;

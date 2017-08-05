@@ -1,10 +1,31 @@
 /*
- * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.nio;
 
+import java.util.Spliterator;
 
 /**
  * A container for data of a specific primitive type.
@@ -30,8 +51,8 @@ package java.nio;
  *
  * <p> There is one subclass of this class for each non-boolean primitive type.
  *
- * 
- * <h4> Transferring data </h4>
+ *
+ * <h2> Transferring data </h2>
  *
  * <p> Each subclass of this class defines two categories of <i>get</i> and
  * <i>put</i> operations: </p>
@@ -57,7 +78,7 @@ package java.nio;
  * current position.
  *
  *
- * <h4> Marking and resetting </h4>
+ * <h2> Marking and resetting </h2>
  *
  * <p> A buffer's <i>mark</i> is the index to which its position will be reset
  * when the {@link #reset reset} method is invoked.  The mark is not always
@@ -68,7 +89,7 @@ package java.nio;
  * {@link InvalidMarkException} to be thrown.
  *
  *
- * <h4> Invariants </h4>
+ * <h2> Invariants </h2>
  *
  * <p> The following invariant holds for the mark, position, limit, and
  * capacity values:
@@ -84,11 +105,11 @@ package java.nio;
  * <p> A newly-created buffer always has a position of zero and a mark that is
  * undefined.  The initial limit may be zero, or it may be some other value
  * that depends upon the type of the buffer and the manner in which it is
- * constructed.  The initial content of a buffer is, in general,
- * undefined.
+ * constructed.  Each element of a newly-allocated buffer is initialized
+ * to zero.
  *
  *
- * <h4> Clearing, flipping, and rewinding </h4>
+ * <h2> Clearing, flipping, and rewinding </h2>
  *
  * <p> In addition to methods for accessing the position, limit, and capacity
  * values and for marking and resetting, this class also defines the following
@@ -111,7 +132,7 @@ package java.nio;
  * </ul>
  *
  *
- * <h4> Read-only buffers </h4>
+ * <h2> Read-only buffers </h2>
  *
  * <p> Every buffer is readable, but not every buffer is writable.  The
  * mutation methods of each buffer class are specified as <i>optional
@@ -122,14 +143,14 @@ package java.nio;
  * {@link #isReadOnly isReadOnly} method.
  *
  *
- * <h4> Thread safety </h4>
+ * <h2> Thread safety </h2>
  *
  * <p> Buffers are not safe for use by multiple concurrent threads.  If a
  * buffer is to be used by more than one thread then access to the buffer
  * should be controlled by appropriate synchronization.
  *
  *
- * <h4> Invocation chaining </h4>
+ * <h2> Invocation chaining </h2>
  *
  * <p> Methods in this class that do not otherwise have a value to return are
  * specified to return the buffer upon which they are invoked.  This allows
@@ -148,11 +169,17 @@ package java.nio;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version %I%, %E%
  * @since 1.4
  */
 
 public abstract class Buffer {
+
+    /**
+     * The characteristics of Spliterators that traverse and split elements
+     * maintained in Buffers.
+     */
+    static final int SPLITERATOR_CHARACTERISTICS =
+        Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
 
     // Invariants: mark <= position <= limit <= capacity
     private int mark = -1;
@@ -167,40 +194,41 @@ public abstract class Buffer {
     // Creates a new buffer with the given mark, position, limit, and capacity,
     // after checking invariants.
     //
-    Buffer(int mark, int pos, int lim, int cap) {	// package-private
-	if (cap < 0)
-	    throw new IllegalArgumentException();
-	this.capacity = cap;
-	limit(lim);
-	position(pos);
-	if (mark >= 0) {
-	    if (mark > pos)
-		throw new IllegalArgumentException();
-	    this.mark = mark;
-	}
+    Buffer(int mark, int pos, int lim, int cap) {       // package-private
+        if (cap < 0)
+            throw new IllegalArgumentException("Negative capacity: " + cap);
+        this.capacity = cap;
+        limit(lim);
+        position(pos);
+        if (mark >= 0) {
+            if (mark > pos)
+                throw new IllegalArgumentException("mark > position: ("
+                                                   + mark + " > " + pos + ")");
+            this.mark = mark;
+        }
     }
 
     /**
-     * Returns this buffer's capacity. </p>
+     * Returns this buffer's capacity.
      *
      * @return  The capacity of this buffer
      */
     public final int capacity() {
-	return capacity;
+        return capacity;
     }
 
     /**
-     * Returns this buffer's position. </p>
+     * Returns this buffer's position.
      *
      * @return  The position of this buffer
      */
     public final int position() {
-	return position;
+        return position;
     }
 
     /**
      * Sets this buffer's position.  If the mark is defined and larger than the
-     * new position then it is discarded. </p>
+     * new position then it is discarded.
      *
      * @param  newPosition
      *         The new position value; must be non-negative
@@ -212,26 +240,26 @@ public abstract class Buffer {
      *          If the preconditions on <tt>newPosition</tt> do not hold
      */
     public final Buffer position(int newPosition) {
-	if ((newPosition > limit) || (newPosition < 0))
-	    throw new IllegalArgumentException();
-	position = newPosition;
-	if (mark > position) mark = -1;
-	return this;
+        if ((newPosition > limit) || (newPosition < 0))
+            throw new IllegalArgumentException();
+        position = newPosition;
+        if (mark > position) mark = -1;
+        return this;
     }
 
     /**
-     * Returns this buffer's limit. </p>
+     * Returns this buffer's limit.
      *
      * @return  The limit of this buffer
      */
     public final int limit() {
-	return limit;
+        return limit;
     }
 
     /**
      * Sets this buffer's limit.  If the position is larger than the new limit
      * then it is set to the new limit.  If the mark is defined and larger than
-     * the new limit then it is discarded. </p>
+     * the new limit then it is discarded.
      *
      * @param  newLimit
      *         The new limit value; must be non-negative
@@ -243,22 +271,22 @@ public abstract class Buffer {
      *          If the preconditions on <tt>newLimit</tt> do not hold
      */
     public final Buffer limit(int newLimit) {
-	if ((newLimit > capacity) || (newLimit < 0))
-	    throw new IllegalArgumentException();
-	limit = newLimit;
-	if (position > limit) position = limit;
-	if (mark > limit) mark = -1;
-	return this;
+        if ((newLimit > capacity) || (newLimit < 0))
+            throw new IllegalArgumentException();
+        limit = newLimit;
+        if (position > limit) position = limit;
+        if (mark > limit) mark = -1;
+        return this;
     }
 
     /**
-     * Sets this buffer's mark at its position. </p>
+     * Sets this buffer's mark at its position.
      *
      * @return  This buffer
      */
     public final Buffer mark() {
-	mark = position;
-	return this;
+        mark = position;
+        return this;
     }
 
     /**
@@ -274,10 +302,10 @@ public abstract class Buffer {
      */
     public final Buffer reset() {
         int m = mark;
-	if (m < 0)
-	    throw new InvalidMarkException();
-	position = m;
-	return this;
+        if (m < 0)
+            throw new InvalidMarkException();
+        position = m;
+        return this;
     }
 
     /**
@@ -298,10 +326,10 @@ public abstract class Buffer {
      * @return  This buffer
      */
     public final Buffer clear() {
-	position = 0;
-	limit = capacity;
-	mark = -1;
-	return this;
+        position = 0;
+        limit = capacity;
+        mark = -1;
+        return this;
     }
 
     /**
@@ -326,10 +354,10 @@ public abstract class Buffer {
      * @return  This buffer
      */
     public final Buffer flip() {
-	limit = position;
-	position = 0;
-	mark = -1;
-	return this;
+        limit = position;
+        position = 0;
+        mark = -1;
+        return this;
     }
 
     /**
@@ -348,34 +376,34 @@ public abstract class Buffer {
      * @return  This buffer
      */
     public final Buffer rewind() {
-	position = 0;
-	mark = -1;
-	return this;
+        position = 0;
+        mark = -1;
+        return this;
     }
 
     /**
      * Returns the number of elements between the current position and the
-     * limit. </p>
+     * limit.
      *
      * @return  The number of elements remaining in this buffer
      */
     public final int remaining() {
-	return limit - position;
+        return limit - position;
     }
 
     /**
      * Tells whether there are any elements between the current position and
-     * the limit. </p>
+     * the limit.
      *
      * @return  <tt>true</tt> if, and only if, there is at least one element
      *          remaining in this buffer
      */
     public final boolean hasRemaining() {
-	return position < limit;
+        return position < limit;
     }
 
     /**
-     * Tells whether or not this buffer is read-only. </p>
+     * Tells whether or not this buffer is read-only.
      *
      * @return  <tt>true</tt> if, and only if, this buffer is read-only
      */
@@ -449,7 +477,7 @@ public abstract class Buffer {
 
     /**
      * Tells whether or not this buffer is
-     * <a href="ByteBuffer.html#direct"><i>direct</i></a>. </p>
+     * <a href="ByteBuffer.html#direct"><i>direct</i></a>.
      *
      * @return  <tt>true</tt> if, and only if, this buffer is direct
      *
@@ -457,49 +485,49 @@ public abstract class Buffer {
      */
     public abstract boolean isDirect();
 
-
+
     // -- Package-private methods for bounds checking, etc. --
 
     /**
      * Checks the current position against the limit, throwing a {@link
      * BufferUnderflowException} if it is not smaller than the limit, and then
-     * increments the position. </p>
+     * increments the position.
      *
      * @return  The current position value, before it is incremented
      */
-    final int nextGetIndex() {				// package-private
-	if (position >= limit)
-	    throw new BufferUnderflowException();
-	return position++;
+    final int nextGetIndex() {                          // package-private
+        if (position >= limit)
+            throw new BufferUnderflowException();
+        return position++;
     }
 
-    final int nextGetIndex(int nb) {			// package-private
+    final int nextGetIndex(int nb) {                    // package-private
         if (limit - position < nb)
-	    throw new BufferUnderflowException();
-	int p = position;
-	position += nb;
-	return p;
+            throw new BufferUnderflowException();
+        int p = position;
+        position += nb;
+        return p;
     }
 
     /**
      * Checks the current position against the limit, throwing a {@link
      * BufferOverflowException} if it is not smaller than the limit, and then
-     * increments the position. </p>
+     * increments the position.
      *
      * @return  The current position value, before it is incremented
      */
-    final int nextPutIndex() {				// package-private
-	if (position >= limit)
-	    throw new BufferOverflowException();
-	return position++;
+    final int nextPutIndex() {                          // package-private
+        if (position >= limit)
+            throw new BufferOverflowException();
+        return position++;
     }
 
-    final int nextPutIndex(int nb) {			// package-private
+    final int nextPutIndex(int nb) {                    // package-private
         if (limit - position < nb)
-	    throw new BufferOverflowException();
-	int p = position;
-	position += nb;
-	return p;
+            throw new BufferOverflowException();
+        int p = position;
+        position += nb;
+        return p;
     }
 
     /**
@@ -507,20 +535,20 @@ public abstract class Buffer {
      * IndexOutOfBoundsException} if it is not smaller than the limit
      * or is smaller than zero.
      */
-    final int checkIndex(int i) {			// package-private
-	if ((i < 0) || (i >= limit))
-	    throw new IndexOutOfBoundsException();
-	return i;
+    final int checkIndex(int i) {                       // package-private
+        if ((i < 0) || (i >= limit))
+            throw new IndexOutOfBoundsException();
+        return i;
     }
 
-    final int checkIndex(int i, int nb) {		// package-private
-	if ((i < 0) || (nb > limit - i))
-	    throw new IndexOutOfBoundsException();
-	return i;
+    final int checkIndex(int i, int nb) {               // package-private
+        if ((i < 0) || (nb > limit - i))
+            throw new IndexOutOfBoundsException();
+        return i;
     }
 
-    final int markValue() {				// package-private
-	return mark;
+    final int markValue() {                             // package-private
+        return mark;
     }
 
     final void truncate() {                             // package-private
@@ -530,9 +558,13 @@ public abstract class Buffer {
         capacity = 0;
     }
 
+    final void discardMark() {                          // package-private
+        mark = -1;
+    }
+
     static void checkBounds(int off, int len, int size) { // package-private
         if ((off | len | (off + len) | (size - (off + len))) < 0)
-	    throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException();
     }
 
 }

@@ -1,10 +1,28 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
- 
+
 package javax.swing.plaf.metal;
 
 import javax.swing.plaf.*;
@@ -39,7 +57,7 @@ import sun.swing.SwingUtilities2;
  *     <code>UIManager.put("swing.boldMetal",&nbsp;Boolean.FALSE);</code>
  * </ul>
  * The defaults property <code>swing.boldMetal</code>, if set,
- * takes precendence over the system property of the same name. After
+ * takes precedence over the system property of the same name. After
  * setting this defaults property you need to re-install
  * <code>MetalLookAndFeel</code>, as well as update the UI
  * of any previously created widgets. Otherwise the results are undefined.
@@ -61,14 +79,13 @@ import sun.swing.SwingUtilities2;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see MetalLookAndFeel
  * @see MetalLookAndFeel#setCurrentTheme
  *
- * @version %I% %G%
  * @author Steve Wilson
  */
 public class DefaultMetalTheme extends MetalTheme {
@@ -99,11 +116,11 @@ public class DefaultMetalTheme extends MetalTheme {
     };
 
     // note the properties listed here can currently be used by people
-    // providing runtimes to hint what fonts are good.  For example the bold 
-    // dialog font looks bad on a Mac, so Apple could use this property to 
+    // providing runtimes to hint what fonts are good.  For example the bold
+    // dialog font looks bad on a Mac, so Apple could use this property to
     // hint at a good font.
     //
-    // However, we don't promise to support these forever.  We may move 
+    // However, we don't promise to support these forever.  We may move
     // to getting these from the swing.properties file, or elsewhere.
     /**
      * System property names used to look up fonts.
@@ -209,7 +226,7 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the primary 1 color
      */
-    protected ColorUIResource getPrimary1() { return primary1; } 
+    protected ColorUIResource getPrimary1() { return primary1; }
 
     /**
      * Returns the primary 2 color. This returns a color with rgb values
@@ -260,16 +277,16 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the control text font
      */
-    public FontUIResource getControlTextFont() { 
+    public FontUIResource getControlTextFont() {
         return getFont(CONTROL_TEXT_FONT);
     }
 
     /**
      * Returns the system text font. This returns Dialog, 12pt, plain.
      *
-     * @return the sytem text font
+     * @return the system text font
      */
-    public FontUIResource getSystemTextFont() { 
+    public FontUIResource getSystemTextFont() {
         return getFont(SYSTEM_TEXT_FONT);
     }
 
@@ -278,7 +295,7 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the user text font
      */
-    public FontUIResource getUserTextFont() { 
+    public FontUIResource getUserTextFont() {
         return getFont(USER_TEXT_FONT);
     }
 
@@ -290,7 +307,7 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the menu text font
      */
-    public FontUIResource getMenuTextFont() { 
+    public FontUIResource getMenuTextFont() {
         return getFont(MENU_TEXT_FONT);
     }
 
@@ -299,7 +316,7 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the window title font
      */
-    public FontUIResource getWindowTitleFont() { 
+    public FontUIResource getWindowTitleFont() {
         return getFont(WINDOW_TITLE_FONT);
     }
 
@@ -308,7 +325,7 @@ public class DefaultMetalTheme extends MetalTheme {
      *
      * @return the sub-text font
      */
-    public FontUIResource getSubTextFont() { 
+    public FontUIResource getSubTextFont() {
         return getFont(SUB_TEXT_FONT);
     }
 
@@ -370,9 +387,9 @@ public class DefaultMetalTheme extends MetalTheme {
          * that it is wrapped inside a <code>doPrivileged</code> call.
          */
         protected Font getPrivilegedFont(final int key) {
-            return (Font)java.security.AccessController.doPrivileged(
-                new java.security.PrivilegedAction() {
-                    public Object run() {
+            return java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<Font>() {
+                    public Font run() {
                         return Font.getFont(getDefaultPropertyName(key));
                     }
                 }

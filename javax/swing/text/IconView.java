@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -20,7 +38,6 @@ import javax.swing.event.*;
  * factory.
  *
  * @author Timothy Prinzing
- * @version %I% %G%
  */
 public class IconView extends View  {
 
@@ -30,9 +47,9 @@ public class IconView extends View  {
      * @param elem the element to create a view for
      */
     public IconView(Element elem) {
-	super(elem);
-	AttributeSet attr = elem.getAttributes();
-	c = StyleConstants.getIcon(attr);
+        super(elem);
+        AttributeSet attr = elem.getAttributes();
+        c = StyleConstants.getIcon(attr);
     }
 
     // --- View methods ---------------------------------------------
@@ -51,8 +68,8 @@ public class IconView extends View  {
      * @see View#paint
      */
     public void paint(Graphics g, Shape a) {
-	Rectangle alloc = a.getBounds();
-	c.paintIcon(getContainer(), g, alloc.x, alloc.y);
+        Rectangle alloc = a.getBounds();
+        c.paintIcon(getContainer(), g, alloc.x, alloc.y);
     }
 
     /**
@@ -67,14 +84,14 @@ public class IconView extends View  {
      * @exception IllegalArgumentException for an invalid axis
      */
     public float getPreferredSpan(int axis) {
-	switch (axis) {
-	case View.X_AXIS:
-	    return c.getIconWidth();
-	case View.Y_AXIS:
-	    return c.getIconHeight();
-	default:
-	    throw new IllegalArgumentException("Invalid axis: " + axis);
-	}
+        switch (axis) {
+        case View.X_AXIS:
+            return c.getIconWidth();
+        case View.Y_AXIS:
+            return c.getIconHeight();
+        default:
+            throw new IllegalArgumentException("Invalid axis: " + axis);
+        }
     }
 
     /**
@@ -84,26 +101,26 @@ public class IconView extends View  {
      * along the x axis.
      *
      * @param axis may be either View.X_AXIS or View.Y_AXIS
-     * @return the desired alignment >= 0.0f && <= 1.0f.  This should be
+     * @return the desired alignment &gt;= 0.0f &amp;&amp; &lt;= 1.0f.  This should be
      *   a value between 0.0 and 1.0 where 0 indicates alignment at the
      *   origin and 1.0 indicates alignment to the full span
      *   away from the origin.  An alignment of 0.5 would be the
      *   center of the view.
      */
     public float getAlignment(int axis) {
-	switch (axis) {
-	case View.Y_AXIS:
-	    return 1;
-	default:
-	    return super.getAlignment(axis);
-	}
+        switch (axis) {
+        case View.Y_AXIS:
+            return 1;
+        default:
+            return super.getAlignment(axis);
+        }
     }
 
     /**
      * Provides a mapping from the document model coordinate space
      * to the coordinate space of the view mapped to it.
      *
-     * @param pos the position to convert >= 0
+     * @param pos the position to convert &gt;= 0
      * @param a the allocated region to render into
      * @return the bounding box of the given position
      * @exception BadLocationException  if the given position does not
@@ -111,42 +128,41 @@ public class IconView extends View  {
      * @see View#modelToView
      */
     public Shape modelToView(int pos, Shape a, Position.Bias b) throws BadLocationException {
-	int p0 = getStartOffset();
-	int p1 = getEndOffset();
-	if ((pos >= p0) && (pos <= p1)) {
-	    Rectangle r = a.getBounds();
-	    if (pos == p1) {
-		r.x += r.width;
-	    }
-	    r.width = 0;
-	    return r;
-	}
-	throw new BadLocationException(pos + " not in range " + p0 + "," + p1, pos);
+        int p0 = getStartOffset();
+        int p1 = getEndOffset();
+        if ((pos >= p0) && (pos <= p1)) {
+            Rectangle r = a.getBounds();
+            if (pos == p1) {
+                r.x += r.width;
+            }
+            r.width = 0;
+            return r;
+        }
+        throw new BadLocationException(pos + " not in range " + p0 + "," + p1, pos);
     }
 
     /**
      * Provides a mapping from the view coordinate space to the logical
      * coordinate space of the model.
      *
-     * @param x the X coordinate >= 0
-     * @param y the Y coordinate >= 0
+     * @param x the X coordinate &gt;= 0
+     * @param y the Y coordinate &gt;= 0
      * @param a the allocated region to render into
      * @return the location within the model that best represents the
-     *  given point of view >= 0
+     *  given point of view &gt;= 0
      * @see View#viewToModel
      */
     public int viewToModel(float x, float y, Shape a, Position.Bias[] bias) {
-	Rectangle alloc = (Rectangle) a;
-	if (x < alloc.x + (alloc.width / 2)) {
-	    bias[0] = Position.Bias.Forward;
-	    return getStartOffset();
-	}
-	bias[0] = Position.Bias.Backward;
-	return getEndOffset();
+        Rectangle alloc = (Rectangle) a;
+        if (x < alloc.x + (alloc.width / 2)) {
+            bias[0] = Position.Bias.Forward;
+            return getStartOffset();
+        }
+        bias[0] = Position.Bias.Backward;
+        return getEndOffset();
     }
 
     // --- member variables ------------------------------------------------
 
     private Icon c;
 }
-

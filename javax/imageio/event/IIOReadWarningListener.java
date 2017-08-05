@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.event;
@@ -24,12 +42,11 @@ import javax.imageio.ImageReader;
  * @see javax.imageio.ImageReader#addIIOReadWarningListener
  * @see javax.imageio.ImageReader#removeIIOReadWarningListener
  *
- * @version 0.5
  */
 public interface IIOReadWarningListener extends EventListener {
-    
+
     /**
-     * Reports the occurence of a non-fatal error in decoding.  Decoding
+     * Reports the occurrence of a non-fatal error in decoding.  Decoding
      * will continue following the call to this method.  The application
      * may choose to display a dialog, print the warning to the console,
      * ignore the warning, or take any other action it chooses.

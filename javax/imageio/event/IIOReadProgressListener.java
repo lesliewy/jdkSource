@@ -1,14 +1,31 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.event;
 
 import java.util.EventListener;
-import java.util.Locale;
 import javax.imageio.ImageReader;
 
 /**
@@ -30,7 +47,6 @@ import javax.imageio.ImageReader;
  * @see javax.imageio.ImageReader#addIIOReadProgressListener
  * @see javax.imageio.ImageReader#removeIIOReadProgressListener
  *
- * @version 0.5
  */
 public interface IIOReadProgressListener extends EventListener {
 
@@ -46,7 +62,7 @@ public interface IIOReadProgressListener extends EventListener {
     void sequenceStarted(ImageReader source, int minIndex);
 
     /**
-     * Reports that a sequence of read operationshas completed.
+     * Reports that a sequence of read operations has completed.
      * <code>ImageReader</code> implementations are required to call
      * this method exactly once from their
      * <code>readAll(Iterator)</code> method.

@@ -1,1081 +1,1254 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.util;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntFunction;
+import java.util.function.IntToDoubleFunction;
+import java.util.function.IntToLongFunction;
+import java.util.function.IntUnaryOperator;
+import java.util.function.LongBinaryOperator;
+import java.util.function.UnaryOperator;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * This class contains various methods for manipulating arrays (such as
- * sorting and searching).  This class also contains a static factory
+ * sorting and searching). This class also contains a static factory
  * that allows arrays to be viewed as lists.
  *
- * <p>The methods in this class all throw a <tt>NullPointerException</tt> if
- * the specified array reference is null, except where noted.
+ * <p>The methods in this class all throw a {@code NullPointerException},
+ * if the specified array reference is null, except where noted.
  *
  * <p>The documentation for the methods contained in this class includes
- * briefs description of the <i>implementations</i>.  Such descriptions should
+ * briefs description of the <i>implementations</i>. Such descriptions should
  * be regarded as <i>implementation notes</i>, rather than parts of the
- * <i>specification</i>.  Implementors should feel free to substitute other
- * algorithms, so long as the specification itself is adhered to.  (For
- * example, the algorithm used by <tt>sort(Object[])</tt> does not have to be
- * a mergesort, but it does have to be <i>stable</i>.)
+ * <i>specification</i>. Implementors should feel free to substitute other
+ * algorithms, so long as the specification itself is adhered to. (For
+ * example, the algorithm used by {@code sort(Object[])} does not have to be
+ * a MergeSort, but it does have to be <i>stable</i>.)
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
- * @author  John Rose
- * @version %I%, %G%
- * @since   1.2
+ * @author Josh Bloch
+ * @author Neal Gafter
+ * @author John Rose
+ * @since  1.2
  */
-
 public class Arrays {
+
+    /**
+     * The minimum array length below which a parallel sorting
+     * algorithm will not further partition the sorting task. Using
+     * smaller sizes typically results in memory contention across
+     * tasks that makes parallel speedups unlikely.
+     */
+    private static final int MIN_ARRAY_SORT_GRAN = 1 << 13;
+
     // Suppresses default constructor, ensuring non-instantiability.
-    private Arrays() {
-    }
-
-    // Sorting
+    private Arrays() {}
 
     /**
-     * Sorts the specified array of longs into ascending numerical order.
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * A comparator that implements the natural ordering of a group of
+     * mutually comparable elements. May be used when a supplied
+     * comparator is null. To simplify code-sharing within underlying
+     * implementations, the compare method only declares type Object
+     * for its second argument.
      *
-     * @param a the array to be sorted
+     * Arrays class implementor's note: It is an empirical matter
+     * whether ComparableTimSort offers any performance benefit over
+     * TimSort used with this comparator.  If not, you are better off
+     * deleting or bypassing ComparableTimSort.  There is currently no
+     * empirical case for separating them for parallel sorting, so all
+     * public Object parallelSort methods use the same comparator
+     * based implementation.
      */
-    public static void sort(long[] a) {
-	sort1(a, 0, a.length);
+    static final class NaturalOrder implements Comparator<Object> {
+        @SuppressWarnings("unchecked")
+        public int compare(Object first, Object second) {
+            return ((Comparable<Object>)first).compareTo(second);
+        }
+        static final NaturalOrder INSTANCE = new NaturalOrder();
     }
 
     /**
-     * Sorts the specified range of the specified array of longs into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)
-     *
-     * <p>The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
-     *
-     * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     * <tt>toIndex &gt; a.length</tt>
+     * Checks that {@code fromIndex} and {@code toIndex} are in
+     * the range and throws an exception if they aren't.
      */
-    public static void sort(long[] a, int fromIndex, int toIndex) {
-        rangeCheck(a.length, fromIndex, toIndex);
-	sort1(a, fromIndex, toIndex-fromIndex);
+    private static void rangeCheck(int arrayLength, int fromIndex, int toIndex) {
+        if (fromIndex > toIndex) {
+            throw new IllegalArgumentException(
+                    "fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+        }
+        if (fromIndex < 0) {
+            throw new ArrayIndexOutOfBoundsException(fromIndex);
+        }
+        if (toIndex > arrayLength) {
+            throw new ArrayIndexOutOfBoundsException(toIndex);
+        }
     }
 
+    /*
+     * Sorting methods. Note that all public "sort" methods take the
+     * same form: Performing argument checks if necessary, and then
+     * expanding arguments into those required for the internal
+     * implementation methods residing in other package-private
+     * classes (except for legacyMergeSort, included in this class).
+     */
+
     /**
-     * Sorts the specified array of ints into ascending numerical order.
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
      */
     public static void sort(int[] a) {
-	sort1(a, 0, a.length);
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified range of the specified array of ints into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)<p>
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
      *
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
      */
     public static void sort(int[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	sort1(a, fromIndex, toIndex-fromIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified array of shorts into ascending numerical order.
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
+     *
+     * @param a the array to be sorted
+     */
+    public static void sort(long[] a) {
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     */
+    public static void sort(long[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
      */
     public static void sort(short[] a) {
-	sort1(a, 0, a.length);
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified range of the specified array of shorts into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)<p>
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
      *
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
      */
     public static void sort(short[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	sort1(a, fromIndex, toIndex-fromIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified array of chars into ascending numerical order.
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
      */
     public static void sort(char[] a) {
-	sort1(a, 0, a.length);
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified range of the specified array of chars into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)<p>
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
      *
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
      */
     public static void sort(char[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	sort1(a, fromIndex, toIndex-fromIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified array of bytes into ascending numerical order.
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
      */
     public static void sort(byte[] a) {
-	sort1(a, 0, a.length);
+        DualPivotQuicksort.sort(a, 0, a.length - 1);
     }
 
     /**
-     * Sorts the specified range of the specified array of bytes into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)<p>
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
      *
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
      */
     public static void sort(byte[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	sort1(a, fromIndex, toIndex-fromIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1);
     }
 
     /**
-     * Sorts the specified array of doubles into ascending numerical order.
-     * <p>
-     * The <code>&lt;</code> relation does not provide a total order on
-     * all floating-point values; although they are distinct numbers
-     * <code>-0.0 == 0.0</code> is <code>true</code> and a NaN value
-     * compares neither less than, greater than, nor equal to any
-     * floating-point value, even itself.  To allow the sort to
-     * proceed, instead of using the <code>&lt;</code> relation to
-     * determine ascending numerical order, this method uses the total
-     * order imposed by {@link Double#compareTo}.  This ordering
-     * differs from the <code>&lt;</code> relation in that
-     * <code>-0.0</code> is treated as less than <code>0.0</code> and
-     * NaN is considered greater than any other floating-point value.
-     * For the purposes of sorting, all NaN values are considered
-     * equivalent and equal.
-     * <p>
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified array into ascending numerical order.
      *
-     * @param a the array to be sorted
-     */
-    public static void sort(double[] a) {
-	sort2(a, 0, a.length);
-    }
-
-    /**
-     * Sorts the specified range of the specified array of doubles into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)
-     * <p>
-     * The <code>&lt;</code> relation does not provide a total order on
-     * all floating-point values; although they are distinct numbers
-     * <code>-0.0 == 0.0</code> is <code>true</code> and a NaN value
-     * compares neither less than, greater than, nor equal to any
-     * floating-point value, even itself.  To allow the sort to
-     * proceed, instead of using the <code>&lt;</code> relation to
-     * determine ascending numerical order, this method uses the total
-     * order imposed by {@link Double#compareTo}.  This ordering
-     * differs from the <code>&lt;</code> relation in that
-     * <code>-0.0</code> is treated as less than <code>0.0</code> and
-     * NaN is considered greater than any other floating-point value.
-     * For the purposes of sorting, all NaN values are considered
-     * equivalent and equal.
-     * <p>
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>The {@code <} relation does not provide a total order on all float
+     * values: {@code -0.0f == 0.0f} is {@code true} and a {@code Float.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Float#compareTo}: {@code -0.0f} is treated as less than value
+     * {@code 0.0f} and {@code Float.NaN} is considered greater than any
+     * other value and all {@code Float.NaN} values are considered equal.
      *
-     * @param a the array to be sorted
-     * @param fromIndex the index of the first element (inclusive) to be
-     *        sorted
-     * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
-     */
-    public static void sort(double[] a, int fromIndex, int toIndex) {
-        rangeCheck(a.length, fromIndex, toIndex);
-	sort2(a, fromIndex, toIndex);
-    }
-
-    /**
-     * Sorts the specified array of floats into ascending numerical order.
-     * <p>
-     * The <code>&lt;</code> relation does not provide a total order on
-     * all floating-point values; although they are distinct numbers
-     * <code>-0.0f == 0.0f</code> is <code>true</code> and a NaN value
-     * compares neither less than, greater than, nor equal to any
-     * floating-point value, even itself.  To allow the sort to
-     * proceed, instead of using the <code>&lt;</code> relation to
-     * determine ascending numerical order, this method uses the total
-     * order imposed by {@link Float#compareTo}.  This ordering
-     * differs from the <code>&lt;</code> relation in that
-     * <code>-0.0f</code> is treated as less than <code>0.0f</code> and
-     * NaN is considered greater than any other floating-point value.
-     * For the purposes of sorting, all NaN values are considered
-     * equivalent and equal.
-     * <p>
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
      */
     public static void sort(float[] a) {
-	sort2(a, 0, a.length);
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
     }
 
     /**
-     * Sorts the specified range of the specified array of floats into
-     * ascending numerical order.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)
-     * <p>
-     * The <code>&lt;</code> relation does not provide a total order on
-     * all floating-point values; although they are distinct numbers
-     * <code>-0.0f == 0.0f</code> is <code>true</code> and a NaN value
-     * compares neither less than, greater than, nor equal to any
-     * floating-point value, even itself.  To allow the sort to
-     * proceed, instead of using the <code>&lt;</code> relation to
-     * determine ascending numerical order, this method uses the total
-     * order imposed by {@link Float#compareTo}.  This ordering
-     * differs from the <code>&lt;</code> relation in that
-     * <code>-0.0f</code> is treated as less than <code>0.0f</code> and
-     * NaN is considered greater than any other floating-point value.
-     * For the purposes of sorting, all NaN values are considered
-     * equivalent and equal.
-     * <p>
-     * The sorting algorithm is a tuned quicksort, adapted from Jon
-     * L. Bentley and M. Douglas McIlroy's "Engineering a Sort Function",
-     * Software-Practice and Experience, Vol. 23(11) P. 1249-1265 (November
-     * 1993).  This algorithm offers n*log(n) performance on many data sets
-     * that cause other quicksorts to degrade to quadratic performance.
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
      *
+     * <p>The {@code <} relation does not provide a total order on all float
+     * values: {@code -0.0f == 0.0f} is {@code true} and a {@code Float.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Float#compareTo}: {@code -0.0f} is treated as less than value
+     * {@code 0.0f} and {@code Float.NaN} is considered greater than any
+     * other value and all {@code Float.NaN} values are considered equal.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     */
+    public static void sort(float[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>The {@code <} relation does not provide a total order on all double
+     * values: {@code -0.0d == 0.0d} is {@code true} and a {@code Double.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Double#compareTo}: {@code -0.0d} is treated as less than value
+     * {@code 0.0d} and {@code Double.NaN} is considered greater than any
+     * other value and all {@code Double.NaN} values are considered equal.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
+     *
+     * @param a the array to be sorted
+     */
+    public static void sort(double[] a) {
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending order. The range
+     * to be sorted extends from the index {@code fromIndex}, inclusive, to
+     * the index {@code toIndex}, exclusive. If {@code fromIndex == toIndex},
+     * the range to be sorted is empty.
+     *
+     * <p>The {@code <} relation does not provide a total order on all double
+     * values: {@code -0.0d == 0.0d} is {@code true} and a {@code Double.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Double#compareTo}: {@code -0.0d} is treated as less than value
+     * {@code 0.0d} and {@code Double.NaN} is considered greater than any
+     * other value and all {@code Double.NaN} values are considered equal.
+     *
+     * <p>Implementation note: The sorting algorithm is a Dual-Pivot Quicksort
+     * by Vladimir Yaroslavskiy, Jon Bentley, and Joshua Bloch. This algorithm
+     * offers O(n log(n)) performance on many data sets that cause other
+     * quicksorts to degrade to quadratic performance, and is typically
+     * faster than traditional (one-pivot) Quicksort implementations.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     */
+    public static void sort(double[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(byte[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(byte[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(byte[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1);
+        else
+            new ArraysParallelSortHelpers.FJByte.Sorter
+                (null, a, new byte[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(byte[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(byte[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(byte[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1);
+        else
+            new ArraysParallelSortHelpers.FJByte.Sorter
+                (null, a, new byte[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(char[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(char[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(char[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJChar.Sorter
+                (null, a, new char[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+      @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(char[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(char[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(char[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJChar.Sorter
+                (null, a, new char[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(short[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(short[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(short[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJShort.Sorter
+                (null, a, new short[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(short[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(short[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(short[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJShort.Sorter
+                (null, a, new short[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(int[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(int[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(int[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJInt.Sorter
+                (null, a, new int[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(int[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(int[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(int[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJInt.Sorter
+                (null, a, new int[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(long[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(long[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(long[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJLong.Sorter
+                (null, a, new long[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(long[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(long[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(long[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJLong.Sorter
+                (null, a, new long[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>The {@code <} relation does not provide a total order on all float
+     * values: {@code -0.0f == 0.0f} is {@code true} and a {@code Float.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Float#compareTo}: {@code -0.0f} is treated as less than value
+     * {@code 0.0f} and {@code Float.NaN} is considered greater than any
+     * other value and all {@code Float.NaN} values are considered equal.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(float[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(float[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(float[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJFloat.Sorter
+                (null, a, new float[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * <p>The {@code <} relation does not provide a total order on all float
+     * values: {@code -0.0f == 0.0f} is {@code true} and a {@code Float.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Float#compareTo}: {@code -0.0f} is treated as less than value
+     * {@code 0.0f} and {@code Float.NaN} is considered greater than any
+     * other value and all {@code Float.NaN} values are considered equal.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(float[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(float[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(float[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJFloat.Sorter
+                (null, a, new float[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array into ascending numerical order.
+     *
+     * <p>The {@code <} relation does not provide a total order on all double
+     * values: {@code -0.0d == 0.0d} is {@code true} and a {@code Double.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Double#compareTo}: {@code -0.0d} is treated as less than value
+     * {@code 0.0d} and {@code Double.NaN} is considered greater than any
+     * other value and all {@code Double.NaN} values are considered equal.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(double[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(double[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(double[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJDouble.Sorter
+                (null, a, new double[n], 0, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the array into ascending numerical order.
+     * The range to be sorted extends from the index {@code fromIndex},
+     * inclusive, to the index {@code toIndex}, exclusive. If
+     * {@code fromIndex == toIndex}, the range to be sorted is empty.
+     *
+     * <p>The {@code <} relation does not provide a total order on all double
+     * values: {@code -0.0d == 0.0d} is {@code true} and a {@code Double.NaN}
+     * value compares neither less than, greater than, nor equal to any value,
+     * even itself. This method uses the total order imposed by the method
+     * {@link Double#compareTo}: {@code -0.0d} is treated as less than value
+     * {@code 0.0d} and {@code Double.NaN} is considered greater than any
+     * other value and all {@code Double.NaN} values are considered equal.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(double[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(double[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element, inclusive, to be sorted
+     * @param toIndex the index of the last element, exclusive, to be sorted
+     *
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *
+     * @since 1.8
+     */
+    public static void parallelSort(double[] a, int fromIndex, int toIndex) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            DualPivotQuicksort.sort(a, fromIndex, toIndex - 1, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJDouble.Sorter
+                (null, a, new double[n], fromIndex, n, 0,
+                 ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g).invoke();
+    }
+
+    /**
+     * Sorts the specified array of objects into ascending order, according
+     * to the {@linkplain Comparable natural ordering} of its elements.
+     * All elements in the array must implement the {@link Comparable}
+     * interface.  Furthermore, all elements in the array must be
+     * <i>mutually comparable</i> (that is, {@code e1.compareTo(e2)} must
+     * not throw a {@code ClassCastException} for any elements {@code e1}
+     * and {@code e2} in the array).
+     *
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(Object[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(Object[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param <T> the class of the objects to be sorted
+     * @param a the array to be sorted
+     *
+     * @throws ClassCastException if the array contains elements that are not
+     *         <i>mutually comparable</i> (for example, strings and integers)
+     * @throws IllegalArgumentException (optional) if the natural
+     *         ordering of the array elements is found to violate the
+     *         {@link Comparable} contract
+     *
+     * @since 1.8
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Comparable<? super T>> void parallelSort(T[] a) {
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            TimSort.sort(a, 0, n, NaturalOrder.INSTANCE, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJObject.Sorter<T>
+                (null, a,
+                 (T[])Array.newInstance(a.getClass().getComponentType(), n),
+                 0, n, 0, ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g, NaturalOrder.INSTANCE).invoke();
+    }
+
+    /**
+     * Sorts the specified range of the specified array of objects into
+     * ascending order, according to the
+     * {@linkplain Comparable natural ordering} of its
+     * elements.  The range to be sorted extends from index
+     * {@code fromIndex}, inclusive, to index {@code toIndex}, exclusive.
+     * (If {@code fromIndex==toIndex}, the range to be sorted is empty.)  All
+     * elements in this range must implement the {@link Comparable}
+     * interface.  Furthermore, all elements in this range must be <i>mutually
+     * comparable</i> (that is, {@code e1.compareTo(e2)} must not throw a
+     * {@code ClassCastException} for any elements {@code e1} and
+     * {@code e2} in the array).
+     *
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(Object[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(Object[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param <T> the class of the objects to be sorted
      * @param a the array to be sorted
      * @param fromIndex the index of the first element (inclusive) to be
      *        sorted
      * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex} or
+     *         (optional) if the natural ordering of the array elements is
+     *         found to violate the {@link Comparable} contract
+     * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
+     *         {@code toIndex > a.length}
+     * @throws ClassCastException if the array contains elements that are
+     *         not <i>mutually comparable</i> (for example, strings and
+     *         integers).
+     *
+     * @since 1.8
      */
-    public static void sort(float[] a, int fromIndex, int toIndex) {
+    @SuppressWarnings("unchecked")
+    public static <T extends Comparable<? super T>>
+    void parallelSort(T[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	sort2(a, fromIndex, toIndex);
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            TimSort.sort(a, fromIndex, toIndex, NaturalOrder.INSTANCE, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJObject.Sorter<T>
+                (null, a,
+                 (T[])Array.newInstance(a.getClass().getComponentType(), n),
+                 fromIndex, n, 0, ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g, NaturalOrder.INSTANCE).invoke();
     }
 
-    private static void sort2(double a[], int fromIndex, int toIndex) {
-        final long NEG_ZERO_BITS = Double.doubleToLongBits(-0.0d);
-        /*
-         * The sort is done in three phases to avoid the expense of using
-         * NaN and -0.0 aware comparisons during the main sort.
-         */
-
-        /*
-         * Preprocessing phase:  Move any NaN's to end of array, count the
-         * number of -0.0's, and turn them into 0.0's.
-         */
-        int numNegZeros = 0;
-        int i = fromIndex, n = toIndex;
-        while(i < n) {
-            if (a[i] != a[i]) {
-		double swap = a[i];
-                a[i] = a[--n];
-                a[n] = swap;
-            } else {
-                if (a[i]==0 && Double.doubleToLongBits(a[i])==NEG_ZERO_BITS) {
-                    a[i] = 0.0d;
-                    numNegZeros++;
-                }
-                i++;
-            }
-        }
-
-        // Main sort phase: quicksort everything but the NaN's
-	sort1(a, fromIndex, n-fromIndex);
-
-        // Postprocessing phase: change 0.0's to -0.0's as required
-        if (numNegZeros != 0) {
-            int j = binarySearch0(a, fromIndex, n, 0.0d); // posn of ANY zero
-            do {
-                j--;
-            } while (j>=0 && a[j]==0.0d);
-
-            // j is now one less than the index of the FIRST zero
-            for (int k=0; k<numNegZeros; k++)
-                a[++j] = -0.0d;
-        }
+    /**
+     * Sorts the specified array of objects according to the order induced by
+     * the specified comparator.  All elements in the array must be
+     * <i>mutually comparable</i> by the specified comparator (that is,
+     * {@code c.compare(e1, e2)} must not throw a {@code ClassCastException}
+     * for any elements {@code e1} and {@code e2} in the array).
+     *
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(Object[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(Object[]) Arrays.sort} method. The algorithm requires a
+     * working space no greater than the size of the original array. The
+     * {@link ForkJoinPool#commonPool() ForkJoin common pool} is used to
+     * execute any parallel tasks.
+     *
+     * @param <T> the class of the objects to be sorted
+     * @param a the array to be sorted
+     * @param cmp the comparator to determine the order of the array.  A
+     *        {@code null} value indicates that the elements'
+     *        {@linkplain Comparable natural ordering} should be used.
+     * @throws ClassCastException if the array contains elements that are
+     *         not <i>mutually comparable</i> using the specified comparator
+     * @throws IllegalArgumentException (optional) if the comparator is
+     *         found to violate the {@link java.util.Comparator} contract
+     *
+     * @since 1.8
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> void parallelSort(T[] a, Comparator<? super T> cmp) {
+        if (cmp == null)
+            cmp = NaturalOrder.INSTANCE;
+        int n = a.length, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            TimSort.sort(a, 0, n, cmp, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJObject.Sorter<T>
+                (null, a,
+                 (T[])Array.newInstance(a.getClass().getComponentType(), n),
+                 0, n, 0, ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g, cmp).invoke();
     }
 
-
-    private static void sort2(float a[], int fromIndex, int toIndex) {
-        final int NEG_ZERO_BITS = Float.floatToIntBits(-0.0f);
-        /*
-         * The sort is done in three phases to avoid the expense of using
-         * NaN and -0.0 aware comparisons during the main sort.
-         */
-
-        /*
-         * Preprocessing phase:  Move any NaN's to end of array, count the
-         * number of -0.0's, and turn them into 0.0's.
-         */
-        int numNegZeros = 0;
-        int i = fromIndex, n = toIndex;
-        while(i < n) {
-            if (a[i] != a[i]) {
-		float swap = a[i];
-                a[i] = a[--n];
-                a[n] = swap;
-            } else {
-                if (a[i]==0 && Float.floatToIntBits(a[i])==NEG_ZERO_BITS) {
-                    a[i] = 0.0f;
-                    numNegZeros++;
-                }
-                i++;
-            }
-        }
-
-        // Main sort phase: quicksort everything but the NaN's
-	sort1(a, fromIndex, n-fromIndex);
-
-        // Postprocessing phase: change 0.0's to -0.0's as required
-        if (numNegZeros != 0) {
-            int j = binarySearch0(a, fromIndex, n, 0.0f); // posn of ANY zero
-            do {
-                j--;
-            } while (j>=0 && a[j]==0.0f);
-
-            // j is now one less than the index of the FIRST zero
-            for (int k=0; k<numNegZeros; k++)
-                a[++j] = -0.0f;
-        }
+    /**
+     * Sorts the specified range of the specified array of objects according
+     * to the order induced by the specified comparator.  The range to be
+     * sorted extends from index {@code fromIndex}, inclusive, to index
+     * {@code toIndex}, exclusive.  (If {@code fromIndex==toIndex}, the
+     * range to be sorted is empty.)  All elements in the range must be
+     * <i>mutually comparable</i> by the specified comparator (that is,
+     * {@code c.compare(e1, e2)} must not throw a {@code ClassCastException}
+     * for any elements {@code e1} and {@code e2} in the range).
+     *
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
+     *
+     * @implNote The sorting algorithm is a parallel sort-merge that breaks the
+     * array into sub-arrays that are themselves sorted and then merged. When
+     * the sub-array length reaches a minimum granularity, the sub-array is
+     * sorted using the appropriate {@link Arrays#sort(Object[]) Arrays.sort}
+     * method. If the length of the specified array is less than the minimum
+     * granularity, then it is sorted using the appropriate {@link
+     * Arrays#sort(Object[]) Arrays.sort} method. The algorithm requires a working
+     * space no greater than the size of the specified range of the original
+     * array. The {@link ForkJoinPool#commonPool() ForkJoin common pool} is
+     * used to execute any parallel tasks.
+     *
+     * @param <T> the class of the objects to be sorted
+     * @param a the array to be sorted
+     * @param fromIndex the index of the first element (inclusive) to be
+     *        sorted
+     * @param toIndex the index of the last element (exclusive) to be sorted
+     * @param cmp the comparator to determine the order of the array.  A
+     *        {@code null} value indicates that the elements'
+     *        {@linkplain Comparable natural ordering} should be used.
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex} or
+     *         (optional) if the natural ordering of the array elements is
+     *         found to violate the {@link Comparable} contract
+     * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
+     *         {@code toIndex > a.length}
+     * @throws ClassCastException if the array contains elements that are
+     *         not <i>mutually comparable</i> (for example, strings and
+     *         integers).
+     *
+     * @since 1.8
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> void parallelSort(T[] a, int fromIndex, int toIndex,
+                                        Comparator<? super T> cmp) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        if (cmp == null)
+            cmp = NaturalOrder.INSTANCE;
+        int n = toIndex - fromIndex, p, g;
+        if (n <= MIN_ARRAY_SORT_GRAN ||
+            (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            TimSort.sort(a, fromIndex, toIndex, cmp, null, 0, 0);
+        else
+            new ArraysParallelSortHelpers.FJObject.Sorter<T>
+                (null, a,
+                 (T[])Array.newInstance(a.getClass().getComponentType(), n),
+                 fromIndex, n, 0, ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
+                 MIN_ARRAY_SORT_GRAN : g, cmp).invoke();
     }
-
 
     /*
-     * The code for each of the seven primitive types is largely identical.
-     * C'est la vie.
+     * Sorting of complex type arrays.
      */
 
     /**
-     * Sorts the specified sub-array of longs into ascending order.
+     * Old merge sort implementation can be selected (for
+     * compatibility with broken comparators) using a system property.
+     * Cannot be a static boolean in the enclosing class due to
+     * circular dependencies. To be removed in a future release.
      */
-    private static void sort1(long x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	long v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
+    static final class LegacyMergeSort {
+        private static final boolean userRequested =
+            java.security.AccessController.doPrivileged(
+                new sun.security.action.GetBooleanAction(
+                    "java.util.Arrays.useLegacyMergeSort")).booleanValue();
     }
 
     /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(long x[], int a, int b) {
-	long t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(long x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed longs.
-     */
-    private static int med3(long x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-    /**
-     * Sorts the specified sub-array of integers into ascending order.
-     */
-    private static void sort1(int x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	int v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(int x[], int a, int b) {
-	int t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(int x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed integers.
-     */
-    private static int med3(int x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-    /**
-     * Sorts the specified sub-array of shorts into ascending order.
-     */
-    private static void sort1(short x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	short v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(short x[], int a, int b) {
-	short t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(short x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed shorts.
-     */
-    private static int med3(short x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-
-    /**
-     * Sorts the specified sub-array of chars into ascending order.
-     */
-    private static void sort1(char x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	char v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(char x[], int a, int b) {
-	char t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(char x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed chars.
-     */
-    private static int med3(char x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-
-    /**
-     * Sorts the specified sub-array of bytes into ascending order.
-     */
-    private static void sort1(byte x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	byte v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(byte x[], int a, int b) {
-	byte t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(byte x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed bytes.
-     */
-    private static int med3(byte x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-
-    /**
-     * Sorts the specified sub-array of doubles into ascending order.
-     */
-    private static void sort1(double x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	double v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(double x[], int a, int b) {
-	double t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(double x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed doubles.
-     */
-    private static int med3(double x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-
-    /**
-     * Sorts the specified sub-array of floats into ascending order.
-     */
-    private static void sort1(float x[], int off, int len) {
-	// Insertion sort on smallest arrays
-	if (len < 7) {
-	    for (int i=off; i<len+off; i++)
-		for (int j=i; j>off && x[j-1]>x[j]; j--)
-		    swap(x, j, j-1);
-	    return;
-	}
-
-	// Choose a partition element, v
-	int m = off + (len >> 1);       // Small arrays, middle element
-	if (len > 7) {
-	    int l = off;
-	    int n = off + len - 1;
-	    if (len > 40) {        // Big arrays, pseudomedian of 9
-		int s = len/8;
-		l = med3(x, l,     l+s, l+2*s);
-		m = med3(x, m-s,   m,   m+s);
-		n = med3(x, n-2*s, n-s, n);
-	    }
-	    m = med3(x, l, m, n); // Mid-size, med of 3
-	}
-	float v = x[m];
-
-	// Establish Invariant: v* (<v)* (>v)* v*
-	int a = off, b = a, c = off + len - 1, d = c;
-	while(true) {
-	    while (b <= c && x[b] <= v) {
-		if (x[b] == v)
-		    swap(x, a++, b);
-		b++;
-	    }
-	    while (c >= b && x[c] >= v) {
-		if (x[c] == v)
-		    swap(x, c, d--);
-		c--;
-	    }
-	    if (b > c)
-		break;
-	    swap(x, b++, c--);
-	}
-
-	// Swap partition elements back to middle
-	int s, n = off + len;
-	s = Math.min(a-off, b-a  );  vecswap(x, off, b-s, s);
-	s = Math.min(d-c,   n-d-1);  vecswap(x, b,   n-s, s);
-
-	// Recursively sort non-partition-elements
-	if ((s = b-a) > 1)
-	    sort1(x, off, s);
-	if ((s = d-c) > 1)
-	    sort1(x, n-s, s);
-    }
-
-    /**
-     * Swaps x[a] with x[b].
-     */
-    private static void swap(float x[], int a, int b) {
-	float t = x[a];
-	x[a] = x[b];
-	x[b] = t;
-    }
-
-    /**
-     * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
-     */
-    private static void vecswap(float x[], int a, int b, int n) {
-	for (int i=0; i<n; i++, a++, b++)
-	    swap(x, a, b);
-    }
-
-    /**
-     * Returns the index of the median of the three indexed floats.
-     */
-    private static int med3(float x[], int a, int b, int c) {
-	return (x[a] < x[b] ?
-		(x[b] < x[c] ? b : x[a] < x[c] ? c : a) :
-		(x[b] > x[c] ? b : x[a] > x[c] ? c : a));
-    }
-
-
-    /**
-     * Sorts the specified array of objects into ascending order, according to
-     * the {@linkplain Comparable natural ordering}
-     * of its elements.  All elements in the array
-     * must implement the {@link Comparable} interface.  Furthermore, all
-     * elements in the array must be <i>mutually comparable</i> (that is,
-     * <tt>e1.compareTo(e2)</tt> must not throw a <tt>ClassCastException</tt>
-     * for any elements <tt>e1</tt> and <tt>e2</tt> in the array).<p>
+     * Sorts the specified array of objects into ascending order, according
+     * to the {@linkplain Comparable natural ordering} of its elements.
+     * All elements in the array must implement the {@link Comparable}
+     * interface.  Furthermore, all elements in the array must be
+     * <i>mutually comparable</i> (that is, {@code e1.compareTo(e2)} must
+     * not throw a {@code ClassCastException} for any elements {@code e1}
+     * and {@code e2} in the array).
      *
-     * This sort is guaranteed to be <i>stable</i>:  equal elements will
-     * not be reordered as a result of the sort.<p>
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
      *
-     * The sorting algorithm is a modified mergesort (in which the merge is
-     * omitted if the highest element in the low sublist is less than the
-     * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n*log(n) performance.
+     * <p>Implementation note: This implementation is a stable, adaptive,
+     * iterative mergesort that requires far fewer than n lg(n) comparisons
+     * when the input array is partially sorted, while offering the
+     * performance of a traditional mergesort when the input array is
+     * randomly ordered.  If the input array is nearly sorted, the
+     * implementation requires approximately n comparisons.  Temporary
+     * storage requirements vary from a small constant for nearly sorted
+     * input arrays to n/2 object references for randomly ordered input
+     * arrays.
+     *
+     * <p>The implementation takes equal advantage of ascending and
+     * descending order in its input array, and can take advantage of
+     * ascending and descending order in different parts of the the same
+     * input array.  It is well-suited to merging two or more sorted arrays:
+     * simply concatenate the arrays and sort the resulting array.
+     *
+     * <p>The implementation was adapted from Tim Peters's list sort for Python
+     * (<a href="http://svn.python.org/projects/python/trunk/Objects/listsort.txt">
+     * TimSort</a>).  It uses techniques from Peter McIlroy's "Optimistic
+     * Sorting and Information Theoretic Complexity", in Proceedings of the
+     * Fourth Annual ACM-SIAM Symposium on Discrete Algorithms, pp 467-474,
+     * January 1993.
      *
      * @param a the array to be sorted
-     * @throws  ClassCastException if the array contains elements that are not
-     *		<i>mutually comparable</i> (for example, strings and integers).
+     * @throws ClassCastException if the array contains elements that are not
+     *         <i>mutually comparable</i> (for example, strings and integers)
+     * @throws IllegalArgumentException (optional) if the natural
+     *         ordering of the array elements is found to violate the
+     *         {@link Comparable} contract
      */
     public static void sort(Object[] a) {
-        Object[] aux = (Object[])a.clone();
+        if (LegacyMergeSort.userRequested)
+            legacyMergeSort(a);
+        else
+            ComparableTimSort.sort(a, 0, a.length, null, 0, 0);
+    }
+
+    /** To be removed in a future release. */
+    private static void legacyMergeSort(Object[] a) {
+        Object[] aux = a.clone();
         mergeSort(aux, a, 0, a.length, 0);
     }
 
@@ -1084,42 +1257,72 @@ public class Arrays {
      * ascending order, according to the
      * {@linkplain Comparable natural ordering} of its
      * elements.  The range to be sorted extends from index
-     * <tt>fromIndex</tt>, inclusive, to index <tt>toIndex</tt>, exclusive.
-     * (If <tt>fromIndex==toIndex</tt>, the range to be sorted is empty.)  All
+     * {@code fromIndex}, inclusive, to index {@code toIndex}, exclusive.
+     * (If {@code fromIndex==toIndex}, the range to be sorted is empty.)  All
      * elements in this range must implement the {@link Comparable}
      * interface.  Furthermore, all elements in this range must be <i>mutually
-     * comparable</i> (that is, <tt>e1.compareTo(e2)</tt> must not throw a
-     * <tt>ClassCastException</tt> for any elements <tt>e1</tt> and
-     * <tt>e2</tt> in the array).<p>
+     * comparable</i> (that is, {@code e1.compareTo(e2)} must not throw a
+     * {@code ClassCastException} for any elements {@code e1} and
+     * {@code e2} in the array).
      *
-     * This sort is guaranteed to be <i>stable</i>:  equal elements will
-     * not be reordered as a result of the sort.<p>
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
      *
-     * The sorting algorithm is a modified mergesort (in which the merge is
-     * omitted if the highest element in the low sublist is less than the
-     * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n*log(n) performance.
+     * <p>Implementation note: This implementation is a stable, adaptive,
+     * iterative mergesort that requires far fewer than n lg(n) comparisons
+     * when the input array is partially sorted, while offering the
+     * performance of a traditional mergesort when the input array is
+     * randomly ordered.  If the input array is nearly sorted, the
+     * implementation requires approximately n comparisons.  Temporary
+     * storage requirements vary from a small constant for nearly sorted
+     * input arrays to n/2 object references for randomly ordered input
+     * arrays.
+     *
+     * <p>The implementation takes equal advantage of ascending and
+     * descending order in its input array, and can take advantage of
+     * ascending and descending order in different parts of the the same
+     * input array.  It is well-suited to merging two or more sorted arrays:
+     * simply concatenate the arrays and sort the resulting array.
+     *
+     * <p>The implementation was adapted from Tim Peters's list sort for Python
+     * (<a href="http://svn.python.org/projects/python/trunk/Objects/listsort.txt">
+     * TimSort</a>).  It uses techniques from Peter McIlroy's "Optimistic
+     * Sorting and Information Theoretic Complexity", in Proceedings of the
+     * Fourth Annual ACM-SIAM Symposium on Discrete Algorithms, pp 467-474,
+     * January 1993.
      *
      * @param a the array to be sorted
      * @param fromIndex the index of the first element (inclusive) to be
      *        sorted
      * @param toIndex the index of the last element (exclusive) to be sorted
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
-     * @throws    ClassCastException if the array contains elements that are
-     *		  not <i>mutually comparable</i> (for example, strings and
-     *		  integers).
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex} or
+     *         (optional) if the natural ordering of the array elements is
+     *         found to violate the {@link Comparable} contract
+     * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
+     *         {@code toIndex > a.length}
+     * @throws ClassCastException if the array contains elements that are
+     *         not <i>mutually comparable</i> (for example, strings and
+     *         integers).
      */
     public static void sort(Object[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
-	Object[] aux = copyOfRange(a, fromIndex, toIndex);
+        if (LegacyMergeSort.userRequested)
+            legacyMergeSort(a, fromIndex, toIndex);
+        else
+            ComparableTimSort.sort(a, fromIndex, toIndex, null, 0, 0);
+    }
+
+    /** To be removed in a future release. */
+    private static void legacyMergeSort(Object[] a,
+                                        int fromIndex, int toIndex) {
+        Object[] aux = copyOfRange(a, fromIndex, toIndex);
         mergeSort(aux, a, fromIndex, toIndex, -fromIndex);
     }
 
     /**
      * Tuning parameter: list size at or below which insertion sort will be
-     * used in preference to mergesort or quicksort.
+     * used in preference to mergesort.
+     * To be removed in a future release.
      */
     private static final int INSERTIONSORT_THRESHOLD = 7;
 
@@ -1129,19 +1332,21 @@ public class Arrays {
      * low is the index in dest to start sorting
      * high is the end index in dest to end sorting
      * off is the offset to generate corresponding low, high in src
+     * To be removed in a future release.
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static void mergeSort(Object[] src,
-				  Object[] dest,
-				  int low,
-				  int high,
-				  int off) {
-	int length = high - low;
+                                  Object[] dest,
+                                  int low,
+                                  int high,
+                                  int off) {
+        int length = high - low;
 
-	// Insertion sort on smallest arrays
+        // Insertion sort on smallest arrays
         if (length < INSERTIONSORT_THRESHOLD) {
             for (int i=low; i<high; i++)
                 for (int j=i; j>low &&
-			 ((Comparable) dest[j-1]).compareTo(dest[j])>0; j--)
+                         ((Comparable) dest[j-1]).compareTo(dest[j])>0; j--)
                     swap(dest, j, j-1);
             return;
         }
@@ -1175,35 +1380,68 @@ public class Arrays {
      * Swaps x[a] with x[b].
      */
     private static void swap(Object[] x, int a, int b) {
-	Object t = x[a];
-	x[a] = x[b];
-	x[b] = t;
+        Object t = x[a];
+        x[a] = x[b];
+        x[b] = t;
     }
 
     /**
      * Sorts the specified array of objects according to the order induced by
      * the specified comparator.  All elements in the array must be
      * <i>mutually comparable</i> by the specified comparator (that is,
-     * <tt>c.compare(e1, e2)</tt> must not throw a <tt>ClassCastException</tt>
-     * for any elements <tt>e1</tt> and <tt>e2</tt> in the array).<p>
+     * {@code c.compare(e1, e2)} must not throw a {@code ClassCastException}
+     * for any elements {@code e1} and {@code e2} in the array).
      *
-     * This sort is guaranteed to be <i>stable</i>:  equal elements will
-     * not be reordered as a result of the sort.<p>
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
      *
-     * The sorting algorithm is a modified mergesort (in which the merge is
-     * omitted if the highest element in the low sublist is less than the
-     * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n*log(n) performance.
+     * <p>Implementation note: This implementation is a stable, adaptive,
+     * iterative mergesort that requires far fewer than n lg(n) comparisons
+     * when the input array is partially sorted, while offering the
+     * performance of a traditional mergesort when the input array is
+     * randomly ordered.  If the input array is nearly sorted, the
+     * implementation requires approximately n comparisons.  Temporary
+     * storage requirements vary from a small constant for nearly sorted
+     * input arrays to n/2 object references for randomly ordered input
+     * arrays.
      *
+     * <p>The implementation takes equal advantage of ascending and
+     * descending order in its input array, and can take advantage of
+     * ascending and descending order in different parts of the the same
+     * input array.  It is well-suited to merging two or more sorted arrays:
+     * simply concatenate the arrays and sort the resulting array.
+     *
+     * <p>The implementation was adapted from Tim Peters's list sort for Python
+     * (<a href="http://svn.python.org/projects/python/trunk/Objects/listsort.txt">
+     * TimSort</a>).  It uses techniques from Peter McIlroy's "Optimistic
+     * Sorting and Information Theoretic Complexity", in Proceedings of the
+     * Fourth Annual ACM-SIAM Symposium on Discrete Algorithms, pp 467-474,
+     * January 1993.
+     *
+     * @param <T> the class of the objects to be sorted
      * @param a the array to be sorted
      * @param c the comparator to determine the order of the array.  A
-     *        <tt>null</tt> value indicates that the elements'
+     *        {@code null} value indicates that the elements'
      *        {@linkplain Comparable natural ordering} should be used.
-     * @throws  ClassCastException if the array contains elements that are
-     *		not <i>mutually comparable</i> using the specified comparator.
+     * @throws ClassCastException if the array contains elements that are
+     *         not <i>mutually comparable</i> using the specified comparator
+     * @throws IllegalArgumentException (optional) if the comparator is
+     *         found to violate the {@link Comparator} contract
      */
     public static <T> void sort(T[] a, Comparator<? super T> c) {
-	T[] aux = (T[])a.clone();
+        if (c == null) {
+            sort(a);
+        } else {
+            if (LegacyMergeSort.userRequested)
+                legacyMergeSort(a, c);
+            else
+                TimSort.sort(a, 0, a.length, c, null, 0, 0);
+        }
+    }
+
+    /** To be removed in a future release. */
+    private static <T> void legacyMergeSort(T[] a, Comparator<? super T> c) {
+        T[] aux = a.clone();
         if (c==null)
             mergeSort(aux, a, 0, a.length, 0);
         else
@@ -1213,38 +1451,72 @@ public class Arrays {
     /**
      * Sorts the specified range of the specified array of objects according
      * to the order induced by the specified comparator.  The range to be
-     * sorted extends from index <tt>fromIndex</tt>, inclusive, to index
-     * <tt>toIndex</tt>, exclusive.  (If <tt>fromIndex==toIndex</tt>, the
+     * sorted extends from index {@code fromIndex}, inclusive, to index
+     * {@code toIndex}, exclusive.  (If {@code fromIndex==toIndex}, the
      * range to be sorted is empty.)  All elements in the range must be
      * <i>mutually comparable</i> by the specified comparator (that is,
-     * <tt>c.compare(e1, e2)</tt> must not throw a <tt>ClassCastException</tt>
-     * for any elements <tt>e1</tt> and <tt>e2</tt> in the range).<p>
+     * {@code c.compare(e1, e2)} must not throw a {@code ClassCastException}
+     * for any elements {@code e1} and {@code e2} in the range).
      *
-     * This sort is guaranteed to be <i>stable</i>:  equal elements will
-     * not be reordered as a result of the sort.<p>
+     * <p>This sort is guaranteed to be <i>stable</i>:  equal elements will
+     * not be reordered as a result of the sort.
      *
-     * The sorting algorithm is a modified mergesort (in which the merge is
-     * omitted if the highest element in the low sublist is less than the
-     * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n*log(n) performance.
+     * <p>Implementation note: This implementation is a stable, adaptive,
+     * iterative mergesort that requires far fewer than n lg(n) comparisons
+     * when the input array is partially sorted, while offering the
+     * performance of a traditional mergesort when the input array is
+     * randomly ordered.  If the input array is nearly sorted, the
+     * implementation requires approximately n comparisons.  Temporary
+     * storage requirements vary from a small constant for nearly sorted
+     * input arrays to n/2 object references for randomly ordered input
+     * arrays.
      *
+     * <p>The implementation takes equal advantage of ascending and
+     * descending order in its input array, and can take advantage of
+     * ascending and descending order in different parts of the the same
+     * input array.  It is well-suited to merging two or more sorted arrays:
+     * simply concatenate the arrays and sort the resulting array.
+     *
+     * <p>The implementation was adapted from Tim Peters's list sort for Python
+     * (<a href="http://svn.python.org/projects/python/trunk/Objects/listsort.txt">
+     * TimSort</a>).  It uses techniques from Peter McIlroy's "Optimistic
+     * Sorting and Information Theoretic Complexity", in Proceedings of the
+     * Fourth Annual ACM-SIAM Symposium on Discrete Algorithms, pp 467-474,
+     * January 1993.
+     *
+     * @param <T> the class of the objects to be sorted
      * @param a the array to be sorted
      * @param fromIndex the index of the first element (inclusive) to be
      *        sorted
      * @param toIndex the index of the last element (exclusive) to be sorted
      * @param c the comparator to determine the order of the array.  A
-     *        <tt>null</tt> value indicates that the elements'
+     *        {@code null} value indicates that the elements'
      *        {@linkplain Comparable natural ordering} should be used.
      * @throws ClassCastException if the array contains elements that are not
-     *	       <i>mutually comparable</i> using the specified comparator.
-     * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <i>mutually comparable</i> using the specified comparator.
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex} or
+     *         (optional) if the comparator is found to violate the
+     *         {@link Comparator} contract
+     * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
+     *         {@code toIndex > a.length}
      */
     public static <T> void sort(T[] a, int fromIndex, int toIndex,
-				Comparator<? super T> c) {
-        rangeCheck(a.length, fromIndex, toIndex);
-	T[] aux = (T[])copyOfRange(a, fromIndex, toIndex);
+                                Comparator<? super T> c) {
+        if (c == null) {
+            sort(a, fromIndex, toIndex);
+        } else {
+            rangeCheck(a.length, fromIndex, toIndex);
+            if (LegacyMergeSort.userRequested)
+                legacyMergeSort(a, fromIndex, toIndex, c);
+            else
+                TimSort.sort(a, fromIndex, toIndex, c, null, 0, 0);
+        }
+    }
+
+    /** To be removed in a future release. */
+    private static <T> void legacyMergeSort(T[] a, int fromIndex, int toIndex,
+                                            Comparator<? super T> c) {
+        T[] aux = copyOfRange(a, fromIndex, toIndex);
         if (c==null)
             mergeSort(aux, a, fromIndex, toIndex, -fromIndex);
         else
@@ -1257,20 +1529,22 @@ public class Arrays {
      * low is the index in dest to start sorting
      * high is the end index in dest to end sorting
      * off is the offset into src corresponding to low in dest
+     * To be removed in a future release.
      */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private static void mergeSort(Object[] src,
-				  Object[] dest,
-				  int low, int high, int off,
-				  Comparator c) {
-	int length = high - low;
+                                  Object[] dest,
+                                  int low, int high, int off,
+                                  Comparator c) {
+        int length = high - low;
 
-	// Insertion sort on smallest arrays
-	if (length < INSERTIONSORT_THRESHOLD) {
-	    for (int i=low; i<high; i++)
-		for (int j=i; j>low && c.compare(dest[j-1], dest[j])>0; j--)
-		    swap(dest, j, j-1);
-	    return;
-	}
+        // Insertion sort on smallest arrays
+        if (length < INSERTIONSORT_THRESHOLD) {
+            for (int i=low; i<high; i++)
+                for (int j=i; j>low && c.compare(dest[j-1], dest[j])>0; j--)
+                    swap(dest, j, j-1);
+            return;
+        }
 
         // Recursively sort halves of dest into src
         int destLow  = low;
@@ -1297,18 +1571,191 @@ public class Arrays {
         }
     }
 
+    // Parallel prefix
+
     /**
-     * Check that fromIndex and toIndex are in range, and throw an
-     * appropriate exception if they aren't.
+     * Cumulates, in parallel, each element of the given array in place,
+     * using the supplied function. For example if the array initially
+     * holds {@code [2, 1, 0, 3]} and the operation performs addition,
+     * then upon return the array holds {@code [2, 3, 3, 6]}.
+     * Parallel prefix computation is usually more efficient than
+     * sequential loops for large arrays.
+     *
+     * @param <T> the class of the objects in the array
+     * @param array the array, which is modified in-place by this method
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
      */
-    private static void rangeCheck(int arrayLen, int fromIndex, int toIndex) {
-        if (fromIndex > toIndex)
-            throw new IllegalArgumentException("fromIndex(" + fromIndex +
-                       ") > toIndex(" + toIndex+")");
-        if (fromIndex < 0)
-            throw new ArrayIndexOutOfBoundsException(fromIndex);
-        if (toIndex > arrayLen)
-            throw new ArrayIndexOutOfBoundsException(toIndex);
+    public static <T> void parallelPrefix(T[] array, BinaryOperator<T> op) {
+        Objects.requireNonNull(op);
+        if (array.length > 0)
+            new ArrayPrefixHelpers.CumulateTask<>
+                    (null, op, array, 0, array.length).invoke();
+    }
+
+    /**
+     * Performs {@link #parallelPrefix(Object[], BinaryOperator)}
+     * for the given subrange of the array.
+     *
+     * @param <T> the class of the objects in the array
+     * @param array the array
+     * @param fromIndex the index of the first element, inclusive
+     * @param toIndex the index of the last element, exclusive
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > array.length}
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static <T> void parallelPrefix(T[] array, int fromIndex,
+                                          int toIndex, BinaryOperator<T> op) {
+        Objects.requireNonNull(op);
+        rangeCheck(array.length, fromIndex, toIndex);
+        if (fromIndex < toIndex)
+            new ArrayPrefixHelpers.CumulateTask<>
+                    (null, op, array, fromIndex, toIndex).invoke();
+    }
+
+    /**
+     * Cumulates, in parallel, each element of the given array in place,
+     * using the supplied function. For example if the array initially
+     * holds {@code [2, 1, 0, 3]} and the operation performs addition,
+     * then upon return the array holds {@code [2, 3, 3, 6]}.
+     * Parallel prefix computation is usually more efficient than
+     * sequential loops for large arrays.
+     *
+     * @param array the array, which is modified in-place by this method
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(long[] array, LongBinaryOperator op) {
+        Objects.requireNonNull(op);
+        if (array.length > 0)
+            new ArrayPrefixHelpers.LongCumulateTask
+                    (null, op, array, 0, array.length).invoke();
+    }
+
+    /**
+     * Performs {@link #parallelPrefix(long[], LongBinaryOperator)}
+     * for the given subrange of the array.
+     *
+     * @param array the array
+     * @param fromIndex the index of the first element, inclusive
+     * @param toIndex the index of the last element, exclusive
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > array.length}
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(long[] array, int fromIndex,
+                                      int toIndex, LongBinaryOperator op) {
+        Objects.requireNonNull(op);
+        rangeCheck(array.length, fromIndex, toIndex);
+        if (fromIndex < toIndex)
+            new ArrayPrefixHelpers.LongCumulateTask
+                    (null, op, array, fromIndex, toIndex).invoke();
+    }
+
+    /**
+     * Cumulates, in parallel, each element of the given array in place,
+     * using the supplied function. For example if the array initially
+     * holds {@code [2.0, 1.0, 0.0, 3.0]} and the operation performs addition,
+     * then upon return the array holds {@code [2.0, 3.0, 3.0, 6.0]}.
+     * Parallel prefix computation is usually more efficient than
+     * sequential loops for large arrays.
+     *
+     * <p> Because floating-point operations may not be strictly associative,
+     * the returned result may not be identical to the value that would be
+     * obtained if the operation was performed sequentially.
+     *
+     * @param array the array, which is modified in-place by this method
+     * @param op a side-effect-free function to perform the cumulation
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(double[] array, DoubleBinaryOperator op) {
+        Objects.requireNonNull(op);
+        if (array.length > 0)
+            new ArrayPrefixHelpers.DoubleCumulateTask
+                    (null, op, array, 0, array.length).invoke();
+    }
+
+    /**
+     * Performs {@link #parallelPrefix(double[], DoubleBinaryOperator)}
+     * for the given subrange of the array.
+     *
+     * @param array the array
+     * @param fromIndex the index of the first element, inclusive
+     * @param toIndex the index of the last element, exclusive
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > array.length}
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(double[] array, int fromIndex,
+                                      int toIndex, DoubleBinaryOperator op) {
+        Objects.requireNonNull(op);
+        rangeCheck(array.length, fromIndex, toIndex);
+        if (fromIndex < toIndex)
+            new ArrayPrefixHelpers.DoubleCumulateTask
+                    (null, op, array, fromIndex, toIndex).invoke();
+    }
+
+    /**
+     * Cumulates, in parallel, each element of the given array in place,
+     * using the supplied function. For example if the array initially
+     * holds {@code [2, 1, 0, 3]} and the operation performs addition,
+     * then upon return the array holds {@code [2, 3, 3, 6]}.
+     * Parallel prefix computation is usually more efficient than
+     * sequential loops for large arrays.
+     *
+     * @param array the array, which is modified in-place by this method
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(int[] array, IntBinaryOperator op) {
+        Objects.requireNonNull(op);
+        if (array.length > 0)
+            new ArrayPrefixHelpers.IntCumulateTask
+                    (null, op, array, 0, array.length).invoke();
+    }
+
+    /**
+     * Performs {@link #parallelPrefix(int[], IntBinaryOperator)}
+     * for the given subrange of the array.
+     *
+     * @param array the array
+     * @param fromIndex the index of the first element, inclusive
+     * @param toIndex the index of the last element, exclusive
+     * @param op a side-effect-free, associative function to perform the
+     * cumulation
+     * @throws IllegalArgumentException if {@code fromIndex > toIndex}
+     * @throws ArrayIndexOutOfBoundsException
+     *     if {@code fromIndex < 0} or {@code toIndex > array.length}
+     * @throws NullPointerException if the specified array or function is null
+     * @since 1.8
+     */
+    public static void parallelPrefix(int[] array, int fromIndex,
+                                      int toIndex, IntBinaryOperator op) {
+        Objects.requireNonNull(op);
+        rangeCheck(array.length, fromIndex, toIndex);
+        if (fromIndex < toIndex)
+            new ArrayPrefixHelpers.IntCumulateTask
+                    (null, op, array, fromIndex, toIndex).invoke();
     }
 
     // Searching
@@ -1324,16 +1771,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(long[] a, long key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1349,49 +1796,49 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(long[] a, int fromIndex, int toIndex,
-				   long key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   long key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(long[] a, int fromIndex, int toIndex,
-				     long key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     long key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    long midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            long midVal = a[mid];
 
-	    if (midVal < key)
-		low = mid + 1;
-	    else if (midVal > key)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -1405,16 +1852,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(int[] a, int key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1430,49 +1877,49 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(int[] a, int fromIndex, int toIndex,
-				   int key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   int key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(int[] a, int fromIndex, int toIndex,
-				     int key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     int key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    int midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            int midVal = a[mid];
 
-	    if (midVal < key)
-		low = mid + 1;
-	    else if (midVal > key)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -1486,16 +1933,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(short[] a, short key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1511,49 +1958,49 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(short[] a, int fromIndex, int toIndex,
-				   short key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   short key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(short[] a, int fromIndex, int toIndex,
-				     short key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     short key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    short midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            short midVal = a[mid];
 
-	    if (midVal < key)
-		low = mid + 1;
-	    else if (midVal > key)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -1567,16 +2014,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(char[] a, char key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1592,49 +2039,49 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(char[] a, int fromIndex, int toIndex,
-				   char key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   char key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(char[] a, int fromIndex, int toIndex,
-				     char key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     char key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    char midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            char midVal = a[mid];
 
-	    if (midVal < key)
-		low = mid + 1;
-	    else if (midVal > key)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -1648,16 +2095,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(byte[] a, byte key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1673,49 +2120,49 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(byte[] a, int fromIndex, int toIndex,
-				   byte key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   byte key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(byte[] a, int fromIndex, int toIndex,
-				     byte key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     byte key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    byte midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            byte midVal = a[mid];
 
-	    if (midVal < key)
-		low = mid + 1;
-	    else if (midVal > key)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -1730,16 +2177,16 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(double[] a, double key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1756,86 +2203,81 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(double[] a, int fromIndex, int toIndex,
-				   double key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   double key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(double[] a, int fromIndex, int toIndex,
-				     double key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     double key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    double midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            double midVal = a[mid];
 
-            int cmp;
-            if (midVal < key) {
-                cmp = -1;   // Neither val is NaN, thisVal is smaller
-            } else if (midVal > key) {
-                cmp = 1;    // Neither val is NaN, thisVal is larger
-            } else {
+            if (midVal < key)
+                low = mid + 1;  // Neither val is NaN, thisVal is smaller
+            else if (midVal > key)
+                high = mid - 1; // Neither val is NaN, thisVal is larger
+            else {
                 long midBits = Double.doubleToLongBits(midVal);
                 long keyBits = Double.doubleToLongBits(key);
-                cmp = (midBits == keyBits ?  0 : // Values are equal
-                       (midBits < keyBits ? -1 : // (-0.0, 0.0) or (!NaN, NaN)
-                        1));                     // (0.0, -0.0) or (NaN, !NaN)
+                if (midBits == keyBits)     // Values are equal
+                    return mid;             // Key found
+                else if (midBits < keyBits) // (-0.0, 0.0) or (!NaN, NaN)
+                    low = mid + 1;
+                else                        // (0.0, -0.0) or (NaN, !NaN)
+                    high = mid - 1;
             }
-
-	    if (cmp < 0)
-		low = mid + 1;
-	    else if (cmp > 0)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
      * Searches the specified array of floats for the specified value using
-     * the binary search algorithm.  The array must be sorted
-     * (as by the {@link #sort(float[])} method) prior to making this call.  If
-     * it is not sorted, the results are undefined.  If the array contains
+     * the binary search algorithm. The array must be sorted
+     * (as by the {@link #sort(float[])} method) prior to making this call. If
+     * it is not sorted, the results are undefined. If the array contains
      * multiple elements with the specified value, there is no guarantee which
-     * one will be found.  This method considers all NaN values to be
+     * one will be found. This method considers all NaN values to be
      * equivalent and equal.
      *
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>. The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key. Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      */
     public static int binarySearch(float[] a, float key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1844,76 +2286,70 @@ public class Arrays {
      * the binary search algorithm.
      * The range must be sorted
      * (as by the {@link #sort(float[], int, int)} method)
-     * prior to making this call.  If
-     * it is not sorted, the results are undefined.  If the range contains
+     * prior to making this call. If
+     * it is not sorted, the results are undefined. If the range contains
      * multiple elements with the specified value, there is no guarantee which
-     * one will be found.  This method considers all NaN values to be
+     * one will be found. This method considers all NaN values to be
      * equivalent and equal.
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>. The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key. Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(float[] a, int fromIndex, int toIndex,
-				   float key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   float key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(float[] a, int fromIndex, int toIndex,
-				     float key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     float key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    float midVal = a[mid];
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            float midVal = a[mid];
 
-            int cmp;
-            if (midVal < key) {
-                cmp = -1;   // Neither val is NaN, thisVal is smaller
-            } else if (midVal > key) {
-                cmp = 1;    // Neither val is NaN, thisVal is larger
-            } else {
+            if (midVal < key)
+                low = mid + 1;  // Neither val is NaN, thisVal is smaller
+            else if (midVal > key)
+                high = mid - 1; // Neither val is NaN, thisVal is larger
+            else {
                 int midBits = Float.floatToIntBits(midVal);
                 int keyBits = Float.floatToIntBits(key);
-                cmp = (midBits == keyBits ?  0 : // Values are equal
-                       (midBits < keyBits ? -1 : // (-0.0, 0.0) or (!NaN, NaN)
-                        1));                     // (0.0, -0.0) or (NaN, !NaN)
+                if (midBits == keyBits)     // Values are equal
+                    return mid;             // Key found
+                else if (midBits < keyBits) // (-0.0, 0.0) or (!NaN, NaN)
+                    low = mid + 1;
+                else                        // (0.0, -0.0) or (NaN, !NaN)
+                    high = mid - 1;
             }
-
-	    if (cmp < 0)
-		low = mid + 1;
-	    else if (cmp > 0)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+        }
+        return -(low + 1);  // key not found.
     }
-
 
     /**
      * Searches the specified array for the specified object using the binary
-     * search algorithm.  The array must be sorted into ascending order
+     * search algorithm. The array must be sorted into ascending order
      * according to the
      * {@linkplain Comparable natural ordering}
      * of its elements (as by the
@@ -1929,18 +2365,18 @@ public class Arrays {
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws ClassCastException if the search key is not comparable to the
      *         elements of the array.
      */
     public static int binarySearch(Object[] a, Object key) {
-	return binarySearch0(a, 0, a.length, key);
+        return binarySearch0(a, 0, a.length, key);
     }
 
     /**
@@ -1962,52 +2398,54 @@ public class Arrays {
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws ClassCastException if the search key is not comparable to the
      *         elements of the array within the specified range.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static int binarySearch(Object[] a, int fromIndex, int toIndex,
-				   Object key) {
-	rangeCheck(a.length, fromIndex, toIndex);
-	return binarySearch0(a, fromIndex, toIndex, key);
+                                   Object key) {
+        rangeCheck(a.length, fromIndex, toIndex);
+        return binarySearch0(a, fromIndex, toIndex, key);
     }
 
     // Like public version, but without range checks.
     private static int binarySearch0(Object[] a, int fromIndex, int toIndex,
-				     Object key) {
-	int low = fromIndex;
-	int high = toIndex - 1;
+                                     Object key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    Comparable midVal = (Comparable)a[mid];
-	    int cmp = midVal.compareTo(key);
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            @SuppressWarnings("rawtypes")
+            Comparable midVal = (Comparable)a[mid];
+            @SuppressWarnings("unchecked")
+            int cmp = midVal.compareTo(key);
 
-	    if (cmp < 0)
-		low = mid + 1;
-	    else if (cmp > 0)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+            if (cmp < 0)
+                low = mid + 1;
+            else if (cmp > 0)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
     /**
@@ -2021,23 +2459,24 @@ public class Arrays {
      * elements equal to the specified object, there is no guarantee which one
      * will be found.
      *
+     * @param <T> the class of the objects in the array
      * @param a the array to be searched
      * @param key the value to be searched for
      * @param c the comparator by which the array is ordered.  A
      *        <tt>null</tt> value indicates that the elements'
-     *	      {@linkplain Comparable natural ordering} should be used.
+     *        {@linkplain Comparable natural ordering} should be used.
      * @return index of the search key, if it is contained in the array;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element greater than the key, or <tt>a.length</tt> if all
-     *	       elements in the array are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element greater than the key, or <tt>a.length</tt> if all
+     *         elements in the array are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws ClassCastException if the array contains elements that are not
-     *	       <i>mutually comparable</i> using the specified comparator,
-     *	       or the search key is not comparable to the
-     *	       elements of the array using this comparator.
+     *         <i>mutually comparable</i> using the specified comparator,
+     *         or the search key is not comparable to the
+     *         elements of the array using this comparator.
      */
     public static <T> int binarySearch(T[] a, T key, Comparator<? super T> c) {
         return binarySearch0(a, 0, a.length, key, c);
@@ -2056,64 +2495,63 @@ public class Arrays {
      * If the range contains multiple elements equal to the specified object,
      * there is no guarantee which one will be found.
      *
+     * @param <T> the class of the objects in the array
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
-     *		searched
+     *          searched
      * @param toIndex the index of the last element (exclusive) to be searched
      * @param key the value to be searched for
      * @param c the comparator by which the array is ordered.  A
      *        <tt>null</tt> value indicates that the elements'
      *        {@linkplain Comparable natural ordering} should be used.
      * @return index of the search key, if it is contained in the array
-     *	       within the specified range;
-     *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
-     *	       <i>insertion point</i> is defined as the point at which the
-     *	       key would be inserted into the array: the index of the first
-     *	       element in the range greater than the key,
-     *	       or <tt>toIndex</tt> if all
-     *	       elements in the range are less than the specified key.  Note
-     *	       that this guarantees that the return value will be &gt;= 0 if
-     *	       and only if the key is found.
+     *         within the specified range;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the array: the index of the first
+     *         element in the range greater than the key,
+     *         or <tt>toIndex</tt> if all
+     *         elements in the range are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
      * @throws ClassCastException if the range contains elements that are not
-     *	       <i>mutually comparable</i> using the specified comparator,
-     *	       or the search key is not comparable to the
-     *	       elements in the range using this comparator.
+     *         <i>mutually comparable</i> using the specified comparator,
+     *         or the search key is not comparable to the
+     *         elements in the range using this comparator.
      * @throws IllegalArgumentException
-     *	       if {@code fromIndex > toIndex}
+     *         if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
-     *	       if {@code fromIndex < 0 or toIndex > a.length}
+     *         if {@code fromIndex < 0 or toIndex > a.length}
      * @since 1.6
      */
     public static <T> int binarySearch(T[] a, int fromIndex, int toIndex,
-				       T key, Comparator<? super T> c) {
-	rangeCheck(a.length, fromIndex, toIndex);
+                                       T key, Comparator<? super T> c) {
+        rangeCheck(a.length, fromIndex, toIndex);
         return binarySearch0(a, fromIndex, toIndex, key, c);
     }
 
     // Like public version, but without range checks.
     private static <T> int binarySearch0(T[] a, int fromIndex, int toIndex,
-					 T key, Comparator<? super T> c) {
+                                         T key, Comparator<? super T> c) {
         if (c == null) {
             return binarySearch0(a, fromIndex, toIndex, key);
-	}
-	int low = fromIndex;
-	int high = toIndex - 1;
+        }
+        int low = fromIndex;
+        int high = toIndex - 1;
 
-	while (low <= high) {
-	    int mid = (low + high) >>> 1;
-	    T midVal = a[mid];
-	    int cmp = c.compare(midVal, key);
-
-	    if (cmp < 0)
-		low = mid + 1;
-	    else if (cmp > 0)
-		high = mid - 1;
-	    else
-		return mid; // key found
-	}
-	return -(low + 1);  // key not found.
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            T midVal = a[mid];
+            int cmp = c.compare(midVal, key);
+            if (cmp < 0)
+                low = mid + 1;
+            else if (cmp > 0)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
-
 
     // Equality Testing
 
@@ -2320,7 +2758,7 @@ public class Arrays {
             return false;
 
         for (int i=0; i<length; i++)
-	    if (Double.doubleToLongBits(a[i])!=Double.doubleToLongBits(a2[i]))
+            if (Double.doubleToLongBits(a[i])!=Double.doubleToLongBits(a2[i]))
                 return false;
 
         return true;
@@ -2355,12 +2793,11 @@ public class Arrays {
             return false;
 
         for (int i=0; i<length; i++)
-	    if (Float.floatToIntBits(a[i])!=Float.floatToIntBits(a2[i]))
+            if (Float.floatToIntBits(a[i])!=Float.floatToIntBits(a2[i]))
                 return false;
 
         return true;
     }
-
 
     /**
      * Returns <tt>true</tt> if the two specified arrays of Objects are
@@ -2396,7 +2833,6 @@ public class Arrays {
         return true;
     }
 
-
     // Filling
 
     /**
@@ -2407,7 +2843,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(long[] a, long val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2425,11 +2862,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(long[] a, int fromIndex, int toIndex, long val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2441,7 +2878,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(int[] a, int val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2459,11 +2897,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(int[] a, int fromIndex, int toIndex, int val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2475,7 +2913,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(short[] a, short val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2493,11 +2932,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(short[] a, int fromIndex, int toIndex, short val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2509,7 +2948,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(char[] a, char val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2527,11 +2967,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(char[] a, int fromIndex, int toIndex, char val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2543,7 +2983,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(byte[] a, byte val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2561,11 +3002,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(byte[] a, int fromIndex, int toIndex, byte val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2577,7 +3018,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(boolean[] a, boolean val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2595,12 +3037,12 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(boolean[] a, int fromIndex, int toIndex,
                             boolean val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2612,7 +3054,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(double[] a, double val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2630,11 +3073,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(double[] a, int fromIndex, int toIndex,double val){
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2646,7 +3089,8 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      */
     public static void fill(float[] a, float val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2664,11 +3108,11 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      */
     public static void fill(float[] a, int fromIndex, int toIndex, float val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
@@ -2682,7 +3126,8 @@ public class Arrays {
      *         runtime type that can be stored in the specified array
      */
     public static void fill(Object[] a, Object val) {
-        fill(a, 0, a.length, val);
+        for (int i = 0, len = a.length; i < len; i++)
+            a[i] = val;
     }
 
     /**
@@ -2700,18 +3145,18 @@ public class Arrays {
      * @param val the value to be stored in all elements of the array
      * @throws IllegalArgumentException if <tt>fromIndex &gt; toIndex</tt>
      * @throws ArrayIndexOutOfBoundsException if <tt>fromIndex &lt; 0</tt> or
-     *	       <tt>toIndex &gt; a.length</tt>
+     *         <tt>toIndex &gt; a.length</tt>
      * @throws ArrayStoreException if the specified value is not of a
      *         runtime type that can be stored in the specified array
      */
     public static void fill(Object[] a, int fromIndex, int toIndex, Object val) {
         rangeCheck(a.length, fromIndex, toIndex);
-        for (int i=fromIndex; i<toIndex; i++)
+        for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
     }
 
-
     // Cloning
+
     /**
      * Copies the specified array, truncating or padding with nulls (if necessary)
      * so the copy has the specified length.  For all indices that are
@@ -2722,6 +3167,7 @@ public class Arrays {
      * is greater than that of the original array.
      * The resulting array is of exactly the same class as the original array.
      *
+     * @param <T> the class of the objects in the array
      * @param original the array to be copied
      * @param newLength the length of the copy to be returned
      * @return a copy of the original array, truncated or padded with nulls
@@ -2730,6 +3176,7 @@ public class Arrays {
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] copyOf(T[] original, int newLength) {
         return (T[]) copyOf(original, newLength, original.getClass());
     }
@@ -2744,6 +3191,8 @@ public class Arrays {
      * is greater than that of the original array.
      * The resulting array is of the class <tt>newType</tt>.
      *
+     * @param <U> the class of the objects in the original array
+     * @param <T> the class of the objects in the returned array
      * @param original the array to be copied
      * @param newLength the length of the copy to be returned
      * @param newType the class of the copy to be returned
@@ -2757,6 +3206,7 @@ public class Arrays {
      * @since 1.6
      */
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
+        @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class)
             ? (T[]) new Object[newLength]
             : (T[]) Array.newInstance(newType.getComponentType(), newLength);
@@ -2973,20 +3423,22 @@ public class Arrays {
      * <p>
      * The resulting array is of exactly the same class as the original array.
      *
+     * @param <T> the class of the objects in the array
      * @param original the array from which a range is to be copied
      * @param from the initial index of the range to be copied, inclusive
      * @param to the final index of the range to be copied, exclusive.
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with nulls to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] copyOfRange(T[] original, int from, int to) {
-        return copyOfRange(original, from, to, (Class<T[]>) original.getClass());
+        return copyOfRange(original, from, to, (Class<? extends T[]>) original.getClass());
     }
 
     /**
@@ -3004,6 +3456,8 @@ public class Arrays {
      * of the returned array will be <tt>to - from</tt>.
      * The resulting array is of the class <tt>newType</tt>.
      *
+     * @param <U> the class of the objects in the original array
+     * @param <T> the class of the objects in the returned array
      * @param original the array from which a range is to be copied
      * @param from the initial index of the range to be copied, inclusive
      * @param to the final index of the range to be copied, exclusive.
@@ -3011,8 +3465,8 @@ public class Arrays {
      * @param newType the class of the copy to be returned
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with nulls to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @throws ArrayStoreException if an element copied from
@@ -3024,6 +3478,7 @@ public class Arrays {
         int newLength = to - from;
         if (newLength < 0)
             throw new IllegalArgumentException(from + " > " + to);
+        @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class)
             ? (T[]) new Object[newLength]
             : (T[]) Array.newInstance(newType.getComponentType(), newLength);
@@ -3052,8 +3507,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3088,8 +3543,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3124,8 +3579,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3160,8 +3615,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3196,8 +3651,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with null characters to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3232,8 +3687,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3268,8 +3723,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with zeros to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3304,8 +3759,8 @@ public class Arrays {
      *     (This index may lie outside the array.)
      * @return a new array containing the specified range from the original array,
      *     truncated or padded with false elements to obtain the required length
-     * @throws ArrayIndexOutOfBoundsException if <tt>from &lt; 0</tt>
-     *     or <tt>from &gt; original.length()</tt>
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *     or {@code from > original.length}
      * @throws IllegalArgumentException if <tt>from &gt; to</tt>
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
@@ -3319,7 +3774,6 @@ public class Arrays {
                          Math.min(original.length - from, newLength));
         return copy;
     }
-
 
     // Misc
 
@@ -3336,72 +3790,109 @@ public class Arrays {
      *     List&lt;String&gt; stooges = Arrays.asList("Larry", "Moe", "Curly");
      * </pre>
      *
+     * @param <T> the class of the objects in the array
      * @param a the array by which the list will be backed
      * @return a list view of the specified array
      */
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <T> List<T> asList(T... a) {
-	return new ArrayList<T>(a);
+        return new ArrayList<>(a);
     }
 
     /**
      * @serial include
      */
     private static class ArrayList<E> extends AbstractList<E>
-	implements RandomAccess, java.io.Serializable
+        implements RandomAccess, java.io.Serializable
     {
         private static final long serialVersionUID = -2764017481108945198L;
-	private final E[] a;
+        private final E[] a;
 
-	ArrayList(E[] array) {
-            if (array==null)
-                throw new NullPointerException();
-	    a = array;
-	}
+        ArrayList(E[] array) {
+            a = Objects.requireNonNull(array);
+        }
 
-	public int size() {
-	    return a.length;
-	}
+        @Override
+        public int size() {
+            return a.length;
+        }
 
-	public Object[] toArray() {
-	    return a.clone();
-	}
+        @Override
+        public Object[] toArray() {
+            return a.clone();
+        }
 
-	public <T> T[] toArray(T[] a) {
-	    int size = size();
-	    if (a.length < size)
-		return Arrays.copyOf(this.a, size,
-				     (Class<? extends T[]>) a.getClass());
-	    System.arraycopy(this.a, 0, a, 0, size);
-	    if (a.length > size)
-		a[size] = null;
-	    return a;
-	}
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(T[] a) {
+            int size = size();
+            if (a.length < size)
+                return Arrays.copyOf(this.a, size,
+                                     (Class<? extends T[]>) a.getClass());
+            System.arraycopy(this.a, 0, a, 0, size);
+            if (a.length > size)
+                a[size] = null;
+            return a;
+        }
 
-	public E get(int index) {
-	    return a[index];
-	}
+        @Override
+        public E get(int index) {
+            return a[index];
+        }
 
-	public E set(int index, E element) {
-	    E oldValue = a[index];
-	    a[index] = element;
-	    return oldValue;
-	}
+        @Override
+        public E set(int index, E element) {
+            E oldValue = a[index];
+            a[index] = element;
+            return oldValue;
+        }
 
+        @Override
         public int indexOf(Object o) {
-            if (o==null) {
-                for (int i=0; i<a.length; i++)
-                    if (a[i]==null)
+            E[] a = this.a;
+            if (o == null) {
+                for (int i = 0; i < a.length; i++)
+                    if (a[i] == null)
                         return i;
             } else {
-                for (int i=0; i<a.length; i++)
+                for (int i = 0; i < a.length; i++)
                     if (o.equals(a[i]))
                         return i;
             }
             return -1;
         }
 
+        @Override
         public boolean contains(Object o) {
             return indexOf(o) != -1;
+        }
+
+        @Override
+        public Spliterator<E> spliterator() {
+            return Spliterators.spliterator(a, Spliterator.ORDERED);
+        }
+
+        @Override
+        public void forEach(Consumer<? super E> action) {
+            Objects.requireNonNull(action);
+            for (E e : a) {
+                action.accept(e);
+            }
+        }
+
+        @Override
+        public void replaceAll(UnaryOperator<E> operator) {
+            Objects.requireNonNull(operator);
+            E[] a = this.a;
+            for (int i = 0; i < a.length; i++) {
+                a[i] = operator.apply(a[i]);
+            }
+        }
+
+        @Override
+        public void sort(Comparator<? super E> c) {
+            Arrays.sort(a, c);
         }
     }
 
@@ -3753,6 +4244,7 @@ public class Arrays {
      * @param a2 the other array to be tested for equality
      * @return <tt>true</tt> if the two arrays are equal
      * @see #equals(Object[],Object[])
+     * @see Objects#deepEquals(Object, Object)
      * @since 1.5
      */
     public static boolean deepEquals(Object[] a1, Object[] a2) {
@@ -3774,32 +4266,38 @@ public class Arrays {
                 return false;
 
             // Figure out whether the two elements are equal
-            boolean eq;
-            if (e1 instanceof Object[] && e2 instanceof Object[])
-                eq = deepEquals ((Object[]) e1, (Object[]) e2);
-            else if (e1 instanceof byte[] && e2 instanceof byte[])
-                eq = equals((byte[]) e1, (byte[]) e2);
-            else if (e1 instanceof short[] && e2 instanceof short[])
-                eq = equals((short[]) e1, (short[]) e2);
-            else if (e1 instanceof int[] && e2 instanceof int[])
-                eq = equals((int[]) e1, (int[]) e2);
-            else if (e1 instanceof long[] && e2 instanceof long[])
-                eq = equals((long[]) e1, (long[]) e2);
-            else if (e1 instanceof char[] && e2 instanceof char[])
-                eq = equals((char[]) e1, (char[]) e2);
-            else if (e1 instanceof float[] && e2 instanceof float[])
-                eq = equals((float[]) e1, (float[]) e2);
-            else if (e1 instanceof double[] && e2 instanceof double[])
-                eq = equals((double[]) e1, (double[]) e2);
-            else if (e1 instanceof boolean[] && e2 instanceof boolean[])
-                eq = equals((boolean[]) e1, (boolean[]) e2);
-            else
-                eq = e1.equals(e2);
+            boolean eq = deepEquals0(e1, e2);
 
             if (!eq)
                 return false;
         }
         return true;
+    }
+
+    static boolean deepEquals0(Object e1, Object e2) {
+        assert e1 != null;
+        boolean eq;
+        if (e1 instanceof Object[] && e2 instanceof Object[])
+            eq = deepEquals ((Object[]) e1, (Object[]) e2);
+        else if (e1 instanceof byte[] && e2 instanceof byte[])
+            eq = equals((byte[]) e1, (byte[]) e2);
+        else if (e1 instanceof short[] && e2 instanceof short[])
+            eq = equals((short[]) e1, (short[]) e2);
+        else if (e1 instanceof int[] && e2 instanceof int[])
+            eq = equals((int[]) e1, (int[]) e2);
+        else if (e1 instanceof long[] && e2 instanceof long[])
+            eq = equals((long[]) e1, (long[]) e2);
+        else if (e1 instanceof char[] && e2 instanceof char[])
+            eq = equals((char[]) e1, (char[]) e2);
+        else if (e1 instanceof float[] && e2 instanceof float[])
+            eq = equals((float[]) e1, (float[]) e2);
+        else if (e1 instanceof double[] && e2 instanceof double[])
+            eq = equals((double[]) e1, (double[]) e2);
+        else if (e1 instanceof boolean[] && e2 instanceof boolean[])
+            eq = equals((boolean[]) e1, (boolean[]) e2);
+        else
+            eq = e1.equals(e2);
+        return eq;
     }
 
     /**
@@ -3818,16 +4316,16 @@ public class Arrays {
     public static String toString(long[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3848,16 +4346,16 @@ public class Arrays {
     public static String toString(int[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3878,16 +4376,16 @@ public class Arrays {
     public static String toString(short[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3908,16 +4406,16 @@ public class Arrays {
     public static String toString(char[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3938,16 +4436,16 @@ public class Arrays {
     public static String toString(byte[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3968,16 +4466,16 @@ public class Arrays {
     public static String toString(boolean[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -3998,16 +4496,17 @@ public class Arrays {
     public static String toString(float[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -4028,16 +4527,16 @@ public class Arrays {
     public static String toString(double[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
-	if (iMax == -1)
+        int iMax = a.length - 1;
+        if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
         b.append('[');
         for (int i = 0; ; i++) {
             b.append(a[i]);
-	    if (i == iMax)
-		return b.append(']').toString();
+            if (i == iMax)
+                return b.append(']').toString();
             b.append(", ");
         }
     }
@@ -4061,17 +4560,18 @@ public class Arrays {
     public static String toString(Object[] a) {
         if (a == null)
             return "null";
-	int iMax = a.length - 1;
+
+        int iMax = a.length - 1;
         if (iMax == -1)
             return "[]";
 
         StringBuilder b = new StringBuilder();
-	b.append('[');
+        b.append('[');
         for (int i = 0; ; i++) {
             b.append(String.valueOf(a[i]));
             if (i == iMax)
-		return b.append(']').toString();
-	    b.append(", ");
+                return b.append(']').toString();
+            b.append(", ");
         }
     }
 
@@ -4116,7 +4616,7 @@ public class Arrays {
         if (a.length != 0 && bufLen <= 0)
             bufLen = Integer.MAX_VALUE;
         StringBuilder buf = new StringBuilder(bufLen);
-        deepToString(a, buf, new HashSet());
+        deepToString(a, buf, new HashSet<Object[]>());
         return buf.toString();
     }
 
@@ -4126,17 +4626,21 @@ public class Arrays {
             buf.append("null");
             return;
         }
+        int iMax = a.length - 1;
+        if (iMax == -1) {
+            buf.append("[]");
+            return;
+        }
+
         dejaVu.add(a);
         buf.append('[');
-        for (int i = 0; i < a.length; i++) {
-            if (i != 0)
-                buf.append(", ");
+        for (int i = 0; ; i++) {
 
             Object element = a[i];
             if (element == null) {
                 buf.append("null");
             } else {
-                Class eClass = element.getClass();
+                Class<?> eClass = element.getClass();
 
                 if (eClass.isArray()) {
                     if (eClass == byte[].class)
@@ -4165,8 +4669,447 @@ public class Arrays {
                     buf.append(element.toString());
                 }
             }
+            if (i == iMax)
+                break;
+            buf.append(", ");
         }
         buf.append(']');
         dejaVu.remove(a);
+    }
+
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param <T> type of elements of the array
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static <T> void setAll(T[] array, IntFunction<? extends T> generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.apply(i);
+    }
+
+    /**
+     * Set all elements of the specified array, in parallel, using the
+     * provided generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, an unchecked exception
+     * is thrown from {@code parallelSetAll} and the array is left in an
+     * indeterminate state.
+     *
+     * @param <T> type of elements of the array
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static <T> void parallelSetAll(T[] array, IntFunction<? extends T> generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.apply(i); });
+    }
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsInt(i);
+    }
+
+    /**
+     * Set all elements of the specified array, in parallel, using the
+     * provided generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, an unchecked exception
+     * is thrown from {@code parallelSetAll} and the array is left in an
+     * indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     * value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
+    }
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(long[] array, IntToLongFunction generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsLong(i);
+    }
+
+    /**
+     * Set all elements of the specified array, in parallel, using the
+     * provided generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, an unchecked exception
+     * is thrown from {@code parallelSetAll} and the array is left in an
+     * indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void parallelSetAll(long[] array, IntToLongFunction generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsLong(i); });
+    }
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(double[] array, IntToDoubleFunction generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsDouble(i);
+    }
+
+    /**
+     * Set all elements of the specified array, in parallel, using the
+     * provided generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, an unchecked exception
+     * is thrown from {@code parallelSetAll} and the array is left in an
+     * indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void parallelSetAll(double[] array, IntToDoubleFunction generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsDouble(i); });
+    }
+
+    /**
+     * Returns a {@link Spliterator} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param <T> type of elements
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static <T> Spliterator<T> spliterator(T[] array) {
+        return Spliterators.spliterator(array,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param <T> type of elements
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static <T> Spliterator<T> spliterator(T[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfInt} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfInt spliterator(int[] array) {
+        return Spliterators.spliterator(array,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfInt} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfInt spliterator(int[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfLong} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return the spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfLong spliterator(long[] array) {
+        return Spliterators.spliterator(array,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfLong} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfLong spliterator(long[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfDouble} covering all of the specified
+     * array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfDouble spliterator(double[] array) {
+        return Spliterators.spliterator(array,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfDouble} covering the specified range of
+     * the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfDouble spliterator(double[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                                        Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a sequential {@link Stream} with the specified array as its
+     * source.
+     *
+     * @param <T> The type of the array elements
+     * @param array The array, assumed to be unmodified during use
+     * @return a {@code Stream} for the array
+     * @since 1.8
+     */
+    public static <T> Stream<T> stream(T[] array) {
+        return stream(array, 0, array.length);
+    }
+
+    /**
+     * Returns a sequential {@link Stream} with the specified range of the
+     * specified array as its source.
+     *
+     * @param <T> the type of the array elements
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a {@code Stream} for the array range
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static <T> Stream<T> stream(T[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.stream(spliterator(array, startInclusive, endExclusive), false);
+    }
+
+    /**
+     * Returns a sequential {@link IntStream} with the specified array as its
+     * source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return an {@code IntStream} for the array
+     * @since 1.8
+     */
+    public static IntStream stream(int[] array) {
+        return stream(array, 0, array.length);
+    }
+
+    /**
+     * Returns a sequential {@link IntStream} with the specified range of the
+     * specified array as its source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return an {@code IntStream} for the array range
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static IntStream stream(int[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.intStream(spliterator(array, startInclusive, endExclusive), false);
+    }
+
+    /**
+     * Returns a sequential {@link LongStream} with the specified array as its
+     * source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a {@code LongStream} for the array
+     * @since 1.8
+     */
+    public static LongStream stream(long[] array) {
+        return stream(array, 0, array.length);
+    }
+
+    /**
+     * Returns a sequential {@link LongStream} with the specified range of the
+     * specified array as its source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a {@code LongStream} for the array range
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static LongStream stream(long[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.longStream(spliterator(array, startInclusive, endExclusive), false);
+    }
+
+    /**
+     * Returns a sequential {@link DoubleStream} with the specified array as its
+     * source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a {@code DoubleStream} for the array
+     * @since 1.8
+     */
+    public static DoubleStream stream(double[] array) {
+        return stream(array, 0, array.length);
+    }
+
+    /**
+     * Returns a sequential {@link DoubleStream} with the specified range of the
+     * specified array as its source.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a {@code DoubleStream} for the array range
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static DoubleStream stream(double[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.doubleStream(spliterator(array, startInclusive, endExclusive), false);
     }
 }

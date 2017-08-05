@@ -1,9 +1,13 @@
 /*
- * Copyright 1999-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,7 +22,9 @@
  */
 package com.sun.org.apache.xml.internal.utils;
 
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * This class is in support of SerializerToHTML, and acts as a sort
@@ -29,7 +35,7 @@ class ElemDesc
 {
 
   /** Table of attributes for the element */
-  Hashtable m_attrs = null;
+  Map<String, Integer> m_attrs = null;
 
   /** Element's flags, describing the role this element plays during
    * formatting of the document. This is used as a bitvector; more than one flag
@@ -121,9 +127,9 @@ class ElemDesc
 
   /**
    * "is (this element described by these flags)".
-   * 
+   *
    * This might more properly be called areFlagsSet(). It accepts an
-   * integer (being used as a bitvector) and checks whether all the 
+   * integer (being used as a bitvector) and checks whether all the
    * corresponding bits are set in our internal flags. Note that this
    * test is performed as a bitwise AND, not an equality test, so a
    * 0 bit in the input means "don't test", not "must be set false".
@@ -132,7 +138,7 @@ class ElemDesc
    *
    * @return true if the flags set in the parameter are also set in the
    * element's stored flags.
-   * 
+   *
    * @see m_flags
    * @see isAttrFlagSet
    */
@@ -143,7 +149,7 @@ class ElemDesc
   }
 
   /**
-   * Set a new attribute for this element 
+   * Set a new attribute for this element
    *
    *
    * @param name Attribute name
@@ -153,20 +159,20 @@ class ElemDesc
   {
 
     if (null == m_attrs)
-      m_attrs = new Hashtable();
+      m_attrs = new HashMap<>();
 
-    m_attrs.put(name, new Integer(flags));
+    m_attrs.put(name, flags);
   }
 
   /**
-   * Find out if a flag is set in a given attribute of this element 
+   * Find out if a flag is set in a given attribute of this element
    *
    *
    * @param name Attribute name
    * @param flags Flag to check
    *
    * @return True if the flag is set in the attribute. Returns false
-   * if the attribute is not found 
+   * if the attribute is not found
    * @see m_flags
    */
   boolean isAttrFlagSet(String name, int flags)
@@ -174,11 +180,11 @@ class ElemDesc
 
     if (null != m_attrs)
     {
-      Integer _flags = (Integer) m_attrs.get(name);
+      Integer _flags = m_attrs.get(name);
 
       if (null != _flags)
       {
-        return (_flags.intValue() & flags) != 0;
+        return (_flags & flags) != 0;
       }
     }
 

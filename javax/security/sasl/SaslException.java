@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.security.sasl;
@@ -27,26 +45,26 @@ public class SaslException extends IOException {
     private Throwable _exception;
 
     /**
-     * Constructs a new instance of <tt>SaslException</tt>.
+     * Constructs a new instance of {@code SaslException}.
      * The root exception and the detailed message are null.
      */
     public SaslException () {
-	super();
+        super();
     }
 
     /**
-     * Constructs a new instance of <tt>SaslException</tt> with a detailed message.
+     * Constructs a new instance of {@code SaslException} with a detailed message.
      * The root exception is null.
      * @param detail A possibly null string containing details of the exception.
      *
      * @see java.lang.Throwable#getMessage
      */
     public SaslException (String detail) {
-	super(detail);
+        super(detail);
     }
 
     /**
-     * Constructs a new instance of <tt>SaslException</tt> with a detailed message
+     * Constructs a new instance of {@code SaslException} with a detailed message
      * and a root exception.
      * For example, a SaslException might result from a problem with
      * the callback handler, which might throw a NoSuchCallbackException if
@@ -62,10 +80,10 @@ public class SaslException extends IOException {
      * @see #getCause
      */
     public SaslException (String detail, Throwable ex) {
-	super(detail);
-	if (ex != null) {
-	    initCause(ex);
-	}
+        super(detail);
+        if (ex != null) {
+            initCause(ex);
+        }
     }
 
     /*
@@ -73,7 +91,7 @@ public class SaslException extends IOException {
      * JSR 28 would return same value for getCause() (i.e., _exception).
      */
     public Throwable getCause() {
-	return _exception;
+        return _exception;
     }
 
     /*
@@ -81,15 +99,15 @@ public class SaslException extends IOException {
      * _exception as well.
      */
     public Throwable initCause(Throwable cause) {
-	super.initCause(cause);
-	_exception = cause;
-	return this;
+        super.initCause(cause);
+        _exception = cause;
+        return this;
     }
 
     /**
      * Returns the string representation of this exception.
      * The string representation contains
-     * this exception's class name, its detailed messsage, and if
+     * this exception's class name, its detailed message, and if
      * it has a root exception, the string representation of the root
      * exception. This string representation
      * is meant for debugging and not meant to be interpreted
@@ -99,13 +117,13 @@ public class SaslException extends IOException {
      */
     // Override Throwable.toString() to conform to JSR 28
     public String toString() {
-	String answer = super.toString();
-	if (_exception != null && _exception != this) {
-	    answer += " [Caused by " + _exception.toString() + "]";
-	}
-	return answer;
+        String answer = super.toString();
+        if (_exception != null && _exception != this) {
+            answer += " [Caused by " + _exception.toString() + "]";
+        }
+        return answer;
     }
 
-    /** Use serialVersionUID from JSR 28 RI for interoperability */ 
+    /** Use serialVersionUID from JSR 28 RI for interoperability */
     private static final long serialVersionUID = 4579784287983423626L;
 }

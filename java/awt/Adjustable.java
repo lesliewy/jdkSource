@@ -1,39 +1,57 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt;
 
 import java.awt.event.*;
 
+import java.lang.annotation.Native;
+
 /**
  * The interface for objects which have an adjustable numeric value
  * contained within a bounded range of values.
  *
- * @version %I% %G%
  * @author Amy Fowler
  * @author Tim Prinzing
  */
-
 public interface Adjustable {
 
     /**
-     * Indicates that the <code>Adjustable</code> has horizontal orientation.  
+     * Indicates that the <code>Adjustable</code> has horizontal orientation.
      */
-    public static final int HORIZONTAL = 0; 
+    @Native public static final int HORIZONTAL = 0;
 
     /**
-     * Indicates that the <code>Adjustable</code> has vertical orientation.  
+     * Indicates that the <code>Adjustable</code> has vertical orientation.
      */
-    public static final int VERTICAL = 1;    
+    @Native public static final int VERTICAL = 1;
 
     /**
-     * Indicates that the <code>Adjustable</code> has no orientation.  
+     * Indicates that the <code>Adjustable</code> has no orientation.
      */
-    public static final int NO_ORIENTATION = 2;    
+    @Native public static final int NO_ORIENTATION = 2;
 
     /**
      * Gets the orientation of the adjustable object.
@@ -111,7 +129,7 @@ public interface Adjustable {
      * then one of those values is substituted, as appropriate.
      * <p>
      * Calling this method does not fire an
-     * <code>AdjustmentEvent</code>. 
+     * <code>AdjustmentEvent</code>.
      *
      * @param v the current value, between <code>minimum</code>
      *    and <code>maximum</code> - <code>visibleAmount</code>
@@ -129,14 +147,14 @@ public interface Adjustable {
      * the adjustable object changes.
      * @param l the listener to receive events
      * @see AdjustmentEvent
-     */    
+     */
     void addAdjustmentListener(AdjustmentListener l);
 
     /**
      * Removes an adjustment listener.
      * @param l the listener being removed
      * @see AdjustmentEvent
-     */ 
+     */
     void removeAdjustmentListener(AdjustmentListener l);
 
-}    
+}

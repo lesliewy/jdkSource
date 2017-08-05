@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.event;
@@ -14,14 +32,11 @@ import java.util.EventListener;
  * This class is functionally equivalent to the WindowListener class
  * in the AWT.
  * <p>
- * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/events/internalframelistener.html">How to Write an Internal Frame Listener</a>
- * in <em>The Java Tutorial</em> and
- * <a href="http://www.awl.com/cp/javaseries/jcl1_2.html">The Java Class Libraries (update)</a>
- * for further documentation.
+ * See <a href="https://docs.oracle.com/javase/tutorial/uiswing/events/internalframelistener.html">How to Write an Internal Frame Listener</a>
+ * in <em>The Java Tutorial</em> for further documentation.
  *
  * @see java.awt.event.WindowListener
  *
- * @version %I% %G%
  * @author Thomas Ball
  */
 public interface InternalFrameListener extends EventListener {

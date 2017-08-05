@@ -1,12 +1,30 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
-import java.util.EventListener;
+import java.beans.ConstructorProperties;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -24,16 +42,16 @@ import java.io.IOException;
 /**
  * An implementation of a "push" button.
   * <p>
- * Buttons can be configured, and to some degree controlled, by 
+ * Buttons can be configured, and to some degree controlled, by
  * <code><a href="Action.html">Action</a></code>s.  Using an
  * <code>Action</code> with a button has many benefits beyond directly
  * configuring a button.  Refer to <a href="Action.html#buttonActions">
  * Swing Components Supporting <code>Action</code></a> for more
  * details, and you can find more information in <a
- * href="http://java.sun.com/docs/books/tutorial/uiswing/misc/action.html">How
+ * href="https://docs.oracle.com/javase/tutorial/uiswing/misc/action.html">How
  * to Use Actions</a>, a section in <em>The Java Tutorial</em>.
  * <p>
- * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/button.html">How to Use Buttons, Check Boxes, and Radio Buttons</a>
+ * See <a href="https://docs.oracle.com/javase/tutorial/uiswing/components/button.html">How to Use Buttons, Check Boxes, and Radio Buttons</a>
  * in <em>The Java Tutorial</em>
  * for information and examples of using buttons.
  * <p>
@@ -47,7 +65,7 @@ import java.io.IOException;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -55,9 +73,9 @@ import java.io.IOException;
  *   attribute: isContainer false
  * description: An implementation of a \"push\" button.
  *
- * @version %I% %G%
  * @author Jeff Dinkins
  */
+@SuppressWarnings("serial")
 public class JButton extends AbstractButton implements Accessible {
 
     /**
@@ -72,7 +90,7 @@ public class JButton extends AbstractButton implements Accessible {
     public JButton() {
         this(null, null);
     }
-    
+
     /**
      * Creates a button with an icon.
      *
@@ -81,18 +99,19 @@ public class JButton extends AbstractButton implements Accessible {
     public JButton(Icon icon) {
         this(null, icon);
     }
-    
+
     /**
      * Creates a button with text.
      *
      * @param text  the text of the button
      */
+    @ConstructorProperties({"text"})
     public JButton(String text) {
         this(text, null);
     }
-    
+
     /**
-     * Creates a button where properties are taken from the 
+     * Creates a button where properties are taken from the
      * <code>Action</code> supplied.
      *
      * @param a the <code>Action</code> used to specify the new button
@@ -101,7 +120,7 @@ public class JButton extends AbstractButton implements Accessible {
      */
     public JButton(Action a) {
         this();
-	setAction(a);
+        setAction(a);
     }
 
     /**
@@ -127,10 +146,10 @@ public class JButton extends AbstractButton implements Accessible {
     public void updateUI() {
         setUI((ButtonUI)UIManager.getUI(this));
     }
-    
+
 
     /**
-     * Returns a string that specifies the name of the L&F class
+     * Returns a string that specifies the name of the L&amp;F class
      * that renders this component.
      *
      * @return the string "ButtonUI"
@@ -138,7 +157,7 @@ public class JButton extends AbstractButton implements Accessible {
      * @see UIDefaults#getUI
      * @beaninfo
      *        expert: true
-     *   description: A string that specifies the name of the L&F class.
+     *   description: A string that specifies the name of the L&amp;F class.
      */
     public String getUIClassID() {
         return uiClassID;
@@ -156,7 +175,7 @@ public class JButton extends AbstractButton implements Accessible {
      * @return the value of the <code>defaultButton</code> property
      * @see JRootPane#setDefaultButton
      * @see #isDefaultCapable
-     * @beaninfo 
+     * @beaninfo
      *  description: Whether or not this button is the default button
      */
     public boolean isDefaultButton() {
@@ -172,7 +191,7 @@ public class JButton extends AbstractButton implements Accessible {
      *
      * @return the value of the <code>defaultCapable</code> property
      * @see #setDefaultCapable
-     * @see #isDefaultButton 
+     * @see #isDefaultButton
      * @see JRootPane#setDefaultButton
      */
     public boolean isDefaultCapable() {
@@ -191,7 +210,7 @@ public class JButton extends AbstractButton implements Accessible {
      *        capable of being the default button on the
      *        <code>RootPane</code>; otherwise <code>false</code>
      * @see #isDefaultCapable
-     * @beaninfo 
+     * @beaninfo
      *        bound: true
      *    attribute: visualUpdate true
      *  description: Whether or not this button can be the default button
@@ -217,8 +236,8 @@ public class JButton extends AbstractButton implements Accessible {
         super.removeNotify();
     }
 
-    /** 
-     * See readObject() and writeObject() in JComponent for more 
+    /**
+     * See readObject() and writeObject() in JComponent for more
      * information about serialization in Swing.
      */
     private void writeObject(ObjectOutputStream s) throws IOException {
@@ -235,18 +254,18 @@ public class JButton extends AbstractButton implements Accessible {
 
     /**
      * Returns a string representation of this <code>JButton</code>.
-     * This method is intended to be used only for debugging purposes, and the 
-     * content and format of the returned string may vary between      
-     * implementations. The returned string may be empty but may not 
+     * This method is intended to be used only for debugging purposes, and the
+     * content and format of the returned string may vary between
+     * implementations. The returned string may be empty but may not
      * be <code>null</code>.
-     * 
+     *
      * @return  a string representation of this <code>JButton</code>
      */
     protected String paramString() {
-	String defaultCapableString = (defaultCapable ? "true" : "false");
-	
-	return super.paramString() +
-	    ",defaultCapable=" + defaultCapableString;
+        String defaultCapableString = (defaultCapable ? "true" : "false");
+
+        return super.paramString() +
+            ",defaultCapable=" + defaultCapableString;
     }
 
 
@@ -257,11 +276,11 @@ public class JButton extends AbstractButton implements Accessible {
     /**
      * Gets the <code>AccessibleContext</code> associated with this
      * <code>JButton</code>. For <code>JButton</code>s,
-     * the <code>AccessibleContext</code> takes the form of an 
-     * <code>AccessibleJButton</code>. 
+     * the <code>AccessibleContext</code> takes the form of an
+     * <code>AccessibleJButton</code>.
      * A new <code>AccessibleJButton</code> instance is created if necessary.
      *
-     * @return an <code>AccessibleJButton</code> that serves as the 
+     * @return an <code>AccessibleJButton</code> that serves as the
      *         <code>AccessibleContext</code> of this <code>JButton</code>
      * @beaninfo
      *       expert: true
@@ -275,9 +294,9 @@ public class JButton extends AbstractButton implements Accessible {
     }
 
     /**
-     * This class implements accessibility support for the 
-     * <code>JButton</code> class.  It provides an implementation of the 
-     * Java Accessibility API appropriate to button user-interface 
+     * This class implements accessibility support for the
+     * <code>JButton</code> class.  It provides an implementation of the
+     * Java Accessibility API appropriate to button user-interface
      * elements.
      * <p>
      * <strong>Warning:</strong>
@@ -285,16 +304,17 @@ public class JButton extends AbstractButton implements Accessible {
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
+    @SuppressWarnings("serial")
     protected class AccessibleJButton extends AccessibleAbstractButton {
-    
+
         /**
          * Get the role of this object.
          *
-         * @return an instance of AccessibleRole describing the role of the 
+         * @return an instance of AccessibleRole describing the role of the
          * object
          * @see AccessibleRole
          */

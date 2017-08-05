@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.text;
 
@@ -25,10 +43,20 @@ package javax.swing.text;
  * <code>FilterBypass</code> multiple times, or for different regions, but
  * it should not callback into the <code>FilterBypass</code> after returning
  * from the <code>remove</code> or <code>insertString</code> method.
+ * <p>
+ * By default, text related document mutation methods such as
+ * <code>insertString</code>, <code>replace</code> and <code>remove</code>
+ * in <code>AbstractDocument</code> use <code>DocumentFilter</code> when
+ * available, and <code>Element</code> related mutation methods such as
+ * <code>create</code>, <code>insert</code> and <code>removeElement</code> in
+ * <code>DefaultStyledDocument</code> do not use <code>DocumentFilter</code>.
+ * If a method doesn't follow these defaults, this must be explicitly stated
+ * in the method documentation.
  *
  * @see javax.swing.text.Document
+ * @see javax.swing.text.AbstractDocument
+ * @see javax.swing.text.DefaultStyledDocument
  *
- * @version %I% %G%
  * @since 1.4
  */
 public class DocumentFilter {
@@ -40,8 +68,8 @@ public class DocumentFilter {
      * necessary.
      *
      * @param fb FilterBypass that can be used to mutate Document
-     * @param offset the offset from the beginning >= 0
-     * @param length the number of characters to remove >= 0
+     * @param offset the offset from the beginning &gt;= 0
+     * @param length the number of characters to remove &gt;= 0
      * @exception BadLocationException  some portion of the removal range
      *   was not a valid part of the document.  The location in the exception
      *   is the first bad position encountered.
@@ -58,9 +86,9 @@ public class DocumentFilter {
      * necessary, or call directly into the FilterBypass.
      *
      * @param fb FilterBypass that can be used to mutate Document
-     * @param offset  the offset into the document to insert the content >= 0.
-     *    All positions that track change at or after the given location 
-     *    will move.  
+     * @param offset  the offset into the document to insert the content &gt;= 0.
+     *    All positions that track change at or after the given location
+     *    will move.
      * @param string the string to insert
      * @param attr      the attributes to associate with the inserted
      *   content.  This may be null if there are no attributes.
@@ -103,7 +131,7 @@ public class DocumentFilter {
      */
     public static abstract class FilterBypass {
         /**
-         * Returns the Document the mutation is occuring on.
+         * Returns the Document the mutation is occurring on.
          *
          * @return Document that remove/insertString will operate on
          */
@@ -113,8 +141,8 @@ public class DocumentFilter {
          * Removes the specified region of text, bypassing the
          * DocumentFilter.
          *
-         * @param offset the offset from the beginning >= 0
-         * @param length the number of characters to remove >= 0
+         * @param offset the offset from the beginning &gt;= 0
+         * @param length the number of characters to remove &gt;= 0
          * @exception BadLocationException some portion of the removal range
          *   was not a valid part of the document.  The location in the
          *   exception is the first bad position encountered.
@@ -126,8 +154,8 @@ public class DocumentFilter {
          * Inserts the specified text, bypassing the
          * DocumentFilter.
          * @param offset  the offset into the document to insert the
-         *   content >= 0. All positions that track change at or after the
-         *   given location will move.  
+         *   content &gt;= 0. All positions that track change at or after the
+         *   given location will move.
          * @param string the string to insert
          * @param attr the attributes to associate with the inserted
          *   content.  This may be null if there are no attributes.

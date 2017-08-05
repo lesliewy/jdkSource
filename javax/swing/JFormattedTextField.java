@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2015, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -12,7 +30,6 @@ import java.awt.im.InputContext;
 import java.io.*;
 import java.text.*;
 import java.util.*;
-import javax.swing.UIManager;
 import javax.swing.event.*;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.*;
@@ -36,7 +53,7 @@ import javax.swing.text.*;
  * configuring what action should be taken when focus is lost. The possible
  * configurations are:
  * <table summary="Possible JFormattedTextField configurations and their descriptions">
- * <tr><th><p align="left">Value</p></th><th><p align="left">Description</p></th></tr>
+ * <tr><th><p style="text-align:left">Value</p></th><th><p style="text-align:left">Description</p></th></tr>
  * <tr><td>JFormattedTextField.REVERT
  *            <td>Revert the display to match that of <code>getValue</code>,
  *                possibly losing the current edit.
@@ -53,7 +70,7 @@ import javax.swing.text.*;
  *            <td>Do nothing, don't obtain a new
  *                <code>AbstractFormatter</code>, and don't update the value.
  * </table>
- * The default is <code>JFormattedTextField.COMMIT_OR_REVERT</code>, 
+ * The default is <code>JFormattedTextField.COMMIT_OR_REVERT</code>,
  * refer to {@link #setFocusLostBehavior} for more information on this.
  * <p>
  * <code>JFormattedTextField</code> allows the focus to leave, even if
@@ -108,14 +125,14 @@ import javax.swing.text.*;
  * policy is <code>JFormattedTextField.PERSIST</code>
  * and the <code>JFormattedTextField</code> has been edited, the
  * <code>AbstractFormatterFactory</code> will not be queried until the
- * value has been commited. Similarly if the focus lost policy is
+ * value has been committed. Similarly if the focus lost policy is
  * <code>JFormattedTextField.COMMIT</code> and an exception
  * is thrown from <code>stringToValue</code>, the
- * <code>AbstractFormatterFactory</code> will not be querired when focus is
+ * <code>AbstractFormatterFactory</code> will not be queried when focus is
  * lost or gained.
  * <p>
  * <code>JFormattedTextField.AbstractFormatter</code>
- * is also responsible for determining when values are commited to
+ * is also responsible for determining when values are committed to
  * the <code>JFormattedTextField</code>. Some
  * <code>JFormattedTextField.AbstractFormatter</code>s will make new values
  * available on every edit, and others will never commit the value. You can
@@ -133,7 +150,7 @@ import javax.swing.text.*;
  * will be created to handle formatting of numbers:
  * <pre>
  *   JFormattedTextField tf = new JFormattedTextField();
- *   tf.setValue(new Number(100));
+ *   tf.setValue(100);
  * </pre>
  * <p>
  * <strong>Warning:</strong> As the <code>AbstractFormatter</code> will
@@ -153,11 +170,10 @@ import javax.swing.text.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @since 1.4
  */
 public class JFormattedTextField extends JTextField {
@@ -167,7 +183,7 @@ public class JFormattedTextField extends JTextField {
 
     /**
      * Constant identifying that when focus is lost,
-     * <code>commitEdit</code> should be invoked. If in commiting the
+     * <code>commitEdit</code> should be invoked. If in committing the
      * new value a <code>ParseException</code> is thrown, the invalid
      * value will remain.
      *
@@ -177,7 +193,7 @@ public class JFormattedTextField extends JTextField {
 
     /**
      * Constant identifying that when focus is lost,
-     * <code>commitEdit</code> should be invoked. If in commiting the new
+     * <code>commitEdit</code> should be invoked. If in committing the new
      * value a <code>ParseException</code> is thrown, the value will be
      * reverted.
      *
@@ -557,9 +573,9 @@ public class JFormattedTextField extends JTextField {
      * implementation beeps.
      */
     protected void invalidEdit() {
-	UIManager.getLookAndFeel().provideErrorFeedback(JFormattedTextField.this);
+        UIManager.getLookAndFeel().provideErrorFeedback(JFormattedTextField.this);
     }
-    
+
     /**
      * Processes any input method events, such as
      * <code>InputMethodEvent.INPUT_METHOD_TEXT_CHANGED</code> or
@@ -569,19 +585,19 @@ public class JFormattedTextField extends JTextField {
      * @see InputMethodEvent
      */
     protected void processInputMethodEvent(InputMethodEvent e) {
-	AttributedCharacterIterator text = e.getText();
-	int commitCount = e.getCommittedCharacterCount();
+        AttributedCharacterIterator text = e.getText();
+        int commitCount = e.getCommittedCharacterCount();
 
-	// Keep track of the composed text
-	if (text != null) {
-	    int begin = text.getBeginIndex();
-	    int end = text.getEndIndex();
-	    composedTextExists = ((end - begin) > commitCount);
-	} else {
-	    composedTextExists = false;
-	}
+        // Keep track of the composed text
+        if (text != null) {
+            int begin = text.getBeginIndex();
+            int end = text.getEndIndex();
+            composedTextExists = ((end - begin) > commitCount);
+        } else {
+            composedTextExists = false;
+        }
 
-	super.processInputMethodEvent(e);
+        super.processInputMethodEvent(e);
     }
 
     /**
@@ -595,24 +611,24 @@ public class JFormattedTextField extends JTextField {
     protected void processFocusEvent(FocusEvent e) {
         super.processFocusEvent(e);
 
-	// ignore temporary focus event
-	if (e.isTemporary()) {
-	    return;
-	}
+        // ignore temporary focus event
+        if (e.isTemporary()) {
+            return;
+        }
 
         if (isEdited() && e.getID() == FocusEvent.FOCUS_LOST) {
-	    InputContext ic = getInputContext();
-	    if (focusLostHandler == null) {
-		focusLostHandler = new FocusLostHandler();
-	    }
-	    
-	    // if there is a composed text, process it first
-	    if ((ic != null) && composedTextExists) {
-		ic.endComposition();
-		EventQueue.invokeLater(focusLostHandler);
-	    } else {
-		focusLostHandler.run();
-	    }
+            InputContext ic = getInputContext();
+            if (focusLostHandler == null) {
+                focusLostHandler = new FocusLostHandler();
+            }
+
+            // if there is a composed text, process it first
+            if ((ic != null) && composedTextExists) {
+                ic.endComposition();
+                EventQueue.invokeLater(focusLostHandler);
+            } else {
+                focusLostHandler.run();
+            }
         }
         else if (!isEdited()) {
             // reformat
@@ -624,27 +640,27 @@ public class JFormattedTextField extends JTextField {
      * FOCUS_LOST behavior implementation
      */
     private class FocusLostHandler implements Runnable, Serializable {
-	public void run() {
+        public void run() {
             int fb = JFormattedTextField.this.getFocusLostBehavior();
-            if (fb == JFormattedTextField.COMMIT || 
-	        fb == JFormattedTextField.COMMIT_OR_REVERT) {
+            if (fb == JFormattedTextField.COMMIT ||
+                fb == JFormattedTextField.COMMIT_OR_REVERT) {
                 try {
                     JFormattedTextField.this.commitEdit();
                     // Give it a chance to reformat.
                     JFormattedTextField.this.setValue(
-		        JFormattedTextField.this.getValue(), true, true);
+                        JFormattedTextField.this.getValue(), true, true);
                 } catch (ParseException pe) {
                     if (fb == JFormattedTextField.this.COMMIT_OR_REVERT) {
                         JFormattedTextField.this.setValue(
-			    JFormattedTextField.this.getValue(), true, true);
+                            JFormattedTextField.this.getValue(), true, true);
                     }
                 }
             }
             else if (fb == JFormattedTextField.REVERT) {
                 JFormattedTextField.this.setValue(
-		    JFormattedTextField.this.getValue(), true, true);
+                    JFormattedTextField.this.getValue(), true, true);
             }
-	}
+        }
     }
 
     /**
@@ -695,7 +711,7 @@ public class JFormattedTextField extends JTextField {
     }
 
     /*
-     * See readObject and writeObject in JComponent for more 
+     * See readObject and writeObject in JComponent for more
      * information about serialization in Swing.
      *
      * @param s Stream to write to
@@ -778,9 +794,9 @@ public class JFormattedTextField extends JTextField {
 
         setEdited(false);
 
-	if (firePC) {
-	    firePropertyChange("value", oldValue, value);
-	}
+        if (firePC) {
+            firePropertyChange("value", oldValue, value);
+        }
     }
 
     /**
@@ -819,10 +835,10 @@ public class JFormattedTextField extends JTextField {
         }
         if (type instanceof Number) {
             AbstractFormatter displayFormatter = new NumberFormatter();
-	    ((NumberFormatter)displayFormatter).setValueClass(type.getClass());
+            ((NumberFormatter)displayFormatter).setValueClass(type.getClass());
             AbstractFormatter editFormatter = new NumberFormatter(
                                   new DecimalFormat("#.#"));
-	    ((NumberFormatter)editFormatter).setValueClass(type.getClass());
+            ((NumberFormatter)editFormatter).setValueClass(type.getClass());
 
             return new DefaultFormatterFactory(displayFormatter,
                                                displayFormatter,editFormatter);
@@ -861,7 +877,7 @@ public class JFormattedTextField extends JTextField {
      * Instances of <code>AbstractFormatter</code> are used by
      * <code>JFormattedTextField</code> to handle the conversion both
      * from an Object to a String, and back from a String to an Object.
-     * <code>AbstractFormatter</code>s can also enfore editing policies,
+     * <code>AbstractFormatter</code>s can also enforce editing policies,
      * or navigation policies, or manipulate the
      * <code>JFormattedTextField</code> in any way it sees fit to
      * enforce the desired policy.
@@ -879,7 +895,7 @@ public class JFormattedTextField extends JTextField {
      * they can override <code>getActions</code>,
      * <code>getNavigationFilter</code> and <code>getDocumentFilter</code>
      * to restrict the <code>JFormattedTextField</code> in a particular
-     * way. 
+     * way.
      * <p>
      * Subclasses that allow the <code>JFormattedTextField</code> to be in
      * a temporarily invalid state should invoke <code>setEditValid</code>
@@ -1026,7 +1042,7 @@ public class JFormattedTextField extends JTextField {
         }
 
         /**
-         * Subclass and override if you wish to provide a 
+         * Subclass and override if you wish to provide a
          * <code>DocumentFilter</code> to restrict what can be input.
          * <code>install</code> will install the returned value onto
          * the <code>JFormattedTextField</code>.
@@ -1098,8 +1114,8 @@ public class JFormattedTextField extends JTextField {
                 try {
                     ((JFormattedTextField)target).commitEdit();
                 } catch (ParseException pe) {
-		    ((JFormattedTextField)target).invalidEdit();
-                    // value not commited, don't notify ActionListeners
+                    ((JFormattedTextField)target).invalidEdit();
+                    // value not committed, don't notify ActionListeners
                     return;
                 }
             }
@@ -1110,10 +1126,10 @@ public class JFormattedTextField extends JTextField {
         public boolean isEnabled() {
             JTextComponent target = getFocusedComponent();
             if (target instanceof JFormattedTextField) {
-		JFormattedTextField ftf = (JFormattedTextField)target;
-		if (!ftf.isEdited()) {
-		    return false;
-		}
+                JFormattedTextField ftf = (JFormattedTextField)target;
+                if (!ftf.isEdited()) {
+                    return false;
+                }
                 return true;
             }
             return super.isEnabled();
@@ -1144,10 +1160,10 @@ public class JFormattedTextField extends JTextField {
         public boolean isEnabled() {
             JTextComponent target = getFocusedComponent();
             if (target instanceof JFormattedTextField) {
-		JFormattedTextField ftf = (JFormattedTextField)target;
-		if (!ftf.isEdited()) {
-		    return false;
-		}
+                JFormattedTextField ftf = (JFormattedTextField)target;
+                if (!ftf.isEdited()) {
+                    return false;
+                }
                 return true;
             }
             return super.isEnabled();

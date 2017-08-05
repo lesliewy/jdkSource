@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 
@@ -17,10 +35,9 @@ package java.util.logging;
  * if a given LogRecord should be published.  If isLoggable returns
  * false, the LogRecord will be discarded.
  *
- * @version %I%, %G%
  * @since 1.4
  */
-
+@FunctionalInterface
 public interface Filter {
 
     /**
@@ -29,5 +46,4 @@ public interface Filter {
      * @return true if the log record should be published.
      */
     public boolean isLoggable(LogRecord record);
-
 }

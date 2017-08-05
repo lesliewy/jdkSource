@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.spec;
@@ -18,7 +36,7 @@ package java.security.spec;
  * <P> A key may be specified in an algorithm-specific way, or in an
  * algorithm-independent encoding format (such as ASN.1).
  * For example, a DSA private key may be specified by its components
- * <code>x</code>, <code>p</code>, <code>q</code>, and <code>g</code>
+ * {@code x}, {@code p}, {@code q}, and {@code g}
  * (see {@link DSAPrivateKeySpec}), or it may be
  * specified using its DER encoding
  * (see {@link PKCS8EncodedKeySpec}).
@@ -29,7 +47,6 @@ package java.security.spec;
  *
  * @author Jan Luehe
  *
- * @version %I%, %G%
  *
  * @see java.security.Key
  * @see java.security.KeyFactory

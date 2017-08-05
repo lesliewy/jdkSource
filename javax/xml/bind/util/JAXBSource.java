@@ -1,7 +1,28 @@
 /*
- * Copyright (c) 2003, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
+
 package javax.xml.bind.util;
 
 import org.xml.sax.ContentHandler;
@@ -20,35 +41,36 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.transform.sax.SAXSource;
+import org.xml.sax.XMLFilter;
 
 /**
  * JAXP {@link javax.xml.transform.Source} implementation
  * that marshals a JAXB-generated object.
- * 
+ *
  * <p>
  * This utility class is useful to combine JAXB with
  * other Java/XML technologies.
- * 
+ *
  * <p>
  * The following example shows how to use JAXB to marshal a document
  * for transformation by XSLT.
- * 
+ *
  * <blockquote>
  *    <pre>
  *       MyObject o = // get JAXB content tree
- *       
+ *
  *       // jaxbContext is a JAXBContext object from which 'o' is created.
  *       JAXBSource source = new JAXBSource( jaxbContext, o );
- *       
+ *
  *       // set up XSLT transformation
  *       TransformerFactory tf = TransformerFactory.newInstance();
  *       Transformer t = tf.newTransformer(new StreamSource("test.xsl"));
- *       
+ *
  *       // run transformation
  *       t.transform(source,new StreamResult(System.out));
  *    </pre>
  * </blockquote>
- * 
+ *
  * <p>
  * The fact that JAXBSource derives from SAXSource is an implementation
  * detail. Thus in general applications are strongly discouraged from
@@ -57,20 +79,20 @@ import javax.xml.transform.sax.SAXSource;
  * The XMLReader object obtained by the getXMLReader method shall
  * be used only for parsing the InputSource object returned by
  * the getInputSource method.
- * 
+ *
  * <p>
  * Similarly the InputSource object obtained by the getInputSource
  * method shall be used only for being parsed by the XMLReader object
  * returned by the getXMLReader.
  *
  * @author
- * 	Kohsuke Kawaguchi (kohsuke.kawaguchi@sun.com)
+ *      Kohsuke Kawaguchi (kohsuke.kawaguchi@sun.com)
  */
 public class JAXBSource extends SAXSource {
 
     /**
      * Creates a new {@link javax.xml.transform.Source} for the given content object.
-     * 
+     *
      * @param   context
      *      JAXBContext that was used to create
      *      <code>contentObject</code>. This context is used
@@ -82,22 +104,22 @@ public class JAXBSource extends SAXSource {
      * @throws JAXBException if an error is encountered while creating the
      * JAXBSource or if either of the parameters are null.
      */
-    public JAXBSource( JAXBContext context, Object contentObject ) 
+    public JAXBSource( JAXBContext context, Object contentObject )
         throws JAXBException {
-            
-        this( 
-            ( context == null ) ? 
-                assertionFailed( Messages.format( Messages.SOURCE_NULL_CONTEXT ) ) : 
+
+        this(
+            ( context == null ) ?
+                assertionFailed( Messages.format( Messages.SOURCE_NULL_CONTEXT ) ) :
                 context.createMarshaller(),
-                
-            ( contentObject == null ) ? 
-                assertionFailed( Messages.format( Messages.SOURCE_NULL_CONTENT ) ) : 
+
+            ( contentObject == null ) ?
+                assertionFailed( Messages.format( Messages.SOURCE_NULL_CONTENT ) ) :
                 contentObject);
     }
-    
+
     /**
      * Creates a new {@link javax.xml.transform.Source} for the given content object.
-     * 
+     *
      * @param   marshaller
      *      A marshaller instance that will be used to marshal
      *      <code>contentObject</code> into XML. This must be
@@ -110,28 +132,28 @@ public class JAXBSource extends SAXSource {
      * @throws JAXBException if an error is encountered while creating the
      * JAXBSource or if either of the parameters are null.
      */
-    public JAXBSource( Marshaller marshaller, Object contentObject ) 
+    public JAXBSource( Marshaller marshaller, Object contentObject )
         throws JAXBException {
-            
+
         if( marshaller == null )
-            throw new JAXBException( 
+            throw new JAXBException(
                 Messages.format( Messages.SOURCE_NULL_MARSHALLER ) );
-                
+
         if( contentObject == null )
-            throw new JAXBException( 
+            throw new JAXBException(
                 Messages.format( Messages.SOURCE_NULL_CONTENT ) );
-            
+
         this.marshaller = marshaller;
         this.contentObject = contentObject;
-        
+
         super.setXMLReader(pseudoParser);
         // pass a dummy InputSource. We don't care
         super.setInputSource(new InputSource());
     }
-    
+
     private final Marshaller marshaller;
     private final Object contentObject;
-    
+
     // this object will pretend as an XMLReader.
     // no matter what parameter is specified to the parse method,
     // it just parse the contentObject.
@@ -189,7 +211,7 @@ public class JAXBSource extends SAXSource {
         // SAX allows ContentHandler to be changed during the parsing,
         // but JAXB doesn't. So this repeater will sit between those
         // two components.
-        private XMLFilterImpl repeater = new XMLFilterImpl();
+        private XMLFilter repeater = new XMLFilterImpl();
 
         public void setContentHandler(ContentHandler handler) {
             repeater.setContentHandler(handler);
@@ -219,7 +241,7 @@ public class JAXBSource extends SAXSource {
             // SAX events will be sent to the repeater, and the repeater
             // will further forward it to an appropriate component.
             try {
-                marshaller.marshal( contentObject, repeater );
+                marshaller.marshal( contentObject, (XMLFilterImpl)repeater );
             } catch( JAXBException e ) {
                 // wrap it to a SAXException
                 SAXParseException se =
@@ -242,9 +264,9 @@ public class JAXBSource extends SAXSource {
      * Hook to throw exception from the middle of a contructor chained call
      * to this
      */
-    private static Marshaller assertionFailed( String message ) 
+    private static Marshaller assertionFailed( String message )
         throws JAXBException {
-            
+
         throw new JAXBException( message );
     }
 }

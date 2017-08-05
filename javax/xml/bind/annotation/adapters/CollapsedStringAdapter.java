@@ -1,6 +1,26 @@
 /*
- * Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2004, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.xml.bind.annotation.adapters;
@@ -44,7 +64,7 @@ public class CollapsedStringAdapter extends XmlAdapter<String,String> {
         // we now know that the input contains spaces.
         // let's sit down and do the collapsing normally.
 
-        StringBuffer result = new StringBuffer(len /*allocate enough size to avoid re-allocation*/ );
+        StringBuilder result = new StringBuilder(len /*allocate enough size to avoid re-allocation*/ );
 
         if(s!=0) {
             for( int i=0; i<s; i++ )

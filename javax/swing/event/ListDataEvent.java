@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.event;
@@ -18,14 +36,14 @@ import java.util.EventObject;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Hans Muller
  */
-public class ListDataEvent extends EventObject 
+@SuppressWarnings("serial")
+public class ListDataEvent extends EventObject
 {
     /** Identifies one or more changes in the lists contents. */
     public static final int CONTENTS_CHANGED = 0;
@@ -67,9 +85,9 @@ public class ListDataEvent extends EventObject
     public int getIndex1() { return index1; }
 
     /**
-     * Constructs a ListDataEvent object. If index0 is >
+     * Constructs a ListDataEvent object. If index0 is &gt;
      * index1, index0 and index1 will be swapped such that
-     * index0 will always be <= index1.
+     * index0 will always be &lt;= index1.
      *
      * @param source  the source Object (typically <code>this</code>)
      * @param type    an int specifying {@link #CONTENTS_CHANGED},
@@ -79,18 +97,18 @@ public class ListDataEvent extends EventObject
      */
     public ListDataEvent(Object source, int type, int index0, int index1) {
         super(source);
-	this.type = type;
-	this.index0 = Math.min(index0, index1);
-	this.index1 = Math.max(index0, index1);
+        this.type = type;
+        this.index0 = Math.min(index0, index1);
+        this.index1 = Math.max(index0, index1);
     }
 
     /**
-     * Returns a string representation of this ListDataEvent. This method 
-     * is intended to be used only for debugging purposes, and the 
-     * content and format of the returned string may vary between      
-     * implementations. The returned string may be empty but may not 
+     * Returns a string representation of this ListDataEvent. This method
+     * is intended to be used only for debugging purposes, and the
+     * content and format of the returned string may vary between
+     * implementations. The returned string may be empty but may not
      * be <code>null</code>.
-     * 
+     *
      * @since 1.4
      * @return  a string representation of this ListDataEvent.
      */
@@ -101,6 +119,3 @@ public class ListDataEvent extends EventObject
         ",index1=" + index1 + "]";
     }
 }
-
-
-

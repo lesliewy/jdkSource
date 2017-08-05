@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.table;
@@ -14,7 +32,6 @@ import javax.swing.*;
  * This interface defines the method required by any object that
  * would like to be a renderer for cells in a <code>JTable</code>.
  *
- * @version %I% %G%
  * @author Alan Chung
  */
 
@@ -32,10 +49,10 @@ public interface TableCellRenderer {
      * <pre>
      *     JTable.DropLocation dropLocation = table.getDropLocation();
      *     if (dropLocation != null
-     *             && !dropLocation.isInsertRow()
-     *             && !dropLocation.isInsertColumn()
-     *             && dropLocation.getRow() == row
-     *             && dropLocation.getColumn() == column) {
+     *             &amp;&amp; !dropLocation.isInsertRow()
+     *             &amp;&amp; !dropLocation.isInsertColumn()
+     *             &amp;&amp; dropLocation.getRow() == row
+     *             &amp;&amp; dropLocation.getColumn() == column) {
      *
      *         // this cell represents the current drop location
      *         // so render it specially, perhaps with a different color
@@ -49,29 +66,29 @@ public interface TableCellRenderer {
      * or not the table is being printed, check the return value from
      * {@link javax.swing.JComponent#isPaintingForPrint()}.
      *
-     * @param	table		the <code>JTable</code> that is asking the 
-     *				renderer to draw; can be <code>null</code>
-     * @param	value		the value of the cell to be rendered.  It is
-     *				up to the specific renderer to interpret
-     *				and draw the value.  For example, if
-     *				<code>value</code>
-     *				is the string "true", it could be rendered as a
-     *				string or it could be rendered as a check
-     *				box that is checked.  <code>null</code> is a
-     *				valid value
-     * @param	isSelected	true if the cell is to be rendered with the
-     *				selection highlighted; otherwise false
-     * @param	hasFocus	if true, render cell appropriately.  For
-     *				example, put a special border on the cell, if
-     *				the cell can be edited, render in the color used
-     *				to indicate editing
-     * @param	row	        the row index of the cell being drawn.  When
-     *				drawing the header, the value of
-     *				<code>row</code> is -1
-     * @param	column	        the column index of the cell being drawn
+     * @param   table           the <code>JTable</code> that is asking the
+     *                          renderer to draw; can be <code>null</code>
+     * @param   value           the value of the cell to be rendered.  It is
+     *                          up to the specific renderer to interpret
+     *                          and draw the value.  For example, if
+     *                          <code>value</code>
+     *                          is the string "true", it could be rendered as a
+     *                          string or it could be rendered as a check
+     *                          box that is checked.  <code>null</code> is a
+     *                          valid value
+     * @param   isSelected      true if the cell is to be rendered with the
+     *                          selection highlighted; otherwise false
+     * @param   hasFocus        if true, render cell appropriately.  For
+     *                          example, put a special border on the cell, if
+     *                          the cell can be edited, render in the color used
+     *                          to indicate editing
+     * @param   row             the row index of the cell being drawn.  When
+     *                          drawing the header, the value of
+     *                          <code>row</code> is -1
+     * @param   column          the column index of the cell being drawn
      * @see javax.swing.JComponent#isPaintingForPrint()
      */
     Component getTableCellRendererComponent(JTable table, Object value,
-					    boolean isSelected, boolean hasFocus, 
-					    int row, int column);
+                                            boolean isSelected, boolean hasFocus,
+                                            int row, int column);
 }

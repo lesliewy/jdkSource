@@ -1,17 +1,35 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security.cert;
 
 /**
- * Parameters used as input for the LDAP <code>CertStore</code> algorithm.
+ * Parameters used as input for the LDAP {@code CertStore} algorithm.
  * <p>
  * This class is used to provide necessary configuration parameters (server
- * name and port number) to implementations of the LDAP <code>CertStore</code>
+ * name and port number) to implementations of the LDAP {@code CertStore}
  * algorithm.
  * <p>
  * <b>Concurrent Access</b>
@@ -22,9 +40,8 @@ package java.security.cert;
  * provide the necessary locking. Multiple threads each manipulating
  * separate objects need not synchronize.
  *
- * @version 	%I% %G%
- * @since	1.4
- * @author	Steve Hanna
+ * @since       1.4
+ * @author      Steve Hanna
  * @see         CertStore
  */
 public class LDAPCertStoreParameters implements CertStoreParameters {
@@ -42,13 +59,13 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     private String serverName;
 
     /**
-     * Creates an instance of <code>LDAPCertStoreParameters</code> with the
+     * Creates an instance of {@code LDAPCertStoreParameters} with the
      * specified parameter values.
      *
      * @param serverName the DNS name of the LDAP server
      * @param port the port number of the LDAP server
-     * @exception NullPointerException if <code>serverName</code> is
-     * <code>null</code>
+     * @exception NullPointerException if {@code serverName} is
+     * {@code null}
      */
     public LDAPCertStoreParameters(String serverName, int port) {
         if (serverName == null)
@@ -58,19 +75,19 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     }
 
     /**
-     * Creates an instance of <code>LDAPCertStoreParameters</code> with the
+     * Creates an instance of {@code LDAPCertStoreParameters} with the
      * specified server name and a default port of 389.
      *
      * @param serverName the DNS name of the LDAP server
-     * @exception NullPointerException if <code>serverName</code> is
-     * <code>null</code>
+     * @exception NullPointerException if {@code serverName} is
+     * {@code null}
      */
     public LDAPCertStoreParameters(String serverName) {
-	this(serverName, LDAP_DEFAULT_PORT);
+        this(serverName, LDAP_DEFAULT_PORT);
     }
 
     /**
-     * Creates an instance of <code>LDAPCertStoreParameters</code> with the
+     * Creates an instance of {@code LDAPCertStoreParameters} with the
      * default parameter values (server name "localhost", port 389).
      */
     public LDAPCertStoreParameters() {
@@ -80,7 +97,7 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     /**
      * Returns the DNS name of the LDAP server.
      *
-     * @return the name (not <code>null</code>)
+     * @return the name (not {@code null})
      */
     public String getServerName() {
         return serverName;
@@ -100,8 +117,8 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
      * the original and vice versa.
      * <p>
      * Note: this method currently performs a shallow copy of the object
-     * (simply calls <code>Object.clone()</code>). This may be changed in a 
-     * future revision to perform a deep copy if new parameters are added 
+     * (simply calls {@code Object.clone()}). This may be changed in a
+     * future revision to perform a deep copy if new parameters are added
      * that should not be shared.
      *
      * @return the copy
@@ -111,7 +128,7 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
             return super.clone();
         } catch (CloneNotSupportedException e) {
             /* Cannot happen */
-            throw new InternalError(e.toString());
+            throw new InternalError(e.toString(), e);
         }
     }
 

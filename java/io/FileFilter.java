@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
@@ -17,6 +35,7 @@ package java.io;
  *
  * @since 1.2
  */
+@FunctionalInterface
 public interface FileFilter {
 
     /**
@@ -28,5 +47,4 @@ public interface FileFilter {
      *          should be included
      */
     boolean accept(File pathname);
-
 }

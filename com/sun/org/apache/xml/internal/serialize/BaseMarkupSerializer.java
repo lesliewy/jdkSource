@@ -1,19 +1,22 @@
 /*
- * Copyright 1999-2002,2004,2005 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 // Sep 14, 2000:
 //  Fixed comments to preserve whitespaces and add a line break
@@ -42,23 +45,23 @@
 
 package com.sun.org.apache.xml.internal.serialize;
 
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.util.Hashtable;
-import java.util.Vector;
-
 import com.sun.org.apache.xerces.internal.dom.DOMErrorImpl;
 import com.sun.org.apache.xerces.internal.dom.DOMLocatorImpl;
 import com.sun.org.apache.xerces.internal.dom.DOMMessageFormatter;
 import com.sun.org.apache.xerces.internal.util.XMLChar;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+
+import org.w3c.dom.DOMError;
+import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.DocumentType;
-import org.w3c.dom.DOMError;
-import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.Element;
 import org.w3c.dom.Entity;
 import org.w3c.dom.NamedNodeMap;
@@ -82,7 +85,7 @@ import org.xml.sax.ext.LexicalHandler;
  * serializing mechanisms.
  * <p>
  * The serializer must be initialized with the proper writer and
- * output format before it can be used by calling {@link #setOutputCharStream} 
+ * output format before it can be used by calling {@link #setOutputCharStream}
  * or {@link #setOutputByteStream} for the writer and {@link #setOutputFormat}
  * for the output format.
  * <p>
@@ -117,10 +120,9 @@ import org.xml.sax.ext.LexicalHandler;
  * another element.
  *
  *
- * @version $Revision: 1.6 $ $Date: 2007/07/19 04:39:18 $
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
  * @author <a href="mailto:rahul.srivastava@sun.com">Rahul Srivastava</a>
- * @author Elena Litani, IBM 
+ * @author Elena Litani, IBM
  * @author Sunitha Reddy, Sun Microsystems
  * @see Serializer
  * @see LSSerializer
@@ -183,7 +185,7 @@ public abstract class BaseMarkupSerializer
      * Accumulated here prior to starting an element and placing this
      * list in the element state.
      */
-    protected Hashtable     _prefixes;
+    protected Map<String, String>  _prefixes;
 
 
     /**
@@ -235,7 +237,7 @@ public abstract class BaseMarkupSerializer
     /** Current node that is being processed  */
     protected Node fCurrentNode = null;
 
-    
+
 
     //--------------------------------//
     // Constructor and initialization //
@@ -246,7 +248,7 @@ public abstract class BaseMarkupSerializer
      * Protected constructor can only be used by derived class.
      * Must initialize the serializer before serializing any document,
      * by calling {@link #setOutputCharStream} or {@link #setOutputByteStream}
-		 * first
+                 * first
      */
     protected BaseMarkupSerializer( OutputFormat format )
     {
@@ -351,11 +353,11 @@ public abstract class BaseMarkupSerializer
         // reused with the same output stream and different encoding.
 
         _encodingInfo = _format.getEncodingInfo();
-        
+
         if ( _output != null ) {
             _writer = _encodingInfo.getWriter(_output);
         }
-        
+
         if ( _format.getIndenting() ) {
             _indenting = true;
             _printer = new IndentPrinter( _writer, _format );
@@ -410,7 +412,7 @@ public abstract class BaseMarkupSerializer
         if ( _printer.getException() != null )
             throw _printer.getException();
     }
-    
+
     /**
      * Serializes a node using the previously specified
      * writer and output format. Throws an exception only if
@@ -424,12 +426,12 @@ public abstract class BaseMarkupSerializer
         prepare();
         serializeNode( node );
         //Print any PIs and Comments which appeared in 'node'
-        serializePreRoot(); 
+        serializePreRoot();
         _printer.flush();
         if ( _printer.getException() != null )
             throw _printer.getException();
     }
-    
+
     /**
      * Serializes the DOM document fragmnt using the previously specified
      * writer and output format. Throws an exception only if
@@ -466,7 +468,7 @@ public abstract class BaseMarkupSerializer
         reset();
         prepare();
         serializeNode( doc );
-        serializePreRoot(); 
+        serializePreRoot();
         _printer.flush();
         if ( _printer.getException() != null )
             throw _printer.getException();
@@ -488,8 +490,8 @@ public abstract class BaseMarkupSerializer
         }
         // Nothing to do here. All the magic happens in startDocument(String)
     }
-    
-    
+
+
     public void characters( char[] chars, int start, int length )
         throws SAXException
     {
@@ -521,16 +523,16 @@ public abstract class BaseMarkupSerializer
                 if ( ch == ']' && index + 2 < end &&
                      chars[ index + 1 ] == ']' && chars[ index + 2 ] == '>' ) {
                     _printer.printText("]]]]><![CDATA[>");
-                    index +=2; 
+                    index +=2;
                     continue;
                 }
                 if (!XMLChar.isValid(ch)) {
                     // check if it is surrogate
                     if (++index < end) {
                         surrogates(ch, chars[index]);
-                    } 
+                    }
                     else {
-                        fatalError("The character '"+(char)ch+"' is an invalid XML character"); 
+                        fatalError("The character '"+(char)ch+"' is an invalid XML character");
                     }
                     continue;
                 } else {
@@ -539,8 +541,8 @@ public abstract class BaseMarkupSerializer
                         _printer.printText((char)ch);
                     } else {
                         // The character is not printable -- split CDATA section
-                        _printer.printText("]]>&#x");                        
-                        _printer.printText(Integer.toHexString(ch));                        
+                        _printer.printText("]]>&#x");
+                        _printer.printText(Integer.toHexString(ch));
                         _printer.printText(";<![CDATA[");
                     }
                 }
@@ -661,10 +663,10 @@ public abstract class BaseMarkupSerializer
     {
         int          index;
         ElementState state;
-        
+
         if ( _format.getOmitComments() )
             return;
-        
+
         state  = content();
         // Create the processing comment textual representation.
         // Make sure we don't have '-->' inside the comment.
@@ -686,16 +688,16 @@ public abstract class BaseMarkupSerializer
             // following an element.
             if ( _indenting && ! state.preserveSpace)
                 _printer.breakLine();
-						_printer.indent();
+                                                _printer.indent();
             printText( fStrBuffer.toString(), true, true );
-						_printer.unindent();
+                                                _printer.unindent();
             if ( _indenting )
                 state.afterElement = true;
         }
 
         fStrBuffer.setLength(0);
-	state.afterComment = true;
-	state.afterElement = false;
+        state.afterComment = true;
+        state.afterElement = false;
     }
 
 
@@ -818,7 +820,7 @@ public abstract class BaseMarkupSerializer
         throws SAXException
     {
         if ( _prefixes == null )
-            _prefixes = new Hashtable();
+            _prefixes = new HashMap<>();
         _prefixes.put( uri, prefix == null ? "" : prefix );
     }
 
@@ -841,7 +843,7 @@ public abstract class BaseMarkupSerializer
         _printer.enterDTD();
         _docTypePublicId = publicId;
         _docTypeSystemId = systemId;
-        
+
         } catch ( IOException except ) {
             throw new SAXException( except );
         }
@@ -1022,12 +1024,12 @@ public abstract class BaseMarkupSerializer
 
             text = node.getNodeValue();
             if ( text != null ) {
-                if (fDOMFilter !=null && 
+                if (fDOMFilter !=null &&
                     (fDOMFilter.getWhatToShow() & NodeFilter.SHOW_TEXT)!= 0) {
                     short code = fDOMFilter.acceptNode(node);
                     switch (code) {
                         case NodeFilter.FILTER_REJECT:
-                        case NodeFilter.FILTER_SKIP: { 
+                        case NodeFilter.FILTER_SKIP: {
                             break;
                         }
                         default: {
@@ -1038,8 +1040,8 @@ public abstract class BaseMarkupSerializer
                 else if ( !_indenting || getElementState().preserveSpace
                      || (text.replace('\n',' ').trim().length() != 0))
                     characters( text );
-            
-            }                
+
+            }
             break;
         }
 
@@ -1081,23 +1083,23 @@ public abstract class BaseMarkupSerializer
             if ( ! _format.getOmitComments() ) {
                 text = node.getNodeValue();
                 if ( text != null ) {
-                
-                    if (fDOMFilter !=null && 
+
+                    if (fDOMFilter !=null &&
                           (fDOMFilter.getWhatToShow() & NodeFilter.SHOW_COMMENT)!= 0) {
                           short code = fDOMFilter.acceptNode(node);
                           switch (code) {
                               case NodeFilter.FILTER_REJECT:
-                              case NodeFilter.FILTER_SKIP: { 
+                              case NodeFilter.FILTER_SKIP: {
                                   // skip the comment node
                                   return;
                               }
                               default: {
                                    // fall through
                               }
-                          }                      
+                          }
                     }
                     comment( text );
-                }                    
+                }
             }
             break;
         }
@@ -1107,17 +1109,17 @@ public abstract class BaseMarkupSerializer
 
             endCDATA();
             content();
-            
+
             if (((features & DOMSerializerImpl.ENTITIES) != 0)
                 || (node.getFirstChild() == null)) {
-                if (fDOMFilter !=null && 
+                if (fDOMFilter !=null &&
                       (fDOMFilter.getWhatToShow() & NodeFilter.SHOW_ENTITY_REFERENCE)!= 0) {
                       short code = fDOMFilter.acceptNode(node);
                       switch (code) {
                         case NodeFilter.FILTER_REJECT:{
                             return; // remove the node
                           }
-                          case NodeFilter.FILTER_SKIP: { 
+                          case NodeFilter.FILTER_SKIP: {
                               child = node.getFirstChild();
                               while ( child != null ) {
                                   serializeNode( child );
@@ -1130,9 +1132,9 @@ public abstract class BaseMarkupSerializer
                                // fall through
                           }
                       }
-                  }         
+                  }
                 checkUnboundNamespacePrefixedNode(node);
-              
+
                 _printer.printText("&");
                 _printer.printText(node.getNodeName());
                 _printer.printText(";");
@@ -1149,14 +1151,14 @@ public abstract class BaseMarkupSerializer
         }
 
         case Node.PROCESSING_INSTRUCTION_NODE : {
-        
-            if (fDOMFilter !=null && 
+
+            if (fDOMFilter !=null &&
                   (fDOMFilter.getWhatToShow() & NodeFilter.SHOW_PROCESSING_INSTRUCTION)!= 0) {
                   short code = fDOMFilter.acceptNode(node);
                   switch (code) {
-                    case NodeFilter.FILTER_REJECT:                      
-                    case NodeFilter.FILTER_SKIP: { 
-                          return;  // skip this node                      
+                    case NodeFilter.FILTER_REJECT:
+                    case NodeFilter.FILTER_SKIP: {
+                          return;  // skip this node
                     }
                     default: { // fall through
                     }
@@ -1167,20 +1169,20 @@ public abstract class BaseMarkupSerializer
         }
         case Node.ELEMENT_NODE :  {
 
-            if (fDOMFilter !=null && 
+            if (fDOMFilter !=null &&
                   (fDOMFilter.getWhatToShow() & NodeFilter.SHOW_ELEMENT)!= 0) {
                   short code = fDOMFilter.acceptNode(node);
                   switch (code) {
                     case NodeFilter.FILTER_REJECT: {
-                        return;                     
+                        return;
                     }
-                    case NodeFilter.FILTER_SKIP: { 
+                    case NodeFilter.FILTER_SKIP: {
                         Node child = node.getFirstChild();
                         while ( child != null ) {
                             serializeNode( child );
                             child = child.getNextSibling();
                         }
-                        return;  // skip this node                      
+                        return;  // skip this node
                     }
 
                     default: { // fall through
@@ -1197,9 +1199,9 @@ public abstract class BaseMarkupSerializer
             Entity            entity;
             Notation          notation;
             int               i;
-            
+
             serializeDocument();
-            
+
             // If there is a document type, use the SAX events to
             // serialize it.
             docType = ( (Document) node ).getDoctype();
@@ -1246,12 +1248,12 @@ public abstract class BaseMarkupSerializer
                     _docTypeSystemId = docTypeSystemId;
                     endDTD();
                 }
-                
+
                 serializeDTD(docType.getName());
-                              
+
             }
             _started = true;
-                     
+
             // !! Fall through
         }
         case Node.DOCUMENT_FRAGMENT_NODE : {
@@ -1273,12 +1275,12 @@ public abstract class BaseMarkupSerializer
         }
     }
 
- 
+
     /* Serializes XML Declaration, according to 'xml-declaration' property.
      */
     protected void serializeDocument()throws IOException {
         int    i;
-                
+
         String dtd = _printer.leaveDTD();
         if (! _started) {
 
@@ -1307,16 +1309,16 @@ public abstract class BaseMarkupSerializer
                 _printer.breakLine();
             }
         }
-        
+
         // Always serialize these, even if not te first root element.
         serializePreRoot();
-        
+
     }
-       
+
     /* Serializes DTD, if present.
      */
     protected void serializeDTD(String name) throws IOException{
-        
+
         String dtd = _printer.leaveDTD();
         if (! _format.getOmitDocumentType()) {
             if (_docTypeSystemId != null) {
@@ -1359,9 +1361,9 @@ public abstract class BaseMarkupSerializer
                 _printer.breakLine();
             }
         }
-    } 
-    
-    
+    }
+
+
     /**
      * Must be called by a method about to print any type of content.
      * If the element was just opened, the opening tag is closed and
@@ -1521,7 +1523,7 @@ public abstract class BaseMarkupSerializer
         char ch;
 
         for ( int index = 0 ; index <  length; ++index ) {
-            ch = text.charAt( index );            
+            ch = text.charAt( index );
             if (ch == ']'
                 && index + 2 < length
                 && text.charAt(index + 1) == ']'
@@ -1533,20 +1535,20 @@ public abstract class BaseMarkupSerializer
                         String msg = DOMMessageFormatter.formatMessage(
                             DOMMessageFormatter.SERIALIZER_DOMAIN,
                             "EndingCDATA",
-                            null);    
+                            null);
                         if ((features & DOMSerializerImpl.WELLFORMED) != 0) {
                             // issue fatal error
                             modifyDOMError(msg, DOMError.SEVERITY_FATAL_ERROR, "wf-invalid-character", fCurrentNode);
                             fDOMErrorHandler.handleError(fDOMError);
                             throw new LSException(LSException.SERIALIZE_ERR, msg);
-                        } 
+                        }
                         else {
                             // issue error
                             modifyDOMError(msg, DOMError.SEVERITY_ERROR, "cdata-section-not-splitted", fCurrentNode);
                             if (!fDOMErrorHandler.handleError(fDOMError)) {
                                 throw new LSException(LSException.SERIALIZE_ERR, msg);
                             }
-                        }                        
+                        }
                     } else {
                         // issue warning
                         String msg =
@@ -1566,14 +1568,14 @@ public abstract class BaseMarkupSerializer
                 index += 2;
                 continue;
             }
-            
+
             if (!XMLChar.isValid(ch)) {
                 // check if it is surrogate
                 if (++index <length) {
                     surrogates(ch, text.charAt(index));
-                } 
+                }
                 else {
-                    fatalError("The character '"+(char)ch+"' is an invalid XML character"); 
+                    fatalError("The character '"+(char)ch+"' is an invalid XML character");
                 }
                 continue;
             } else {
@@ -1583,8 +1585,8 @@ public abstract class BaseMarkupSerializer
                 } else {
 
                     // The character is not printable -- split CDATA section
-                    _printer.printText("]]>&#x");                        
-                    _printer.printText(Integer.toHexString(ch));                        
+                    _printer.printText("]]>&#x");
+                    _printer.printText(Integer.toHexString(ch));
                     _printer.printText(";<![CDATA[");
                 }
             }
@@ -1596,27 +1598,27 @@ public abstract class BaseMarkupSerializer
         if (XMLChar.isHighSurrogate(high)) {
             if (!XMLChar.isLowSurrogate(low)) {
                 //Invalid XML
-                fatalError("The character '"+(char)low+"' is an invalid XML character"); 
+                fatalError("The character '"+(char)low+"' is an invalid XML character");
             }
             else {
                 int supplemental = XMLChar.supplemental((char)high, (char)low);
                 if (!XMLChar.isValid(supplemental)) {
                     //Invalid XML
-                    fatalError("The character '"+(char)supplemental+"' is an invalid XML character"); 
+                    fatalError("The character '"+(char)supplemental+"' is an invalid XML character");
                 }
                 else {
                     if (content().inCData ) {
-                        _printer.printText("]]>&#x");                        
-                        _printer.printText(Integer.toHexString(supplemental));                        
+                        _printer.printText("]]>&#x");
+                        _printer.printText(Integer.toHexString(supplemental));
                         _printer.printText(";<![CDATA[");
-                    }  
+                    }
                     else {
                         printHex(supplemental);
                     }
                 }
             }
         } else {
-            fatalError("The character '"+(char)high+"' is an invalid XML character"); 
+            fatalError("The character '"+(char)high+"' is an invalid XML character");
         }
 
     }
@@ -1759,19 +1761,19 @@ public abstract class BaseMarkupSerializer
                 _printer.printText((char)(((ch-0x10000)&0x3ff)+0xdc00));
             }
         } else {
-			printHex(ch);
+                        printHex(ch);
         }
     }
-    
-	/**
-	 * Escapes chars
-	 */ 
-	 final void printHex( int ch) throws IOException {
+
+        /**
+         * Escapes chars
+         */
+         final void printHex( int ch) throws IOException {
                  _printer.printText( "&#x" );
-		 _printer.printText(Integer.toHexString(ch));
-		 _printer.printText( ';' );
-                 
-	 }
+                 _printer.printText(Integer.toHexString(ch));
+                 _printer.printText( ';' );
+
+         }
 
 
     /**
@@ -1862,15 +1864,15 @@ public abstract class BaseMarkupSerializer
      * Leave the current element state and return to the
      * state of the parent element. If this was the root
      * element, return to the state of the document.
-     *                                                                             
+     *
      * @return Previous element state
      */
     protected ElementState leaveElementState()
     {
         if ( _elementStateCount > 0 ) {
             /*Corrected by David Blondeau (blondeau@intalio.com)*/
-		_prefixes = null;
-		//_prefixes = _elementStates[ _elementStateCount ].prefixes;
+                _prefixes = null;
+                //_prefixes = _elementStates[ _elementStateCount ].prefixes;
             -- _elementStateCount;
             return _elementStates[ _elementStateCount ];
         } else {
@@ -1906,7 +1908,7 @@ public abstract class BaseMarkupSerializer
         String    prefix;
 
         if ( _prefixes != null ) {
-            prefix = (String) _prefixes.get( namespaceURI );
+            prefix = _prefixes.get( namespaceURI );
             if ( prefix != null )
                 return prefix;
         }
@@ -1926,7 +1928,7 @@ public abstract class BaseMarkupSerializer
 
     /**
      * The method modifies global DOM error object
-     * 
+     *
      * @param message
      * @param severity
      * @param type
@@ -1939,7 +1941,7 @@ public abstract class BaseMarkupSerializer
             fDOMError.fSeverity = severity;
             fDOMError.fLocator = new DOMLocatorImpl(-1, -1, -1, node, null);
             return fDOMError;
-        
+
     }
 
 
@@ -1947,19 +1949,19 @@ public abstract class BaseMarkupSerializer
         if (fDOMErrorHandler != null) {
             modifyDOMError(message, DOMError.SEVERITY_FATAL_ERROR, null, fCurrentNode);
             fDOMErrorHandler.handleError(fDOMError);
-        } 
+        }
         else {
             throw new IOException(message);
         }
     }
-    
-	/**
-	 * DOM level 3: 
-	 * Check a node to determine if it contains unbound namespace prefixes.
-	 *
-	 * @param node The node to check for unbound namespace prefices
-	 */
-	 protected void checkUnboundNamespacePrefixedNode (Node node) throws IOException{
-	 	
-	 }
+
+        /**
+         * DOM level 3:
+         * Check a node to determine if it contains unbound namespace prefixes.
+         *
+         * @param node The node to check for unbound namespace prefices
+         */
+         protected void checkUnboundNamespacePrefixedNode (Node node) throws IOException{
+
+         }
 }

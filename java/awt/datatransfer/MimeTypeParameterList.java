@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.datatransfer;
@@ -15,10 +33,9 @@ import java.util.Set;
 
 
 /**
- * An object that encapsualtes the parameter list of a MimeType
+ * An object that encapsulates the parameter list of a MimeType
  * as defined in RFC 2045 and 2046.
  *
- * @version %I%, %G%
  * @author jeff.dunn@eng.sun.com
  */
 class MimeTypeParameterList implements Cloneable {
@@ -27,25 +44,25 @@ class MimeTypeParameterList implements Cloneable {
      * Default constructor.
      */
     public MimeTypeParameterList() {
-        parameters = new Hashtable();
+        parameters = new Hashtable<>();
     }
 
     public MimeTypeParameterList(String rawdata)
-	throws MimeTypeParseException
+        throws MimeTypeParseException
     {
-        parameters = new Hashtable();
-        
+        parameters = new Hashtable<>();
+
         //    now parse rawdata
         parse(rawdata);
     }
-    
+
     public int hashCode() {
         int code = Integer.MAX_VALUE/45; // "random" value for empty lists
         String paramName = null;
-        Enumeration enum_ = this.getNames();
+        Enumeration<String> enum_ = this.getNames();
 
         while (enum_.hasMoreElements()) {
-            paramName = (String)enum_.nextElement();
+            paramName = enum_.nextElement();
             code += paramName.hashCode();
             code += this.get(paramName).hashCode();
         }
@@ -59,36 +76,36 @@ class MimeTypeParameterList implements Cloneable {
      * order of the parameters is not considered.
      */
     public boolean equals(Object thatObject) {
-	//System.out.println("MimeTypeParameterList.equals("+this+","+thatObject+")");
-	if (!(thatObject instanceof MimeTypeParameterList)) {
-	    return false;
-	}
-	MimeTypeParameterList that = (MimeTypeParameterList)thatObject;
-	if (this.size() != that.size()) {
-	    return false;
-	}
-	String name = null;
-	String thisValue = null;
-	String thatValue = null;
-	Set entries = parameters.entrySet();
-	Iterator iterator = entries.iterator();
-	Map.Entry entry = null;
-	while (iterator.hasNext()) {
-	    entry = (Map.Entry)iterator.next();
-	    name = (String)entry.getKey();
-	    thisValue = (String)entry.getValue();
-	    thatValue = (String)that.parameters.get(name);
-	    if ((thisValue == null) || (thatValue == null)) {
-		// both null -> equal, only one null -> not equal
-		if (thisValue != thatValue) {
-		    return false;
-		}
-	    } else if (!thisValue.equals(thatValue)) {
-	        return false;
-	    }
-	} // while iterator
+        //System.out.println("MimeTypeParameterList.equals("+this+","+thatObject+")");
+        if (!(thatObject instanceof MimeTypeParameterList)) {
+            return false;
+        }
+        MimeTypeParameterList that = (MimeTypeParameterList)thatObject;
+        if (this.size() != that.size()) {
+            return false;
+        }
+        String name = null;
+        String thisValue = null;
+        String thatValue = null;
+        Set<Map.Entry<String, String>> entries = parameters.entrySet();
+        Iterator<Map.Entry<String, String>> iterator = entries.iterator();
+        Map.Entry<String, String> entry = null;
+        while (iterator.hasNext()) {
+            entry = iterator.next();
+            name = entry.getKey();
+            thisValue = entry.getValue();
+            thatValue = that.parameters.get(name);
+            if ((thisValue == null) || (thatValue == null)) {
+                // both null -> equal, only one null -> not equal
+                if (thisValue != thatValue) {
+                    return false;
+                }
+            } else if (!thisValue.equals(thatValue)) {
+                return false;
+            }
+        } // while iterator
 
-	return true;
+        return true;
     } // equals()
 
     /**
@@ -99,22 +116,22 @@ class MimeTypeParameterList implements Cloneable {
         if(length > 0) {
             int currentIndex = skipWhiteSpace(rawdata, 0);
             int lastIndex = 0;
-            
+
             if(currentIndex < length) {
                 char currentChar = rawdata.charAt(currentIndex);
                 while ((currentIndex < length) && (currentChar == ';')) {
                     String name;
                     String value;
                     boolean foundit;
-                    
+
                     //    eat the ';'
                     ++currentIndex;
-                    
+
                     //    now parse the parameter name
-                    
+
                     //    skip whitespace
                     currentIndex = skipWhiteSpace(rawdata, currentIndex);
-                    
+
                     if(currentIndex < length) {
                         //    find the end of the token char run
                         lastIndex = currentIndex;
@@ -124,19 +141,19 @@ class MimeTypeParameterList implements Cloneable {
                             currentChar = rawdata.charAt(currentIndex);
                         }
                         name = rawdata.substring(lastIndex, currentIndex).toLowerCase();
-                        
+
                         //    now parse the '=' that separates the name from the value
-                        
+
                         //    skip whitespace
                         currentIndex = skipWhiteSpace(rawdata, currentIndex);
-                        
+
                         if((currentIndex < length) && (rawdata.charAt(currentIndex) == '='))  {
                             //    eat it and parse the parameter value
                             ++currentIndex;
-                            
+
                             //    skip whitespace
                             currentIndex = skipWhiteSpace(rawdata, currentIndex);
-                            
+
                             if(currentIndex < length) {
                                 //    now find out whether or not we have a quoted value
                                 currentChar = rawdata.charAt(currentIndex);
@@ -144,7 +161,7 @@ class MimeTypeParameterList implements Cloneable {
                                     //    yup it's quoted so eat it and capture the quoted string
                                     ++currentIndex;
                                     lastIndex = currentIndex;
-                                    
+
                                     if(currentIndex < length) {
                                         //    find the next unescqped quote
                                         foundit = false;
@@ -176,7 +193,7 @@ class MimeTypeParameterList implements Cloneable {
                                     foundit = false;
                                     while((currentIndex < length) && !foundit) {
                                         currentChar = rawdata.charAt(currentIndex);
-                                        
+
                                         if(isTokenChar(currentChar)) {
                                             ++currentIndex;
                                         } else {
@@ -188,7 +205,7 @@ class MimeTypeParameterList implements Cloneable {
                                     //    it ain't a value
                                     throw new MimeTypeParseException("Unexpected character encountered at index " + currentIndex);
                                 }
-                                
+
                                 //    now put the data into the hashtable
                                 parameters.put(name, value);
                             } else {
@@ -200,7 +217,7 @@ class MimeTypeParameterList implements Cloneable {
                     } else {
                         throw new MimeTypeParseException("Couldn't find parameter name");
                     }
-                    
+
                     //    setup the next iteration
                     currentIndex = skipWhiteSpace(rawdata, currentIndex);
                     if(currentIndex < length) {
@@ -233,7 +250,7 @@ class MimeTypeParameterList implements Cloneable {
      * is no current association.
      */
     public String get(String name) {
-        return (String)parameters.get(name.trim().toLowerCase());
+        return parameters.get(name.trim().toLowerCase());
     }
 
     /**
@@ -254,25 +271,25 @@ class MimeTypeParameterList implements Cloneable {
     /**
      * Retrieve an enumeration of all the names in this list.
      */
-    public Enumeration getNames() {
+    public Enumeration<String> getNames() {
         return parameters.keys();
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.ensureCapacity(parameters.size() * 16);    //    heuristic: 8 characters per field
-        
-        Enumeration keys = parameters.keys();
+        // Heuristic: 8 characters per field
+        StringBuilder buffer = new StringBuilder(parameters.size() * 16);
+
+        Enumeration<String> keys = parameters.keys();
         while(keys.hasMoreElements())
         {
             buffer.append("; ");
-            
-            String key = (String)keys.nextElement();
+
+            String key = keys.nextElement();
             buffer.append(key);
             buffer.append('=');
-               buffer.append(quote((String)parameters.get(key)));
+               buffer.append(quote(parameters.get(key)));
         }
-        
+
         return buffer.toString();
     }
 
@@ -281,17 +298,17 @@ class MimeTypeParameterList implements Cloneable {
      */
 
      public Object clone() {
-	 MimeTypeParameterList newObj = null;
-	 try {
-	     newObj = (MimeTypeParameterList)super.clone();
-	 } catch (CloneNotSupportedException cannotHappen) {
-	 }
-	 newObj.parameters = (Hashtable)parameters.clone();
-	 return newObj;
+         MimeTypeParameterList newObj = null;
+         try {
+             newObj = (MimeTypeParameterList)super.clone();
+         } catch (CloneNotSupportedException cannotHappen) {
+         }
+         newObj.parameters = (Hashtable)parameters.clone();
+         return newObj;
      }
 
-    private Hashtable parameters;
-    
+    private Hashtable<String, String> parameters;
+
     //    below here be scary parsing related things
 
     /**
@@ -314,29 +331,28 @@ class MimeTypeParameterList implements Cloneable {
                 c = rawdata.charAt(i);
             }
         }
-        
+
         return i;
     }
-    
+
     /**
      * A routine that knows how and when to quote and escape the given value.
      */
     private static String quote(String value) {
         boolean needsQuotes = false;
-        
+
         //    check to see if we actually have to quote this thing
         int length = value.length();
         for(int i = 0; (i < length) && !needsQuotes; ++i) {
             needsQuotes = !isTokenChar(value.charAt(i));
         }
-        
+
         if(needsQuotes) {
-            StringBuffer buffer = new StringBuffer();
-            buffer.ensureCapacity((int)(length * 1.5));
-            
+            StringBuilder buffer = new StringBuilder((int)(length * 1.5));
+
             //    add the initial quote
             buffer.append('"');
-            
+
             //    add the properly escaped text
             for(int i = 0; i < length; ++i) {
                 char c = value.charAt(i);
@@ -345,10 +361,10 @@ class MimeTypeParameterList implements Cloneable {
                 }
                 buffer.append(c);
             }
-            
+
             //    add the closing quote
             buffer.append('"');
-            
+
             return buffer.toString();
         }
         else
@@ -356,15 +372,14 @@ class MimeTypeParameterList implements Cloneable {
             return value;
         }
     }
-    
+
     /**
      * A routine that knows how to strip the quotes and escape sequences from the given value.
      */
     private static String unquote(String value) {
         int valueLength = value.length();
-        StringBuffer buffer = new StringBuffer();
-        buffer.ensureCapacity(valueLength);
-        
+        StringBuilder buffer = new StringBuilder(valueLength);
+
         boolean escaped = false;
         for(int i = 0; i < valueLength; ++i) {
             char currentChar = value.charAt(i);
@@ -377,10 +392,10 @@ class MimeTypeParameterList implements Cloneable {
                 escaped = true;
             }
         }
-        
+
         return buffer.toString();
     }
-    
+
     /**
      * A string that holds all the special chars.
      */

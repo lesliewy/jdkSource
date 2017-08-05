@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.security;
@@ -17,7 +35,6 @@ import java.util.*;
  * @see PublicKey
  * @see PrivateKey
  *
- * @version %I% %E%
  * @author Benjamin Renaud
  */
 
@@ -33,15 +50,15 @@ public final class KeyPair implements java.io.Serializable {
      *
      * <p>Note that this constructor only stores references to the public
      * and private key components in the generated key pair. This is safe,
-     * because <code>Key</code> objects are immutable.
+     * because {@code Key} objects are immutable.
      *
      * @param publicKey the public key.
      *
      * @param privateKey the private key.
      */
     public KeyPair(PublicKey publicKey, PrivateKey privateKey) {
-	this.publicKey = publicKey;
-	this.privateKey = privateKey;
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
     }
 
     /**
@@ -50,7 +67,7 @@ public final class KeyPair implements java.io.Serializable {
      * @return a reference to the public key.
      */
     public PublicKey getPublic() {
-	return publicKey;
+        return publicKey;
     }
 
      /**
@@ -59,6 +76,6 @@ public final class KeyPair implements java.io.Serializable {
      * @return a reference to the private key.
      */
    public PrivateKey getPrivate() {
-	return privateKey;
+        return privateKey;
     }
 }

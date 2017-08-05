@@ -1,18 +1,30 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.tools;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.CharBuffer;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.Modifier;
 
@@ -81,9 +93,9 @@ public interface JavaFileObject extends FileObject {
     /**
      * Checks if this file object is compatible with the specified
      * simple name and kind.  A simple name is a single identifier
-     * (not qualified) as defined in the <a
-     * href="http://java.sun.com/docs/books/jls/">Java Language
-     * Specification</a> 3rd ed., section 6.2 "Names and Identifiers".
+     * (not qualified) as defined in
+     * <cite>The Java&trade; Language Specification</cite>,
+     * section 6.2 "Names and Identifiers".
      *
      * @param simpleName a simple name of a class
      * @param kind a kind

@@ -1,9 +1,13 @@
 /*
- * Copyright 2001-2004 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -13,9 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * $Id: DOMAdapter.java,v 1.2.4.1 2005/09/06 06:07:28 pvedula Exp $
- */
 
 package com.sun.org.apache.xalan.internal.xsltc.dom;
 
@@ -23,11 +24,10 @@ import com.sun.org.apache.xalan.internal.xsltc.DOM;
 import com.sun.org.apache.xalan.internal.xsltc.DOMEnhancedForDTM;
 import com.sun.org.apache.xalan.internal.xsltc.StripFilter;
 import com.sun.org.apache.xalan.internal.xsltc.TransletException;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 import com.sun.org.apache.xml.internal.dtm.DTM;
 import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;
 import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
-
+import java.util.Map;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -53,10 +53,8 @@ public final class DOMAdapter implements DOM {
     private short[] _NSmapping = null;
     private short[] _NSreverse = null;
 
-    private StripFilter _filter = null;
-
     private int _multiDOMMask;
-    
+
     public DOMAdapter(DOM dom,
                       String[] namesArray,
                       String[] urisArray,
@@ -80,25 +78,25 @@ public final class DOMAdapter implements DOM {
         _typesArray = typesArray;
         _namespaceArray = namespaces;
     }
-    
+
     public String[] getNamesArray() {
         return _namesArray;
     }
-    
+
     public String[] getUrisArray() {
-    	return _urisArray;
+        return _urisArray;
     }
-    
+
     public int[] getTypesArray() {
-    	return _typesArray;
+        return _typesArray;
     }
-    
+
     public String[] getNamespaceArray() {
         return _namespaceArray;
     }
-    
+
     public DOM getDOMImpl() {
-    	return _dom;
+        return _dom;
     }
 
     private short[] getMapping() {
@@ -106,52 +104,52 @@ public final class DOMAdapter implements DOM {
             if (_enhancedDOM != null) {
                 _mapping = _enhancedDOM.getMapping(_namesArray, _urisArray,
                                                    _typesArray);
-            } 
+            }
         }
         return _mapping;
     }
 
     private int[] getReverse() {
-	if (_reverse == null) {
+        if (_reverse == null) {
             if (_enhancedDOM != null) {
-	        _reverse = _enhancedDOM.getReverseMapping(_namesArray,
+                _reverse = _enhancedDOM.getReverseMapping(_namesArray,
                                                           _urisArray,
                                                           _typesArray);
             }
-	}
-	return _reverse;
+        }
+        return _reverse;
     }
 
     private short[] getNSMapping() {
-	if (_NSmapping == null) {
+        if (_NSmapping == null) {
             if (_enhancedDOM != null) {
-	        _NSmapping = _enhancedDOM.getNamespaceMapping(_namespaceArray);
+                _NSmapping = _enhancedDOM.getNamespaceMapping(_namespaceArray);
             }
-	}
-	return _NSmapping;
+        }
+        return _NSmapping;
     }
 
     private short[] getNSReverse() {
-	if (_NSreverse == null) {
+        if (_NSreverse == null) {
             if (_enhancedDOM != null) {
-	        _NSreverse = _enhancedDOM
+                _NSreverse = _enhancedDOM
                                   .getReverseNamespaceMapping(_namespaceArray);
             }
-	}
-	return _NSreverse;
+        }
+        return _NSreverse;
     }
 
-    /** 
-      * Returns singleton iterator containg the document root 
+    /**
+      * Returns singleton iterator containg the document root
       */
     public DTMAxisIterator getIterator() {
         return _dom.getIterator();
     }
-    
+
     public String getStringValue() {
         return _dom.getStringValue();
     }
-    
+
     public DTMAxisIterator getChildren(final int node) {
         if (_enhancedDOM != null) {
             return _enhancedDOM.getChildren(node);
@@ -162,9 +160,7 @@ public final class DOMAdapter implements DOM {
         }
     }
 
-    public void setFilter(StripFilter filter) {
-	_filter = filter;
-    }
+    public void setFilter(StripFilter filter) {}
 
     public DTMAxisIterator getTypedChildren(final int type) {
         final int[] reverse = getReverse();
@@ -174,7 +170,7 @@ public final class DOMAdapter implements DOM {
         }
         else {
             return _dom.getTypedChildren(type);
-        }      
+        }
     }
 
     public DTMAxisIterator getNamespaceAxisIterator(final int axis,
@@ -188,9 +184,9 @@ public final class DOMAdapter implements DOM {
         }
         else {
             return _dom.getAxisIterator(axis);
-        }        
+        }
     }
-    
+
     public DTMAxisIterator getTypedAxisIterator(final int axis,
                                                 final int type) {
         final int[] reverse = getReverse();
@@ -198,15 +194,15 @@ public final class DOMAdapter implements DOM {
             return _enhancedDOM.getTypedAxisIterator(axis, reverse[type]);
         } else {
             return _dom.getTypedAxisIterator(axis, type);
-        }      
+        }
     }
-        
+
     public int getMultiDOMMask() {
-	return _multiDOMMask;
+        return _multiDOMMask;
     }
 
     public void setMultiDOMMask(int mask) {
-	_multiDOMMask = mask;
+        _multiDOMMask = mask;
     }
 
     public DTMAxisIterator getNthDescendant(int type, int n,
@@ -223,92 +219,92 @@ public final class DOMAdapter implements DOM {
     public DTMAxisIterator orderNodes(DTMAxisIterator source, int node) {
         return _dom.orderNodes(source, node);
     }
-    
+
     public int getExpandedTypeID(final int node) {
-    	final short[] mapping = getMapping();
-    	final int type;
+        final short[] mapping = getMapping();
+        final int type;
         if (_enhancedDOM != null) {
             type = mapping[_enhancedDOM.getExpandedTypeID2(node)];
         }
         else {
-        	if(null != mapping)
-        	{
-            	type = mapping[_dom.getExpandedTypeID(node)];
-        	}
-        	else
-        	{
-        		type = _dom.getExpandedTypeID(node);
-        	}
+                if(null != mapping)
+                {
+                type = mapping[_dom.getExpandedTypeID(node)];
+                }
+                else
+                {
+                        type = _dom.getExpandedTypeID(node);
+                }
         }
         return type;
     }
 
     public int getNamespaceType(final int node) {
-    	return getNSMapping()[_dom.getNSType(node)];
+        return getNSMapping()[_dom.getNSType(node)];
     }
 
     public int getNSType(int node) {
-	return _dom.getNSType(node);
+        return _dom.getNSType(node);
     }
-    
+
     public int getParent(final int node) {
         return _dom.getParent(node);
     }
 
     public int getAttributeNode(final int type, final int element) {
-	return _dom.getAttributeNode(getReverse()[type], element);
+        return _dom.getAttributeNode(getReverse()[type], element);
     }
-    
+
     public String getNodeName(final int node) {
-    	if (node == DTM.NULL) {
-    	    return "";
-    	}
+        if (node == DTM.NULL) {
+            return "";
+        }
         return _dom.getNodeName(node);
     }
-    
-    public String getNodeNameX(final int node) 
+
+    public String getNodeNameX(final int node)
     {
-    	if (node == DTM.NULL) {
-    	    return "";
-    	}
+        if (node == DTM.NULL) {
+            return "";
+        }
         return _dom.getNodeNameX(node);
     }
 
-    public String getNamespaceName(final int node) 
+    public String getNamespaceName(final int node)
     {
-    	if (node == DTM.NULL) {
-    	    return "";
-    	}
+        if (node == DTM.NULL) {
+            return "";
+        }
         return _dom.getNamespaceName(node);
     }
-    
-    public String getStringValueX(final int node) 
-    {    	
-    	if (_enhancedDOM != null) {
+
+    public String getStringValueX(final int node)
+    {
+        if (_enhancedDOM != null) {
             return _enhancedDOM.getStringValueX(node);
         }
         else {
             if (node == DTM.NULL) {
-    	        return "";
-    	    }
+                return "";
+            }
             return _dom.getStringValueX(node);
         }
     }
-    
+
     public void copy(final int node, SerializationHandler handler)
-	throws TransletException 
+        throws TransletException
     {
         _dom.copy(node, handler);
     }
-    
+
     public void copy(DTMAxisIterator nodes,SerializationHandler handler)
-	throws TransletException 
+        throws TransletException
     {
-	_dom.copy(nodes, handler);
+        _dom.copy(nodes, handler);
     }
 
     public String shallowCopy(final int node, SerializationHandler handler)
-	throws TransletException 
+        throws TransletException
     {
         if (_enhancedDOM != null) {
             return _enhancedDOM.shallowCopy(node, handler);
@@ -317,14 +313,14 @@ public final class DOMAdapter implements DOM {
             return _dom.shallowCopy(node, handler);
         }
     }
-    
-    public boolean lessThan(final int node1, final int node2) 
+
+    public boolean lessThan(final int node1, final int node2)
     {
         return _dom.lessThan(node1, node2);
     }
-    
+
     public void characters(final int textNode, SerializationHandler handler)
-      throws TransletException 
+      throws TransletException
     {
         if (_enhancedDOM != null) {
             _enhancedDOM.characters(textNode, handler);
@@ -334,37 +330,37 @@ public final class DOMAdapter implements DOM {
         }
     }
 
-    public Node makeNode(int index) 
+    public Node makeNode(int index)
     {
         return _dom.makeNode(index);
     }
 
-    public Node makeNode(DTMAxisIterator iter) 
+    public Node makeNode(DTMAxisIterator iter)
     {
         return _dom.makeNode(iter);
     }
 
-    public NodeList makeNodeList(int index) 
+    public NodeList makeNodeList(int index)
     {
         return _dom.makeNodeList(index);
     }
 
-    public NodeList makeNodeList(DTMAxisIterator iter) 
+    public NodeList makeNodeList(DTMAxisIterator iter)
     {
         return _dom.makeNodeList(iter);
     }
 
-    public String getLanguage(int node) 
+    public String getLanguage(int node)
     {
         return _dom.getLanguage(node);
     }
 
-    public int getSize() 
+    public int getSize()
     {
         return _dom.getSize();
     }
 
-    public void setDocumentURI(String uri) 
+    public void setDocumentURI(String uri)
     {
         if (_enhancedDOM != null) {
             _enhancedDOM.setDocumentURI(uri);
@@ -381,84 +377,88 @@ public final class DOMAdapter implements DOM {
         }
     }
 
-    public String getDocumentURI(int node) 
+    public String getDocumentURI(int node)
     {
         return _dom.getDocumentURI(node);
     }
 
-    public int getDocument() 
+    public int getDocument()
     {
         return _dom.getDocument();
     }
 
-    public boolean isElement(final int node) 
+    public boolean isElement(final int node)
     {
         return(_dom.isElement(node));
     }
 
-    public boolean isAttribute(final int node) 
+    public boolean isAttribute(final int node)
     {
         return(_dom.isAttribute(node));
     }
-    
+
     public int getNodeIdent(int nodeHandle)
     {
-    	return _dom.getNodeIdent(nodeHandle);
+        return _dom.getNodeIdent(nodeHandle);
     }
-    
+
     public int getNodeHandle(int nodeId)
     {
-    	return _dom.getNodeHandle(nodeId);
+        return _dom.getNodeHandle(nodeId);
     }
-    
+
     /**
      * Return a instance of a DOM class to be used as an RTF
-     */ 
+     */
     public DOM getResultTreeFrag(int initSize, int rtfType)
     {
-    	if (_enhancedDOM != null) {
-    	    return _enhancedDOM.getResultTreeFrag(initSize, rtfType);
-    	}
-    	else {
-    	    return _dom.getResultTreeFrag(initSize, rtfType);
-    	}
+        if (_enhancedDOM != null) {
+            return _enhancedDOM.getResultTreeFrag(initSize, rtfType);
+        }
+        else {
+            return _dom.getResultTreeFrag(initSize, rtfType);
+        }
     }
-    
+
     /**
      * Return a instance of a DOM class to be used as an RTF
-     */ 
+     */
     public DOM getResultTreeFrag(int initSize, int rtfType,
                                  boolean addToManager)
     {
-    	if (_enhancedDOM != null) {
-    	    return _enhancedDOM.getResultTreeFrag(initSize, rtfType,
+        if (_enhancedDOM != null) {
+            return _enhancedDOM.getResultTreeFrag(initSize, rtfType,
                                                   addToManager);
-    	}
-    	else {
-	    return _dom.getResultTreeFrag(initSize, rtfType, addToManager);
-	}
+        }
+        else {
+            return _dom.getResultTreeFrag(initSize, rtfType, addToManager);
+        }
     }
-  
-    
+
+
     /**
      * Returns a SerializationHandler class wrapped in a SAX adapter.
      */
     public SerializationHandler getOutputDomBuilder()
     {
-    	return _dom.getOutputDomBuilder();
+        return _dom.getOutputDomBuilder();
     }
 
-    public String lookupNamespace(int node, String prefix) 
-	throws TransletException 
+    public String lookupNamespace(int node, String prefix)
+        throws TransletException
     {
-	return _dom.lookupNamespace(node, prefix);
+        return _dom.lookupNamespace(node, prefix);
     }
 
     public String getUnparsedEntityURI(String entity) {
         return _dom.getUnparsedEntityURI(entity);
     }
 
-    public Hashtable getElementsWithIDs() {
+    public Map<String, Integer> getElementsWithIDs() {
         return _dom.getElementsWithIDs();
+    }
+
+    public void release() {
+        _dom.release();
     }
 }

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
@@ -25,7 +43,6 @@ import java.util.StringTokenizer;
  * The following table lists all the possible SerializablePermission target names,
  * and for each provides a description of what the permission allows
  * and a discussion of the risks of granting code the permission.
- * <P>
  *
  * <table border=1 cellpadding=5 summary="Permission target name, what the permission allows, and associated risks">
  * <tr>
@@ -64,7 +81,6 @@ import java.util.StringTokenizer;
  * @see java.security.PermissionCollection
  * @see java.lang.SecurityManager
  *
- * @version %I%, %G%
  *
  * @author Joe Fialli
  * @since 1.2
@@ -93,7 +109,7 @@ public final class SerializablePermission extends BasicPermission {
      */
     public SerializablePermission(String name)
     {
-	super(name);
+        super(name);
     }
 
     /**
@@ -110,6 +126,6 @@ public final class SerializablePermission extends BasicPermission {
 
     public SerializablePermission(String name, String actions)
     {
-	super(name, actions);
+        super(name, actions);
     }
 }

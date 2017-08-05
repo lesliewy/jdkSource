@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.tree;
 
@@ -12,7 +30,7 @@ import javax.swing.event.*;
  * The model used by <code>JTree</code>.
  * <p>
  * <code>JTree</code> and its related classes make extensive use of
- * <code>TreePath</code>s for indentifying nodes in the <code>TreeModel</code>.
+ * <code>TreePath</code>s for identifying nodes in the <code>TreeModel</code>.
  * If a <code>TreeModel</code> returns the same object, as compared by
  * <code>equals</code>, at two different indices under the same parent
  * than the resulting <code>TreePath</code> objects will be considered equal
@@ -32,12 +50,11 @@ import javax.swing.event.*;
  * For further information on tree models,
  * including an example of a custom implementation,
  * see <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Trees</a>
+ href="https://docs.oracle.com/javase/tutorial/uiswing/components/tree.html">How to Use Trees</a>
  * in <em>The Java Tutorial.</em>
- * 
+ *
  * @see TreePath
- * 
- * @version %I% %G%
+ *
  * @author Rob Davis
  * @author Ray Ryan
  */
@@ -59,8 +76,8 @@ public interface TreeModel
      * child array.  <code>parent</code> must be a node previously obtained
      * from this data source. This should not return <code>null</code>
      * if <code>index</code>
-     * is a valid index for <code>parent</code> (that is <code>index >= 0 &&
-     * index < getChildCount(parent</code>)).
+     * is a valid index for <code>parent</code> (that is <code>index &gt;= 0 &amp;&amp;
+     * index &lt; getChildCount(parent</code>)).
      *
      * @param   parent  a node in the tree, obtained from this data source
      * @return  the child of <code>parent</code> at index <code>index</code>
@@ -95,7 +112,7 @@ public interface TreeModel
 
     /**
       * Messaged when the user has altered the value for the item identified
-      * by <code>path</code> to <code>newValue</code>. 
+      * by <code>path</code> to <code>newValue</code>.
       * If <code>newValue</code> signifies a truly new value
       * the model should post a <code>treeNodesChanged</code> event.
       *
@@ -137,7 +154,7 @@ public interface TreeModel
      *
      * @see     #addTreeModelListener
      * @param   l       the listener to remove
-     */  
+     */
     void removeTreeModelListener(TreeModelListener l);
 
 }

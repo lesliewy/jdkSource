@@ -1,32 +1,49 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
- 
+
 package java.security;
 
 import java.security.spec.AlgorithmParameterSpec;
 
 /**
  * <p> This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)
- * for the <code>KeyPairGenerator</code> class, which is used to generate
+ * for the {@code KeyPairGenerator} class, which is used to generate
  * pairs of public and private keys.
  *
  * <p> All the abstract methods in this class must be implemented by each
  * cryptographic service provider who wishes to supply the implementation
  * of a key pair generator for a particular algorithm.
- * 
+ *
  * <p> In case the client does not explicitly initialize the KeyPairGenerator
- * (via a call to an <code>initialize</code> method), each provider must
+ * (via a call to an {@code initialize} method), each provider must
  * supply (and document) a default initialization.
  * For example, the <i>Sun</i> provider uses a default modulus size (keysize)
  * of 1024 bits.
  *
  * @author Benjamin Renaud
  *
- * @version %I%, %G%
  *
  * @see KeyPairGenerator
  * @see java.security.spec.AlgorithmParameterSpec
@@ -44,7 +61,7 @@ public abstract class KeyPairGeneratorSpi {
      *
      * @param random the source of randomness for this generator.
      *
-     * @exception InvalidParameterException if the <code>keysize</code> is not
+     * @exception InvalidParameterException if the {@code keysize} is not
      * supported by this KeyPairGeneratorSpi object.
      */
     public abstract void initialize(int keysize, SecureRandom random);
@@ -55,7 +72,7 @@ public abstract class KeyPairGeneratorSpi {
      *
      * <p>This concrete method has been added to this previously-defined
      * abstract class. (For backwards compatibility, it cannot be abstract.)
-     * It may be overridden by a provider to initialize the key pair 
+     * It may be overridden by a provider to initialize the key pair
      * generator. Such an override
      * is expected to throw an InvalidAlgorithmParameterException if
      * a parameter is inappropriate for this key pair generator.
@@ -72,9 +89,9 @@ public abstract class KeyPairGeneratorSpi {
      * @since 1.2
      */
     public void initialize(AlgorithmParameterSpec params,
-		           SecureRandom random)
-	throws InvalidAlgorithmParameterException {
-	    throw new UnsupportedOperationException();
+                           SecureRandom random)
+        throws InvalidAlgorithmParameterException {
+            throw new UnsupportedOperationException();
     }
 
     /**
@@ -83,7 +100,7 @@ public abstract class KeyPairGeneratorSpi {
      * will be used. This will generate a new key pair every time it
      * is called.
      *
-     * @return the newly generated <tt>KeyPair</tt>
+     * @return the newly generated {@code KeyPair}
      */
     public abstract KeyPair generateKeyPair();
 }

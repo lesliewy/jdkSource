@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing;
 
@@ -33,14 +51,13 @@ import java.awt.event.KeyEvent;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see javax.swing.text.Keymap
  * @see #getKeyStroke
  *
- * @version %I%, %G%
  * @author Arnaud Weber
  * @author David Mendenhall
  */
@@ -54,13 +71,13 @@ public class KeyStroke extends AWTKeyStroke {
     private KeyStroke() {
     }
     private KeyStroke(char keyChar, int keyCode, int modifiers,
-		      boolean onKeyRelease) {
+                      boolean onKeyRelease) {
         super(keyChar, keyCode, modifiers, onKeyRelease);
     }
 
     /**
-     * Returns a shared instance of a <code>KeyStroke</code> 
-     * that represents a <code>KEY_TYPED</code> event for the 
+     * Returns a shared instance of a <code>KeyStroke</code>
+     * that represents a <code>KEY_TYPED</code> event for the
      * specified character.
      *
      * @param keyChar the character value for a keyboard key
@@ -68,9 +85,9 @@ public class KeyStroke extends AWTKeyStroke {
      */
     public static KeyStroke getKeyStroke(char keyChar) {
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    return (KeyStroke)getAWTKeyStroke(keyChar);
-	}
+            registerSubclass(KeyStroke.class);
+            return (KeyStroke)getAWTKeyStroke(keyChar);
+        }
     }
 
     /**
@@ -99,7 +116,7 @@ public class KeyStroke extends AWTKeyStroke {
      * <code>getKeyStroke(int keyCode, int modifiers)</code>.
      *
      * The modifiers consist of any combination of following:<ul>
-     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK
      * <li>java.awt.event.InputEvent.CTRL_DOWN_MASK
      * <li>java.awt.event.InputEvent.META_DOWN_MASK
      * <li>java.awt.event.InputEvent.ALT_DOWN_MASK
@@ -107,12 +124,12 @@ public class KeyStroke extends AWTKeyStroke {
      * </ul>
      * The old modifiers listed below also can be used, but they are
      * mapped to _DOWN_ modifiers. <ul>
-     * <li>java.awt.event.InputEvent.SHIFT_MASK 
-     * <li>java.awt.event.InputEvent.CTRL_MASK 
-     * <li>java.awt.event.InputEvent.META_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_MASK
+     * <li>java.awt.event.InputEvent.CTRL_MASK
+     * <li>java.awt.event.InputEvent.META_MASK
      * <li>java.awt.event.InputEvent.ALT_MASK
      * <li>java.awt.event.InputEvent.ALT_GRAPH_MASK
-     * </ul> 
+     * </ul>
      * also can be used, but they are mapped to _DOWN_ modifiers.
      *
      * Since these numbers are all different powers of two, any combination of
@@ -129,9 +146,9 @@ public class KeyStroke extends AWTKeyStroke {
      */
     public static KeyStroke getKeyStroke(Character keyChar, int modifiers) {
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    return (KeyStroke)getAWTKeyStroke(keyChar, modifiers);
-	}
+            registerSubclass(KeyStroke.class);
+            return (KeyStroke)getAWTKeyStroke(keyChar, modifiers);
+        }
     }
 
     /**
@@ -139,26 +156,29 @@ public class KeyStroke extends AWTKeyStroke {
      * set of modifiers, specifying whether the key is activated when it is
      * pressed or released.
      * <p>
-     * The "virtual key" constants defined in java.awt.event.KeyEvent can be 
+     * The "virtual key" constants defined in java.awt.event.KeyEvent can be
      * used to specify the key code. For example:<ul>
-     * <li>java.awt.event.KeyEvent.VK_ENTER 
+     * <li>java.awt.event.KeyEvent.VK_ENTER
      * <li>java.awt.event.KeyEvent.VK_TAB
      * <li>java.awt.event.KeyEvent.VK_SPACE
      * </ul>
+     * Alternatively, the key code may be obtained by calling
+     * <code>java.awt.event.KeyEvent.getExtendedKeyCodeForChar</code>.
+     *
      * The modifiers consist of any combination of:<ul>
-     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK
      * <li>java.awt.event.InputEvent.CTRL_DOWN_MASK
      * <li>java.awt.event.InputEvent.META_DOWN_MASK
      * <li>java.awt.event.InputEvent.ALT_DOWN_MASK
      * <li>java.awt.event.InputEvent.ALT_GRAPH_DOWN_MASK
      * </ul>
      * The old modifiers <ul>
-     * <li>java.awt.event.InputEvent.SHIFT_MASK 
-     * <li>java.awt.event.InputEvent.CTRL_MASK 
-     * <li>java.awt.event.InputEvent.META_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_MASK
+     * <li>java.awt.event.InputEvent.CTRL_MASK
+     * <li>java.awt.event.InputEvent.META_MASK
      * <li>java.awt.event.InputEvent.ALT_MASK
      * <li>java.awt.event.InputEvent.ALT_GRAPH_MASK
-     * </ul> 
+     * </ul>
      * also can be used, but they are mapped to _DOWN_ modifiers.
      *
      * Since these numbers are all different powers of two, any combination of
@@ -175,38 +195,41 @@ public class KeyStroke extends AWTKeyStroke {
      * @see java.awt.event.InputEvent
      */
     public static KeyStroke getKeyStroke(int keyCode, int modifiers,
-					 boolean onKeyRelease) {
+                                         boolean onKeyRelease) {
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    return (KeyStroke)getAWTKeyStroke(keyCode, modifiers,
-					      onKeyRelease);
-	}
+            registerSubclass(KeyStroke.class);
+            return (KeyStroke)getAWTKeyStroke(keyCode, modifiers,
+                                              onKeyRelease);
+        }
     }
 
     /**
      * Returns a shared instance of a KeyStroke, given a numeric key code and a
      * set of modifiers. The returned KeyStroke will correspond to a key press.
      * <p>
-     * The "virtual key" constants defined in java.awt.event.KeyEvent can be 
+     * The "virtual key" constants defined in java.awt.event.KeyEvent can be
      * used to specify the key code. For example:<ul>
-     * <li>java.awt.event.KeyEvent.VK_ENTER 
+     * <li>java.awt.event.KeyEvent.VK_ENTER
      * <li>java.awt.event.KeyEvent.VK_TAB
      * <li>java.awt.event.KeyEvent.VK_SPACE
      * </ul>
+     * Alternatively, the key code may be obtained by calling
+     * <code>java.awt.event.KeyEvent.getExtendedKeyCodeForChar</code>.
+     *
      * The modifiers consist of any combination of:<ul>
-     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_DOWN_MASK
      * <li>java.awt.event.InputEvent.CTRL_DOWN_MASK
      * <li>java.awt.event.InputEvent.META_DOWN_MASK
      * <li>java.awt.event.InputEvent.ALT_DOWN_MASK
      * <li>java.awt.event.InputEvent.ALT_GRAPH_DOWN_MASK
      * </ul>
      * The old modifiers <ul>
-     * <li>java.awt.event.InputEvent.SHIFT_MASK 
-     * <li>java.awt.event.InputEvent.CTRL_MASK 
-     * <li>java.awt.event.InputEvent.META_MASK 
+     * <li>java.awt.event.InputEvent.SHIFT_MASK
+     * <li>java.awt.event.InputEvent.CTRL_MASK
+     * <li>java.awt.event.InputEvent.META_MASK
      * <li>java.awt.event.InputEvent.ALT_MASK
      * <li>java.awt.event.InputEvent.ALT_GRAPH_MASK
-     * </ul> 
+     * </ul>
      * also can be used, but they are mapped to _DOWN_ modifiers.
      *
      * Since these numbers are all different powers of two, any combination of
@@ -222,9 +245,9 @@ public class KeyStroke extends AWTKeyStroke {
      */
     public static KeyStroke getKeyStroke(int keyCode, int modifiers) {
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    return (KeyStroke)getAWTKeyStroke(keyCode, modifiers);
-	}
+            registerSubclass(KeyStroke.class);
+            return (KeyStroke)getAWTKeyStroke(keyCode, modifiers);
+        }
     }
 
     /**
@@ -241,18 +264,18 @@ public class KeyStroke extends AWTKeyStroke {
      */
     public static KeyStroke getKeyStrokeForEvent(KeyEvent anEvent) {
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    return (KeyStroke)getAWTKeyStrokeForEvent(anEvent);
-	}
+            registerSubclass(KeyStroke.class);
+            return (KeyStroke)getAWTKeyStrokeForEvent(anEvent);
+        }
     }
 
     /**
-     * Parses a string and returns a <code>KeyStroke</code>. 
+     * Parses a string and returns a <code>KeyStroke</code>.
      * The string must have the following syntax:
      * <pre>
      *    &lt;modifiers&gt;* (&lt;typedID&gt; | &lt;pressedReleasedID&gt;)
      *
-     *    modifiers := shift | control | ctrl | meta | alt | altGraph 
+     *    modifiers := shift | control | ctrl | meta | alt | altGraph
      *    typedID := typed &lt;typedKey&gt;
      *    typedKey := string of length 1 giving Unicode character.
      *    pressedReleasedID := (pressed | released) key
@@ -261,11 +284,11 @@ public class KeyStroke extends AWTKeyStroke {
      * If typed, pressed or released is not specified, pressed is assumed. Here
      * are some examples:
      * <pre>
-     *     "INSERT" => getKeyStroke(KeyEvent.VK_INSERT, 0);
-     *     "control DELETE" => getKeyStroke(KeyEvent.VK_DELETE, InputEvent.CTRL_MASK);
-     *     "alt shift X" => getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK);
-     *     "alt shift released X" => getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK, true);
-     *     "typed a" => getKeyStroke('a');
+     *     "INSERT" =&gt; getKeyStroke(KeyEvent.VK_INSERT, 0);
+     *     "control DELETE" =&gt; getKeyStroke(KeyEvent.VK_DELETE, InputEvent.CTRL_MASK);
+     *     "alt shift X" =&gt; getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK);
+     *     "alt shift released X" =&gt; getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK, true);
+     *     "typed a" =&gt; getKeyStroke('a');
      * </pre>
      *
      * In order to maintain backward-compatibility, specifying a null String,
@@ -274,18 +297,20 @@ public class KeyStroke extends AWTKeyStroke {
      * @param s a String formatted as described above
      * @return a KeyStroke object for that String, or null if the specified
      *         String is null, or is formatted incorrectly
+     *
+     * @see java.awt.event.KeyEvent
      */
     public static KeyStroke getKeyStroke(String s) {
-	if (s == null || s.length() == 0) {
-	    return null;
-	}
+        if (s == null || s.length() == 0) {
+            return null;
+        }
         synchronized (AWTKeyStroke.class) {
-	    registerSubclass(KeyStroke.class);
-	    try {
-	        return (KeyStroke)getAWTKeyStroke(s);
-	    } catch (IllegalArgumentException e) {
-	        return null;
-	    }
-	}
+            registerSubclass(KeyStroke.class);
+            try {
+                return (KeyStroke)getAWTKeyStroke(s);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
     }
 }

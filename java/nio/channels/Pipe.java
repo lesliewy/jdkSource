@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.nio.channels;
@@ -15,10 +33,9 @@ import java.nio.channels.spi.*;
  * A pair of channels that implements a unidirectional pipe.
  *
  * <p> A pipe consists of a pair of channels: A writable {@link
- * Pipe.SinkChannel </code>sink<code>} channel and a readable {@link
- * Pipe.SourceChannel </code>source<code>} channel.  Once some bytes are
- * written to the sink channel they can be read from source channel in exactly
- * the order in which they were written.
+ * Pipe.SinkChannel sink} channel and a readable {@link Pipe.SourceChannel source}
+ * channel.  Once some bytes are written to the sink channel they can be read
+ * from source channel in exactlyAthe order in which they were written.
  *
  * <p> Whether or not a thread writing bytes to a pipe will block until another
  * thread reads those bytes, or some previously-written bytes, from the pipe is
@@ -29,71 +46,76 @@ import java.nio.channels.spi.*;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version %I%, %E%
  * @since 1.4
  */
 
 public abstract class Pipe {
 
     /**
-     * A channel representing the readable end of a {@link Pipe}.  </p>
+     * A channel representing the readable end of a {@link Pipe}.
      *
      * @since 1.4
      */
     public static abstract class SourceChannel
-	extends AbstractSelectableChannel
-	implements ReadableByteChannel, ScatteringByteChannel
+        extends AbstractSelectableChannel
+        implements ReadableByteChannel, ScatteringByteChannel
     {
-	/**
-	 * Constructs a new instance of this class.
-	 */
-	protected SourceChannel(SelectorProvider provider) {
-	    super(provider);
-	}
+        /**
+         * Constructs a new instance of this class.
+         *
+         * @param  provider
+         *         The selector provider
+         */
+        protected SourceChannel(SelectorProvider provider) {
+            super(provider);
+        }
 
-	/**
-	 * Returns an operation set identifying this channel's supported
-	 * operations.
-	 *
-	 * <p> Pipe-source channels only support reading, so this method
-	 * returns {@link SelectionKey#OP_READ}.  </p>
-	 *
-	 * @return  The valid-operation set
-	 */
-	public final int validOps() {
-	    return SelectionKey.OP_READ;
-	}
+        /**
+         * Returns an operation set identifying this channel's supported
+         * operations.
+         *
+         * <p> Pipe-source channels only support reading, so this method
+         * returns {@link SelectionKey#OP_READ}.  </p>
+         *
+         * @return  The valid-operation set
+         */
+        public final int validOps() {
+            return SelectionKey.OP_READ;
+        }
 
     }
 
     /**
-     * A channel representing the writable end of a {@link Pipe}.  </p>
+     * A channel representing the writable end of a {@link Pipe}.
      *
      * @since 1.4
      */
     public static abstract class SinkChannel
-	extends AbstractSelectableChannel
-	implements WritableByteChannel, GatheringByteChannel
+        extends AbstractSelectableChannel
+        implements WritableByteChannel, GatheringByteChannel
     {
-	/**
-	 * Initializes a new instance of this class.
-	 */
-	protected SinkChannel(SelectorProvider provider) {
-	    super(provider);
-	}
+        /**
+         * Initializes a new instance of this class.
+         *
+         * @param  provider
+         *         The selector provider
+         */
+        protected SinkChannel(SelectorProvider provider) {
+            super(provider);
+        }
 
-	/**
-	 * Returns an operation set identifying this channel's supported
-	 * operations.
-	 *
-	 * <p> Pipe-sink channels only support writing, so this method returns
-	 * {@link SelectionKey#OP_WRITE}.  </p>
-	 *
-	 * @return  The valid-operation set
-	 */
-	public final int validOps() {
-	    return SelectionKey.OP_WRITE;
-	}
+        /**
+         * Returns an operation set identifying this channel's supported
+         * operations.
+         *
+         * <p> Pipe-sink channels only support writing, so this method returns
+         * {@link SelectionKey#OP_WRITE}.  </p>
+         *
+         * @return  The valid-operation set
+         */
+        public final int validOps() {
+            return SelectionKey.OP_WRITE;
+        }
 
     }
 
@@ -103,14 +125,14 @@ public abstract class Pipe {
     protected Pipe() { }
 
     /**
-     * Returns this pipe's source channel.  </p>
+     * Returns this pipe's source channel.
      *
      * @return  This pipe's source channel
      */
     public abstract SourceChannel source();
 
     /**
-     * Returns this pipe's sink channel.  </p>
+     * Returns this pipe's sink channel.
      *
      * @return  This pipe's sink channel
      */
@@ -130,7 +152,7 @@ public abstract class Pipe {
      *          If an I/O error occurs
      */
     public static Pipe open() throws IOException {
-	return SelectorProvider.provider().openPipe();
+        return SelectorProvider.provider().openPipe();
     }
 
 }

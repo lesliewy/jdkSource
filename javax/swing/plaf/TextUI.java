@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.plaf;
 
@@ -17,7 +35,6 @@ import javax.swing.text.*;
  * Text editor user interface
  *
  * @author  Timothy Prinzing
- * @version %I% %G%
  */
 public abstract class TextUI extends ComponentUI
 {
@@ -25,7 +42,7 @@ public abstract class TextUI extends ComponentUI
      * Converts the given location in the model to a place in
      * the view coordinate system.
      *
-     * @param pos  the local location in the model to translate >= 0
+     * @param pos  the local location in the model to translate &gt;= 0
      * @return the coordinates as a rectangle
      * @exception BadLocationException  if the given position does not
      *   represent a valid location in the associated document
@@ -36,7 +53,7 @@ public abstract class TextUI extends ComponentUI
      * Converts the given location in the model to a place in
      * the view coordinate system.
      *
-     * @param pos  the local location in the model to translate >= 0
+     * @param pos  the local location in the model to translate &gt;= 0
      * @return the coordinates as a rectangle
      * @exception BadLocationException  if the given position does not
      *   represent a valid location in the associated document
@@ -50,7 +67,7 @@ public abstract class TextUI extends ComponentUI
      * @param pt  the location in the view to translate.  This
      *   should be in the same coordinate system as the mouse
      *   events.
-     * @return the offset from the start of the document >= 0
+     * @return the offset from the start of the document &gt;= 0
      */
     public abstract int viewToModel(JTextComponent t, Point pt);
 
@@ -67,19 +84,19 @@ public abstract class TextUI extends ComponentUI
      *           character in the model
      *
      * @return the location within the model that best represents the
-     *         given point in the view >= 0
+     *         given point in the view &gt;= 0
      */
     public abstract int viewToModel(JTextComponent t, Point pt,
-				    Position.Bias[] biasReturn);
+                                    Position.Bias[] biasReturn);
 
     /**
-     * Provides a way to determine the next visually represented model 
+     * Provides a way to determine the next visually represented model
      * location that one might place a caret.  Some views may not be visible,
      * they might not be in the same order found in the model, or they just
      * might not allow access to some of the locations in the model.
      *
      * @param t the text component for which this UI is installed
-     * @param pos the position to convert >= 0
+     * @param pos the position to convert &gt;= 0
      * @param b the bias for the position
      * @param direction the direction from the current position that can
      *  be thought of as the arrow keys typically found on a keyboard.
@@ -92,29 +109,29 @@ public abstract class TextUI extends ComponentUI
      * @exception IllegalArgumentException for an invalid direction
      */
     public abstract int getNextVisualPositionFrom(JTextComponent t,
-			 int pos, Position.Bias b,
-			 int direction, Position.Bias[] biasRet)
-	                 throws BadLocationException;
+                         int pos, Position.Bias b,
+                         int direction, Position.Bias[] biasRet)
+                         throws BadLocationException;
 
     /**
      * Causes the portion of the view responsible for the
      * given part of the model to be repainted.
      *
-     * @param p0 the beginning of the range >= 0
-     * @param p1 the end of the range >= p0
+     * @param p0 the beginning of the range &gt;= 0
+     * @param p1 the end of the range &gt;= p0
      */
     public abstract void damageRange(JTextComponent t, int p0, int p1);
 
     /**
-     * Causes the portion of the view responsible for the 
+     * Causes the portion of the view responsible for the
      * given part of the model to be repainted.
      *
-     * @param p0 the beginning of the range >= 0
-     * @param p1 the end of the range >= p0
+     * @param p0 the beginning of the range &gt;= 0
+     * @param p1 the end of the range &gt;= p0
      */
     public abstract void damageRange(JTextComponent t, int p0, int p1,
-				     Position.Bias firstBias,
-				     Position.Bias secondBias);
+                                     Position.Bias firstBias,
+                                     Position.Bias secondBias);
 
     /**
      * Fetches the binding of services that set a policy

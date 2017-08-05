@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -31,7 +49,7 @@ import sun.util.ResourceBundleEnumeration;
  * <code>ResourceBundle</code> that manages resources for a locale
  * using a set of static strings from a property file. See
  * {@link ResourceBundle ResourceBundle} for more information about resource
- * bundles. 
+ * bundles.
  *
  * <p>
  * Unlike other types of resource bundle, you don't subclass
@@ -82,12 +100,18 @@ import sun.util.ResourceBundleEnumeration;
  * </blockquote>
  *
  * <p>
- * <strong>Note:</strong> PropertyResourceBundle can be constructed either 
- * from an InputStream or a Reader, which represents a property file.  
- * Constructing a PropertyResourceBundle instance from an InputStream requires 
- * that the input stream be encoded in ISO-8859-1.  In that case, characters 
- * that cannot be represented in ISO-8859-1 encoding must be represented by 
- * <a href="http://java.sun.com/docs/books/jls/third_edition/html/lexical.html#3.3">Unicode Escapes</a>, 
+ * The implementation of a {@code PropertyResourceBundle} subclass must be
+ * thread-safe if it's simultaneously used by multiple threads. The default
+ * implementations of the non-abstract methods in this class are thread-safe.
+ *
+ * <p>
+ * <strong>Note:</strong> PropertyResourceBundle can be constructed either
+ * from an InputStream or a Reader, which represents a property file.
+ * Constructing a PropertyResourceBundle instance from an InputStream requires
+ * that the input stream be encoded in ISO-8859-1.  In that case, characters
+ * that cannot be represented in ISO-8859-1 encoding must be represented by Unicode Escapes
+ * as defined in section 3.3 of
+ * <cite>The Java&trade; Language Specification</cite>
  * whereas the other constructor which takes a Reader does not have that limitation.
  *
  * @see ResourceBundle
@@ -105,7 +129,10 @@ public class PropertyResourceBundle extends ResourceBundle {
      *        to read from.
      * @throws IOException if an I/O error occurs
      * @throws NullPointerException if <code>stream</code> is null
+     * @throws IllegalArgumentException if {@code stream} contains a
+     *     malformed Unicode escape sequence.
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public PropertyResourceBundle (InputStream stream) throws IOException {
         Properties properties = new Properties();
         properties.load(stream);
@@ -115,15 +142,18 @@ public class PropertyResourceBundle extends ResourceBundle {
     /**
      * Creates a property resource bundle from a {@link java.io.Reader
      * Reader}.  Unlike the constructor
-     * {@link #PropertyResourceBundle(java.io.InputStream) PropertyResourceBundle(InputStream)}, 
+     * {@link #PropertyResourceBundle(java.io.InputStream) PropertyResourceBundle(InputStream)},
      * there is no limitation as to the encoding of the input property file.
      *
      * @param reader a Reader that represents a property file to
      *        read from.
      * @throws IOException if an I/O error occurs
      * @throws NullPointerException if <code>reader</code> is null
+     * @throws IllegalArgumentException if a malformed Unicode escape sequence appears
+     *     from {@code reader}.
      * @since 1.6
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public PropertyResourceBundle (Reader reader) throws IOException {
         Properties properties = new Properties();
         properties.load(reader);
@@ -162,7 +192,7 @@ public class PropertyResourceBundle extends ResourceBundle {
      * @see #keySet()
      */
     protected Set<String> handleKeySet() {
-	return lookup.keySet();
+        return lookup.keySet();
     }
 
     // ==================privates====================

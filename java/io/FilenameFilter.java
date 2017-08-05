@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1994, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
@@ -16,14 +34,13 @@ package java.io;
  *
  * @author  Arthur van Hoff
  * @author  Jonathan Payne
- * @version %I%, %G%
  * @see     java.awt.FileDialog#setFilenameFilter(java.io.FilenameFilter)
  * @see     java.io.File
  * @see     java.io.File#list(java.io.FilenameFilter)
  * @since   JDK1.0
  */
-public
-interface FilenameFilter {
+@FunctionalInterface
+public interface FilenameFilter {
     /**
      * Tests if a specified file should be included in a file list.
      *

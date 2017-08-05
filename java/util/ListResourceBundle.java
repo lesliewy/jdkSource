@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -51,10 +69,10 @@ import sun.util.ResourceBundleEnumeration;
  * Keys are case-sensitive.
  * <blockquote>
  * <pre>
- * 
+ *
  * public class MyResources extends ListResourceBundle {
  *     protected Object[][] getContents() {
- *         return new Object[][] = {
+ *         return new Object[][] {
  *         // LOCALIZE THIS
  *             {"s1", "The disk \"{1}\" contains {0}."},  // MessageFormat pattern
  *             {"s2", "1"},                               // location of {0} in pattern
@@ -71,7 +89,7 @@ import sun.util.ResourceBundleEnumeration;
  *
  * public class MyResources_fr extends ListResourceBundle {
  *     protected Object[][] getContents() {
- *         return new Object[][] = {
+ *         return new Object[][] {
  *         // LOCALIZE THIS
  *             {"s1", "Le disque \"{1}\" {0}."},          // MessageFormat pattern
  *             {"s2", "1"},                               // location of {0} in pattern
@@ -87,6 +105,12 @@ import sun.util.ResourceBundleEnumeration;
  * }
  * </pre>
  * </blockquote>
+ *
+ * <p>
+ * The implementation of a {@code ListResourceBundle} subclass must be thread-safe
+ * if it's simultaneously used by multiple threads. The default implementations
+ * of the methods in this class are thread-safe.
+ *
  * @see ResourceBundle
  * @see PropertyResourceBundle
  * @since JDK1.1
@@ -124,7 +148,7 @@ public abstract class ListResourceBundle extends ResourceBundle {
         if (lookup == null) {
             loadLookup();
         }
-        
+
         ResourceBundle parent = this.parent;
         return new ResourceBundleEnumeration(lookup.keySet(),
                 (parent != null) ? parent.getKeys() : null);
@@ -140,10 +164,10 @@ public abstract class ListResourceBundle extends ResourceBundle {
      * @see #keySet()
      */
     protected Set<String> handleKeySet() {
-	if (lookup == null) {
-	    loadLookup();
-	}
-	return lookup.keySet();
+        if (lookup == null) {
+            loadLookup();
+        }
+        return lookup.keySet();
     }
 
     /**
@@ -169,7 +193,7 @@ public abstract class ListResourceBundle extends ResourceBundle {
             return;
 
         Object[][] contents = getContents();
-        HashMap<String,Object> temp = new HashMap<String,Object>(contents.length);
+        HashMap<String,Object> temp = new HashMap<>(contents.length);
         for (int i = 0; i < contents.length; ++i) {
             // key must be non-null String, value must be non-null
             String key = (String) contents[i][0];

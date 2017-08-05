@@ -1,13 +1,30 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.plaf.synth;
 
 import java.awt.*;
-import javax.swing.*;
 
 /**
  * <code>SynthPainter</code> is used for painting portions of
@@ -17,19 +34,19 @@ import javax.swing.*;
  * a consequence more paint methods.
  * <p>
  * Instances of <code>SynthPainter</code> are obtained from the
- * {@link javax.swing.plaf.synth.SynthStyle#getPainter} method. 
+ * {@link javax.swing.plaf.synth.SynthStyle#getPainter} method.
  * <p>
  * You typically supply a <code>SynthPainter</code> by way of Synth's
  * <a href="doc-files/synthFileFormat.html">file</a> format. The following
  * example registers a painter for all <code>JButton</code>s that will
  * render the image <code>myImage.png</code>:
  * <pre>
- *  &lt;style id="buttonStyle">
+ *  &lt;style id="buttonStyle"&gt;
  *    &lt;imagePainter path="myImage.png" sourceInsets="2 2 2 2"
- *                  paintCenter="true" stretch="true"/>
- *    &lt;insets top="2" bottom="2" left="2" right="2"/>
- *  &lt;/style>
- *  &lt;bind style="buttonStyle" type="REGION" key="button"/>
+ *                  paintCenter="true" stretch="true"/&gt;
+ *    &lt;insets top="2" bottom="2" left="2" right="2"/&gt;
+ *  &lt;/style&gt;
+ *  &lt;bind style="buttonStyle" type="REGION" key="button"/&gt;
  *</pre>
  * <p>
  * <code>SynthPainter</code> is abstract in so far as it does no painting,
@@ -39,7 +56,6 @@ import javax.swing.*;
  * they can throw a <code>NullPointerException</code> or
  * <code>IllegalArgumentException</code> in response to invalid arguments.
  *
- * @version %I%, %G%
  * @since 1.5
  * @author Scott Violet
  */
@@ -793,7 +809,7 @@ public abstract class SynthPainter {
                                      Graphics g, int x, int y,
                                      int w, int h) {
     }
-    
+
     /**
      * Paints the background of a progress bar. This implementation invokes the
      * method of the same name without the orientation.
@@ -1004,7 +1020,7 @@ public abstract class SynthPainter {
                                      int w, int h, int orientation) {
         paintScrollBarBackground(context, g, x, y, w, h);
     }
-    
+
     /**
      * Paints the border of a scrollbar.
      *
@@ -1020,7 +1036,7 @@ public abstract class SynthPainter {
                                  Graphics g, int x, int y,
                                  int w, int h) {
     }
-    
+
     /**
      * Paints the border of a scrollbar. This implementation invokes the
      * method of the same name without the orientation.
@@ -1101,7 +1117,7 @@ public abstract class SynthPainter {
                                      Graphics g, int x, int y,
                                      int w, int h) {
     }
-    
+
     /**
      * Paints the background of the track of a scrollbar. The track contains
      * the thumb. This implementation invokes the method of the same name without
@@ -1341,7 +1357,7 @@ public abstract class SynthPainter {
                                  Graphics g, int x, int y,
                                  int w, int h) {
     }
-    
+
     /**
      * Paints the border of a slider. This implementation invokes the
      * method of the same name without the orientation.
@@ -1414,7 +1430,7 @@ public abstract class SynthPainter {
                                      Graphics g, int x, int y,
                                      int w, int h) {
     }
-    
+
     /**
      * Paints the background of the track of a slider. This implementation invokes
      * the method of the same name without the orientation.
@@ -1451,7 +1467,7 @@ public abstract class SynthPainter {
                                  Graphics g, int x, int y,
                                  int w, int h) {
     }
-    
+
     /**
      * Paints the border of the track of a slider. This implementation invokes the
      * method of the same name without the orientation.
@@ -1520,7 +1536,7 @@ public abstract class SynthPainter {
                                      Graphics g, int x, int y,
                                      int w, int h) {
     }
-    
+
     /**
      * Paints the background of the divider of a split pane. This implementation
      * invokes the method of the same name without the orientation.
@@ -1698,7 +1714,7 @@ public abstract class SynthPainter {
                                  Graphics g, int x, int y,
                                  int w, int h) {
     }
-    
+
     /**
      * Paints the border of the area behind the tabs of a tabbed pane. This
      * implementation invokes the method of the same name without the orientation.
@@ -1738,7 +1754,7 @@ public abstract class SynthPainter {
                                          int x, int y, int w, int h,
                                          int tabIndex) {
     }
-    
+
     /**
      * Paints the background of a tab of a tabbed pane. This implementation
      * invokes the method of the same name without the orientation.
@@ -1779,7 +1795,7 @@ public abstract class SynthPainter {
                                          int x, int y, int w, int h,
                                          int tabIndex) {
     }
-    
+
     /**
      * Paints the border of a tab of a tabbed pane. This implementation invokes
      * the method of the same name without the orientation.
@@ -2193,7 +2209,7 @@ public abstract class SynthPainter {
                                      Graphics g, int x, int y,
                                      int w, int h) {
     }
-    
+
     /**
      * Paints the background of the window containing the tool bar when it
      * has been detached from its primary frame. This implementation invokes the
@@ -2232,7 +2248,7 @@ public abstract class SynthPainter {
                                  Graphics g, int x, int y,
                                  int w, int h) {
     }
-    
+
     /**
      * Paints the border of the window containing the tool bar when it
      * has been detached from it's primary frame. This implementation invokes the

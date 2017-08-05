@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package javax.swing.tree;
 
@@ -12,12 +30,11 @@ import javax.swing.JTree;
 /**
  * Defines the requirements for an object that displays a tree node.
  * See <a
- href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Trees</a>
+ href="https://docs.oracle.com/javase/tutorial/uiswing/components/tree.html">How to Use Trees</a>
  * in <em>The Java Tutorial</em>
  * for an example of implementing a tree cell renderer
  * that displays custom icons.
  *
- * @version %I% %G%
  * @author Rob Davis
  * @author Ray Ryan
  * @author Scott Violet
@@ -42,18 +59,18 @@ public interface TreeCellRenderer {
      * <pre>
      *     JTree.DropLocation dropLocation = tree.getDropLocation();
      *     if (dropLocation != null
-     *             && dropLocation.getChildIndex() == -1
-     *             && tree.getRowForPath(dropLocation.getPath()) == row) {
+     *             &amp;&amp; dropLocation.getChildIndex() == -1
+     *             &amp;&amp; tree.getRowForPath(dropLocation.getPath()) == row) {
      *
      *         // this row represents the current drop location
      *         // so render it specially, perhaps with a different color
      *     }
      * </pre>
      *
-     * @return	the <code>Component</code> that the renderer uses to draw the value
+     * @return  the <code>Component</code> that the renderer uses to draw the value
      */
     Component getTreeCellRendererComponent(JTree tree, Object value,
-				   boolean selected, boolean expanded,
-				   boolean leaf, int row, boolean hasFocus);
+                                   boolean selected, boolean expanded,
+                                   boolean leaf, int row, boolean hasFocus);
 
 }

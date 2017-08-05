@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.event;
@@ -15,11 +33,10 @@ import javax.imageio.ImageReader;
  * An interface used by <code>ImageReader</code> implementations to
  * notify callers of their image and thumbnail reading methods of
  * pixel updates.
- * 
+ *
  * @see javax.imageio.ImageReader#addIIOReadUpdateListener
  * @see javax.imageio.ImageReader#removeIIOReadUpdateListener
  *
- * @version 0.5
  */
 public interface IIOReadUpdateListener extends EventListener {
 
@@ -41,7 +58,7 @@ public interface IIOReadUpdateListener extends EventListener {
      * @param source the <code>ImageReader</code> object calling this
      * method.
      * @param theImage the <code>BufferedImage</code> being updated.
-     * @param pass the numer of the pass that is about to begin,
+     * @param pass the number of the pass that is about to begin,
      * starting with 0.
      * @param minPass the index of the first pass that will be decoded.
      * @param maxPass the index of the last pass that will be decoded.
@@ -158,7 +175,7 @@ public interface IIOReadUpdateListener extends EventListener {
      * method.
      * @param theThumbnail the <code>BufferedImage</code> thumbnail
      * being updated.
-     * @param pass the numer of the pass that is about to begin,
+     * @param pass the number of the pass that is about to begin,
      * starting with 0.
      * @param minPass the index of the first pass that will be decoded.
      * @param maxPass the index of the last pass that will be decoded.

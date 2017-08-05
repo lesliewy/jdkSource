@@ -1,12 +1,33 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.lang.model.util;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.AnnotationTypeMismatchException;
+import java.lang.annotation.IncompleteAnnotationException;
 import java.util.List;
 import javax.lang.model.element.*;
 import javax.lang.model.type.*;
@@ -20,7 +41,6 @@ import javax.lang.model.type.*;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
  * @see javax.annotation.processing.ProcessingEnvironment#getTypeUtils
  * @since 1.6
  */
@@ -32,10 +52,11 @@ public interface Types {
      * Returns {@code null} if the type is not one with a
      * corresponding element.
      *
+     * @param t the type to map to an element
      * @return the element corresponding to the given type
      */
     Element asElement(TypeMirror t);
-    
+
     /**
      * Tests whether two {@code TypeMirror} objects represent the same type.
      *
@@ -44,10 +65,17 @@ public interface Types {
      * is not the same type as itself.  This might be surprising at first,
      * but makes sense once you consider that an example like this must be
      * rejected by the compiler:
-     * <pre> 
+     * <pre>
      *   {@code List<?> list = new ArrayList<Object>();}
      *   {@code list.add(list.get(0));}
      * </pre>
+     *
+     * <p>Since annotations are only meta-data associated with a type,
+     * the set of annotations on either argument is <em>not</em> taken
+     * into account when computing whether or not two {@code
+     * TypeMirror} objects are the same type. In particular, two
+     * {@code TypeMirror} objects can have different annotations and
+     * still be considered the same.
      *
      * @param t1  the first type
      * @param t2  the second type
@@ -62,9 +90,9 @@ public interface Types {
      * @param t1  the first type
      * @param t2  the second type
      * @return {@code true} if and only if the first type is a subtype
-     *		of the second
+     *          of the second
      * @throws IllegalArgumentException if given an executable or package type
-     * @jls3 4.10 Subtyping
+     * @jls 4.10 Subtyping
      */
     boolean isSubtype(TypeMirror t1, TypeMirror t2);
 
@@ -74,9 +102,9 @@ public interface Types {
      * @param t1  the first type
      * @param t2  the second type
      * @return {@code true} if and only if the first type is assignable
-     *		to the second
+     *          to the second
      * @throws IllegalArgumentException if given an executable or package type
-     * @jls3 5.2 Assignment Conversion
+     * @jls 5.2 Assignment Conversion
      */
     boolean isAssignable(TypeMirror t1, TypeMirror t2);
 
@@ -87,7 +115,7 @@ public interface Types {
      * @param t2  the second type
      * @return {@code true} if and only if the first type contains the second
      * @throws IllegalArgumentException if given an executable or package type
-     * @jls3 4.5.1.1 Type Argument Containment and Equivalence
+     * @jls 4.5.1.1 Type Argument Containment and Equivalence
      */
     boolean contains(TypeMirror t1, TypeMirror t2);
 
@@ -98,8 +126,8 @@ public interface Types {
      * @param m1  the first method
      * @param m2  the second method
      * @return {@code true} if and only if the first signature is a
-     *		subsignature of the second
-     * @jls3 8.4.2 Method Signature
+     *          subsignature of the second
+     * @jls 8.4.2 Method Signature
      */
     boolean isSubsignature(ExecutableType m1, ExecutableType m2);
 
@@ -119,7 +147,7 @@ public interface Types {
      * @param t  the type to be erased
      * @return the erasure of the given type
      * @throws IllegalArgumentException if given a package type
-     * @jls3 4.6 Type Erasure
+     * @jls 4.6 Type Erasure
      */
     TypeMirror erasure(TypeMirror t);
 
@@ -129,7 +157,7 @@ public interface Types {
      *
      * @param p  the primitive type to be converted
      * @return the class of a boxed value of type {@code p}
-     * @jls3 5.1.7 Boxing Conversion
+     * @jls 5.1.7 Boxing Conversion
      */
     TypeElement boxedClass(PrimitiveType p);
 
@@ -140,8 +168,8 @@ public interface Types {
      * @param t  the type to be unboxed
      * @return the type of an unboxed value of type {@code t}
      * @throws IllegalArgumentException if the given type has no
-     *		unboxing conversion
-     * @jls3 5.1.8 Unboxing Conversion
+     *          unboxing conversion
+     * @jls 5.1.8 Unboxing Conversion
      */
     PrimitiveType unboxedType(TypeMirror t);
 
@@ -151,7 +179,7 @@ public interface Types {
      * @param t  the type to be converted
      * @return the result of applying capture conversion
      * @throws IllegalArgumentException if given an executable or package type
-     * @jls3 5.1.10 Capture Conversion
+     * @jls 5.1.10 Capture Conversion
      */
     TypeMirror capture(TypeMirror t);
 
@@ -191,7 +219,7 @@ public interface Types {
      * @param componentType  the component type
      * @return an array type with the specified component type.
      * @throws IllegalArgumentException if the component type is not valid for
-     *		an array
+     *          an array
      */
     ArrayType getArrayType(TypeMirror componentType);
 
@@ -205,7 +233,7 @@ public interface Types {
      * @throws IllegalArgumentException if bounds are not valid
      */
     WildcardType getWildcardType(TypeMirror extendsBound,
-				 TypeMirror superBound);
+                                 TypeMirror superBound);
 
     /**
      * Returns the type corresponding to a type element and
@@ -227,13 +255,13 @@ public interface Types {
      * method to get the type {@code Outer<String>}, and then invoking
      * {@link #getDeclaredType(DeclaredType, TypeElement, TypeMirror...)}.
      *
-     * @param typeElem	the type element
-     * @param typeArgs	the actual type arguments
+     * @param typeElem  the type element
+     * @param typeArgs  the actual type arguments
      * @return the type corresponding to the type element and
-     *		actual type arguments
+     *          actual type arguments
      * @throws IllegalArgumentException if too many or too few
-     *		type arguments are given, or if an inappropriate type
-     *		argument or type element is provided
+     *          type arguments are given, or if an inappropriate type
+     *          argument or type element is provided
      */
     DeclaredType getDeclaredType(TypeElement typeElem, TypeMirror... typeArgs);
 
@@ -255,16 +283,16 @@ public interface Types {
      * equivalent to {@code getDeclaredType(typeElem, typeArgs)}.
      *
      * @param containing  the containing type, or {@code null} if none
-     * @param typeElem	  the type element
-     * @param typeArgs	  the actual type arguments
+     * @param typeElem    the type element
+     * @param typeArgs    the actual type arguments
      * @return the type corresponding to the type element and
-     *		actual type arguments, contained within the given type
+     *          actual type arguments, contained within the given type
      * @throws IllegalArgumentException if too many or too few
-     *		type arguments are given, or if an inappropriate type
-     *		argument, type element, or containing type is provided
+     *          type arguments are given, or if an inappropriate type
+     *          argument, type element, or containing type is provided
      */
     DeclaredType getDeclaredType(DeclaredType containing,
-				 TypeElement typeElem, TypeMirror... typeArgs);
+                                 TypeElement typeElem, TypeMirror... typeArgs);
 
     /**
      * Returns the type of an element when that element is viewed as
@@ -278,7 +306,7 @@ public interface Types {
      * @param element     the element
      * @return the type of the element as viewed from the containing type
      * @throws IllegalArgumentException if the element is not a valid one
-     *		for the given type
+     *          for the given type
      */
     TypeMirror asMemberOf(DeclaredType containing, Element element);
 }

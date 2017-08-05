@@ -1,10 +1,28 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
- 
+
 package java.security;
 
 /**
@@ -18,7 +36,6 @@ package java.security;
  * security policy.  Such information should be given whenever
  * possible at the time the exception is thrown.
  *
- * @version 	%I%, %G%
  * @author Li Gong
  * @author Roland Schemers
  */
@@ -26,13 +43,13 @@ package java.security;
 public class AccessControlException extends SecurityException {
 
     private static final long serialVersionUID = 5138225684096988535L;
- 
-    // the permission that caused the exeception to be thrown.
-    private Permission perm; 
+
+    // the permission that caused the exception to be thrown.
+    private Permission perm;
 
     /**
-     * Constructs an <code>AccessControlException</code> with the
-     * specified, detailed message. 
+     * Constructs an {@code AccessControlException} with the
+     * specified, detailed message.
      *
      * @param   s   the detail message.
      */
@@ -41,26 +58,25 @@ public class AccessControlException extends SecurityException {
     }
 
     /**
-     * Constructs an <code>AccessControlException</code> with the
+     * Constructs an {@code AccessControlException} with the
      * specified, detailed message, and the requested permission that caused
-     * the exception. 
+     * the exception.
      *
      * @param   s   the detail message.
      * @param   p   the permission that caused the exception.
      */
     public AccessControlException(String s, Permission p) {
         super(s);
-	perm = p;
+        perm = p;
     }
 
     /**
-     * Gets the Permission object associated with this exeception, or
+     * Gets the Permission object associated with this exception, or
      * null if there was no corresponding Permission object.
      *
      * @return the Permission object.
      */
     public Permission getPermission() {
-	return perm;
+        return perm;
     }
 }
-

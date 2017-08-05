@@ -1,12 +1,16 @@
 /*
- * Copyright 1999-2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,11 +22,11 @@
 package com.sun.org.apache.xml.internal.serialize;
 
 
-import java.io.UnsupportedEncodingException;
-import java.util.Hashtable;
-import java.util.Locale;
-
 import com.sun.org.apache.xerces.internal.util.EncodingMap;
+import java.io.UnsupportedEncodingException;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -31,10 +35,9 @@ import com.sun.org.apache.xerces.internal.util.EncodingMap;
  * to override encoding names and provide the last printable character
  * for each encoding.
  *
- * @version $Id: Encodings.java,v 1.4 2007/07/19 04:39:18 ofung Exp $
  * @author <a href="mailto:arkin@intalio.com">Assaf Arkin</a>
  */
-public class Encodings
+class Encodings
 {
 
 
@@ -52,10 +55,10 @@ public class Encodings
     // default (Java) encoding if none supplied:
     static final String DEFAULT_ENCODING = "UTF8";
 
-    // note that the size of this Hashtable
+    // note that the size of this Map
     // is bounded by the number of encodings recognized by EncodingMap;
     // therefore it poses no static mutability risk.
-    static Hashtable _encodings = new Hashtable();
+    private static final Map<String, EncodingInfo> _encodings = new ConcurrentHashMap();
 
     /**
      * @param encoding a MIME charset name, or null.
@@ -63,7 +66,7 @@ public class Encodings
     static EncodingInfo getEncodingInfo(String encoding, boolean allowJavaNames) throws UnsupportedEncodingException {
         EncodingInfo eInfo = null;
         if (encoding == null) {
-            if((eInfo = (EncodingInfo)_encodings.get(DEFAULT_ENCODING)) != null) 
+            if((eInfo = _encodings.get(DEFAULT_ENCODING)) != null)
                 return eInfo;
             eInfo = new EncodingInfo(EncodingMap.getJava2IANAMapping(DEFAULT_ENCODING), DEFAULT_ENCODING, LAST_PRINTABLE_UNICODE);
             _encodings.put(DEFAULT_ENCODING, eInfo);
@@ -76,7 +79,7 @@ public class Encodings
             // see if the encoding passed in is a Java encoding name.
             if(allowJavaNames ) {
                 EncodingInfo.testJavaEncodingName(encoding);
-                if((eInfo = (EncodingInfo)_encodings.get(encoding)) != null) 
+                if((eInfo = _encodings.get(encoding)) != null)
                     return eInfo;
                 // is it known to be unicode-compliant?
                 int i=0;
@@ -89,13 +92,13 @@ public class Encodings
                 if(i == UNICODE_ENCODINGS.length) {
                     eInfo = new EncodingInfo(EncodingMap.getJava2IANAMapping(encoding), encoding, DEFAULT_LAST_PRINTABLE);
                 }
-                _encodings.put(encoding, eInfo); 
+                _encodings.put(encoding, eInfo);
                 return eInfo;
             } else {
                 throw new UnsupportedEncodingException(encoding);
             }
         }
-        if ((eInfo = (EncodingInfo)_encodings.get(jName)) != null)
+        if ((eInfo = _encodings.get(jName)) != null)
             return eInfo;
         // have to create one...
         // is it known to be unicode-compliant?
@@ -109,7 +112,7 @@ public class Encodings
         if(i == UNICODE_ENCODINGS.length) {
             eInfo = new EncodingInfo(encoding, jName, DEFAULT_LAST_PRINTABLE);
         }
-        _encodings.put(jName, eInfo); 
+        _encodings.put(jName, eInfo);
         return eInfo;
     }
 

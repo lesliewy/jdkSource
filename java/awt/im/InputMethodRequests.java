@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.im;
@@ -39,7 +57,6 @@ import java.text.AttributedCharacterIterator.Attribute;
  * @see java.awt.Component#getInputMethodRequests
  * @see java.awt.event.InputMethodListener
  *
- * @version 	%I%, %G%
  * @author JavaSoft Asia/Pacific
  * @since 1.2
  */
@@ -66,7 +83,7 @@ public interface InputMethodRequests {
      * For example, for horizontal left-to-right text (such as English), the
      * location to the left of the left-most character on the last line
      * containing selected text is returned. For vertical top-to-bottom text,
-     * with lines proceding from right to left, the location to the top of the
+     * with lines proceeding from right to left, the location to the top of the
      * left-most line containing selected text is returned.
      *
      * <p>
@@ -105,7 +122,7 @@ public interface InputMethodRequests {
      * entered through an input method are inserted. This information is used
      * by an input method, for example, to examine the text surrounding the
      * insert position.
-     * 
+     *
      * @return the offset of the insert position
      */
     int getInsertPositionOffset();

@@ -1,24 +1,36 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang.reflect;
 
 /**
- * The Permission class for reflective operations.  A
- * ReflectPermission is a <em>named permission</em> and has no
- * actions.  The only name currently defined is <tt>suppressAccessChecks</tt>,
- * which allows suppressing the standard Java language access checks
- * -- for public, default (package) access, protected, and private
- * members -- performed by reflected objects at their point of use.
+ * The Permission class for reflective operations.
  * <P>
  * The following table
  * provides a summary description of what the permission allows,
  * and discusses the risks of granting code the permission.
- * <P>
  *
  * <table border=1 cellpadding=5 summary="Table shows permission target name, what the permission allows, and associated risks">
  * <tr>
@@ -29,11 +41,21 @@ package java.lang.reflect;
  *
  * <tr>
  *   <td>suppressAccessChecks</td>
- *   <td>ability to access
- * fields and invoke methods in a class. Note that this includes
- * not only public, but protected and private fields and methods as well.</td>
+ *   <td>ability to suppress the standard Java language access checks
+ *       on fields and methods in a class; allow access not only public members
+ *       but also allow access to default (package) access, protected,
+ *       and private members.</td>
  *   <td>This is dangerous in that information (possibly confidential) and
- * methods normally unavailable would be accessible to malicious code.</td>
+ *       methods normally unavailable would be accessible to malicious code.</td>
+ * </tr>
+ * <tr>
+ *   <td>newProxyInPackage.{package name}</td>
+ *   <td>ability to create a proxy instance in the specified package of which
+ *       the non-public interface that the proxy class implements.</td>
+ *   <td>This gives code access to classes in packages to which it normally
+ *       does not have access and the dynamic proxy class is in the system
+ *       protection domain. Malicious code may use these classes to
+ *       help in its attempt to compromise security in the system.</td>
  * </tr>
  *
  * </table>
@@ -45,6 +67,7 @@ package java.lang.reflect;
  * @see Field#set
  * @see Method#invoke
  * @see Constructor#newInstance
+ * @see Proxy#newProxyInstance
  *
  * @since 1.2
  */
@@ -58,11 +81,11 @@ class ReflectPermission extends java.security.BasicPermission {
      *
      * @param name the name of the ReflectPermission
      *
-     * @throws NullPointerException if <code>name</code> is <code>null</code>.
-     * @throws IllegalArgumentException if <code>name</code> is empty.
+     * @throws NullPointerException if {@code name} is {@code null}.
+     * @throws IllegalArgumentException if {@code name} is empty.
      */
     public ReflectPermission(String name) {
-	super(name);
+        super(name);
     }
 
     /**
@@ -73,11 +96,11 @@ class ReflectPermission extends java.security.BasicPermission {
      *
      * @param actions should be null
      *
-     * @throws NullPointerException if <code>name</code> is <code>null</code>.
-     * @throws IllegalArgumentException if <code>name</code> is empty.
+     * @throws NullPointerException if {@code name} is {@code null}.
+     * @throws IllegalArgumentException if {@code name} is empty.
      */
     public ReflectPermission(String name, String actions) {
-	super(name, actions);
+        super(name, actions);
     }
 
 }

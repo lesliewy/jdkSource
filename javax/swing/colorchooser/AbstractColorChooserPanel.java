@@ -1,16 +1,34 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.swing.colorchooser;
 
 import java.awt.*;
-import java.io.Serializable;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import javax.swing.*;
-import javax.swing.event.*;
 
 /**
  * This is the abstract superclass for color choosers.  If you want to add
@@ -22,31 +40,28 @@ import javax.swing.event.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version %I% %G%
  * @author Tom Santos
  * @author Steve Wilson
  */
 public abstract class AbstractColorChooserPanel extends JPanel {
 
+    private final PropertyChangeListener enabledListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent event) {
+            Object value = event.getNewValue();
+            if (value instanceof Boolean) {
+                setEnabled((Boolean) value);
+            }
+        }
+    };
+
     /**
-     * 
+     *
      */
     private JColorChooser chooser;
-
-    /**
-     * 
-     */
-    private ChangeListener colorListener;
-
-    /**
-     * 
-     */
-    private boolean dirty  = true;
-
 
     /**
       * Invoked automatically when the model's state changes.
@@ -70,7 +85,7 @@ public abstract class AbstractColorChooserPanel extends JPanel {
     /**
      * Provides a hint to the look and feel as to the
      * <code>KeyEvent.VK</code> constant that can be used as a mnemonic to
-     * access the panel. A return value <= 0 indicates there is no mnemonic.
+     * access the panel. A return value &lt;= 0 indicates there is no mnemonic.
      * <p>
      * The return value here is a hint, it is ultimately up to the look
      * and feel to honor the return value in some meaningful way.
@@ -79,7 +94,7 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      * <code>AbstractColorChooserPanel</code> does not support a mnemonic,
      * subclasses wishing a mnemonic will need to override this.
      *
-     * @return KeyEvent.VK constant identifying the mnemonic; <= 0 for no
+     * @return KeyEvent.VK constant identifying the mnemonic; &lt;= 0 for no
      *         mnemonic
      * @see #getDisplayedMnemonicIndex
      * @since 1.4
@@ -92,7 +107,7 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      * Provides a hint to the look and feel as to the index of the character in
      * <code>getDisplayName</code> that should be visually identified as the
      * mnemonic. The look and feel should only use this if
-     * <code>getMnemonic</code> returns a value > 0.
+     * <code>getMnemonic</code> returns a value &gt; 0.
      * <p>
      * The return value here is a hint, it is ultimately up to the look
      * and feel to honor the return value in some meaningful way. For example,
@@ -131,17 +146,17 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      * If you override this, be sure to call <code>super</code>.
      * @param enclosingChooser  the panel to be added
      * @exception RuntimeException  if the chooser panel has already been
-     *				installed
+     *                          installed
      */
     public void installChooserPanel(JColorChooser enclosingChooser) {
         if (chooser != null) {
-	    throw new RuntimeException ("This chooser panel is already installed");
+            throw new RuntimeException ("This chooser panel is already installed");
         }
         chooser = enclosingChooser;
-	buildChooser();
-	updateChooser();
-	colorListener = new ModelListener();
-	getColorSelectionModel().addChangeListener(colorListener);
+        chooser.addPropertyChangeListener("enabled", enabledListener);
+        setEnabled(chooser.isEnabled());
+        buildChooser();
+        updateChooser();
     }
 
     /**
@@ -149,17 +164,19 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      * If override this, be sure to call <code>super</code>.
      */
   public void uninstallChooserPanel(JColorChooser enclosingChooser) {
-        getColorSelectionModel().removeChangeListener(colorListener);
+        chooser.removePropertyChangeListener("enabled", enabledListener);
         chooser = null;
     }
 
     /**
       * Returns the model that the chooser panel is editing.
       * @return the <code>ColorSelectionModel</code> model this panel
-      *		is editing
+      *         is editing
       */
     public ColorSelectionModel getColorSelectionModel() {
-        return chooser.getSelectionModel();
+        return (this.chooser != null)
+                ? this.chooser.getSelectionModel()
+                : null;
     }
 
     /**
@@ -167,18 +184,24 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      * @return the <code>Color</code> that is selected
      */
     protected Color getColorFromModel() {
-        return getColorSelectionModel().getSelectedColor();
+        ColorSelectionModel model = getColorSelectionModel();
+        return (model != null)
+                ? model.getSelectedColor()
+                : null;
+    }
+
+    void setSelectedColor(Color color) {
+        ColorSelectionModel model = getColorSelectionModel();
+        if (model != null) {
+            model.setSelectedColor(color);
+        }
     }
 
     /**
-     * Draws the panel. 
+     * Draws the panel.
      * @param g  the <code>Graphics</code> object
      */
     public void paint(Graphics g) {
-	if (dirty) {
-	    updateChooser();
-	    dirty = false;
-	}
         super.paint(g);
     }
 
@@ -192,8 +215,8 @@ public abstract class AbstractColorChooserPanel extends JPanel {
      *                     or is not an Integer
      * @return the int
      */
-    static int getInt(Object key, int defaultValue) {
-        Object value = UIManager.get(key);
+    int getInt(Object key, int defaultValue) {
+        Object value = UIManager.get(key, getLocale());
 
         if (value instanceof Integer) {
             return ((Integer)value).intValue();
@@ -204,19 +227,5 @@ public abstract class AbstractColorChooserPanel extends JPanel {
             } catch (NumberFormatException nfe) {}
         }
         return defaultValue;
-    }
-
-    /**
-     * 
-     */
-    class ModelListener implements ChangeListener, Serializable {
-        public void stateChanged(ChangeEvent e) {
-	  if (isShowing()) {  // isVisible
-	        updateChooser();
-		dirty = false;
-	    } else {
-	        dirty = true;
-	    }
-	}
     }
 }

@@ -1,13 +1,42 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
+/*
+ *
+ *
+ *
+ *
+ *
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.IntUnaryOperator;
+import java.util.function.IntBinaryOperator;
 import sun.misc.Unsafe;
-import java.util.*;
 
 /**
  * An {@code int} array in which elements may be updated atomically.
@@ -20,28 +49,37 @@ import java.util.*;
 public class AtomicIntegerArray implements java.io.Serializable {
     private static final long serialVersionUID = 2862133569453604235L;
 
-   // setup to use Unsafe.compareAndSwapInt for updates
     private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final int base = unsafe.arrayBaseOffset(int[].class);
-    private static final int scale = unsafe.arrayIndexScale(int[].class);
+    private static final int shift;
     private final int[] array;
 
-    private long rawIndex(int i) {
+    static {
+        int scale = unsafe.arrayIndexScale(int[].class);
+        if ((scale & (scale - 1)) != 0)
+            throw new Error("data type scale not a power of two");
+        shift = 31 - Integer.numberOfLeadingZeros(scale);
+    }
+
+    private long checkedByteOffset(int i) {
         if (i < 0 || i >= array.length)
             throw new IndexOutOfBoundsException("index " + i);
-        return base + (long) i * scale;
+
+        return byteOffset(i);
+    }
+
+    private static long byteOffset(int i) {
+        return ((long) i << shift) + base;
     }
 
     /**
-     * Creates a new AtomicIntegerArray of given length.
+     * Creates a new AtomicIntegerArray of the given length, with all
+     * elements initially zero.
      *
      * @param length the length of the array
      */
     public AtomicIntegerArray(int length) {
         array = new int[length];
-        // must perform at least one volatile write to conform to JMM
-        if (length > 0)
-            unsafe.putIntVolatile(array, rawIndex(0), 0);
     }
 
     /**
@@ -52,17 +90,8 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @throws NullPointerException if array is null
      */
     public AtomicIntegerArray(int[] array) {
-        if (array == null)
-            throw new NullPointerException();
-        int length = array.length;
-        this.array = new int[length];
-        if (length > 0) {
-            int last = length-1;
-            for (int i = 0; i < last; ++i)
-                this.array[i] = array[i];
-            // Do the last write as volatile
-            unsafe.putIntVolatile(this.array, rawIndex(last), array[last]);
-        }
+        // Visibility guaranteed by final field guarantees
+        this.array = array.clone();
     }
 
     /**
@@ -81,7 +110,11 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the current value
      */
     public final int get(int i) {
-        return unsafe.getIntVolatile(array, rawIndex(i));
+        return getRaw(checkedByteOffset(i));
+    }
+
+    private int getRaw(long offset) {
+        return unsafe.getIntVolatile(array, offset);
     }
 
     /**
@@ -91,7 +124,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void set(int i, int newValue) {
-        unsafe.putIntVolatile(array, rawIndex(i), newValue);
+        unsafe.putIntVolatile(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -102,7 +135,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(int i, int newValue) {
-        unsafe.putOrderedInt(array, rawIndex(i), newValue);
+        unsafe.putOrderedInt(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -114,11 +147,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndSet(int i, int newValue) {
-        while (true) {
-            int current = get(i);
-            if (compareAndSet(i, current, newValue))
-                return current;
-        }
+        return unsafe.getAndSetInt(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -128,26 +157,29 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful. False return indicates that
+     * @return {@code true} if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(int i, int expect, int update) {
-        return unsafe.compareAndSwapInt(array, rawIndex(i),
-                                        expect, update);
+        return compareAndSetRaw(checkedByteOffset(i), expect, update);
+    }
+
+    private boolean compareAndSetRaw(long offset, int expect, int update) {
+        return unsafe.compareAndSwapInt(array, offset, expect, update);
     }
 
     /**
      * Atomically sets the element at position {@code i} to the given
      * updated value if the current value {@code ==} the expected value.
      *
-     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
-     * and does not provide ordering guarantees, so is only rarely an
-     * appropriate alternative to {@code compareAndSet}.
+     * <p><a href="package-summary.html#weakCompareAndSet">May fail
+     * spuriously and does not provide ordering guarantees</a>, so is
+     * only rarely an appropriate alternative to {@code compareAndSet}.
      *
      * @param i the index
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return {@code true} if successful
      */
     public final boolean weakCompareAndSet(int i, int expect, int update) {
         return compareAndSet(i, expect, update);
@@ -160,12 +192,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndIncrement(int i) {
-        while (true) {
-            int current = get(i);
-            int next = current + 1;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
+        return getAndAdd(i, 1);
     }
 
     /**
@@ -175,12 +202,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndDecrement(int i) {
-        while (true) {
-            int current = get(i);
-            int next = current - 1;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
+        return getAndAdd(i, -1);
     }
 
     /**
@@ -191,12 +213,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndAdd(int i, int delta) {
-        while (true) {
-            int current = get(i);
-            int next = current + delta;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
+        return unsafe.getAndAddInt(array, checkedByteOffset(i), delta);
     }
 
     /**
@@ -206,12 +223,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int incrementAndGet(int i) {
-        while (true) {
-            int current = get(i);
-            int next = current + 1;
-            if (compareAndSet(i, current, next))
-                return next;
-        }
+        return getAndAdd(i, 1) + 1;
     }
 
     /**
@@ -221,12 +233,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int decrementAndGet(int i) {
-        while (true) {
-            int current = get(i);
-            int next = current - 1;
-            if (compareAndSet(i, current, next))
-                return next;
-        }
+        return getAndAdd(i, -1) - 1;
     }
 
     /**
@@ -237,22 +244,121 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int addAndGet(int i, int delta) {
-        while (true) {
-            int current = get(i);
-            int next = current + delta;
-            if (compareAndSet(i, current, next))
-                return next;
-        }
+        return getAndAdd(i, delta) + delta;
+    }
+
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function, returning the previous value. The
+     * function should be side-effect-free, since it may be re-applied
+     * when attempted updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndUpdate(int i, IntUnaryOperator updateFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function, returning the updated value. The
+     * function should be side-effect-free, since it may be re-applied
+     * when attempted updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int updateAndGet(int i, IntUnaryOperator updateFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the
+     * results of applying the given function to the current and
+     * given values, returning the previous value. The function should
+     * be side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.  The function is
+     * applied with the current value at index {@code i} as its first
+     * argument, and the given update as the second argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndAccumulate(int i, int x,
+                                      IntBinaryOperator accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the
+     * results of applying the given function to the current and
+     * given values, returning the updated value. The function should
+     * be side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.  The function is
+     * applied with the current value at index {@code i} as its first
+     * argument, and the given update as the second argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int accumulateAndGet(int i, int x,
+                                      IntBinaryOperator accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
     }
 
     /**
      * Returns the String representation of the current values of array.
-     * @return the String representation of the current values of array.
+     * @return the String representation of the current values of array
      */
     public String toString() {
-        if (array.length > 0) // force volatile read
-            get(0);
-        return Arrays.toString(array);
+        int iMax = array.length - 1;
+        if (iMax == -1)
+            return "[]";
+
+        StringBuilder b = new StringBuilder();
+        b.append('[');
+        for (int i = 0; ; i++) {
+            b.append(getRaw(byteOffset(i)));
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(',').append(' ');
+        }
     }
 
 }

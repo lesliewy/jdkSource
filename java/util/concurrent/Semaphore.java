@@ -1,14 +1,41 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
+/*
+ *
+ *
+ *
+ *
+ *
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package java.util.concurrent;
-import java.util.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
+import java.util.Collection;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
  * A counting semaphore.  Conceptually, a semaphore maintains a set of
@@ -21,7 +48,7 @@ import java.util.concurrent.atomic.*;
  * <p>Semaphores are often used to restrict the number of threads than can
  * access some (physical or logical) resource. For example, here is
  * a class that uses a semaphore to control access to a pool of items:
- * <pre>
+ *  <pre> {@code
  * class Pool {
  *   private static final int MAX_AVAILABLE = 100;
  *   private final Semaphore available = new Semaphore(MAX_AVAILABLE, true);
@@ -63,9 +90,7 @@ import java.util.concurrent.atomic.*;
  *     }
  *     return false;
  *   }
- *
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>Before obtaining an item each thread must acquire a permit from
  * the semaphore, guaranteeing that an item is available for use. When
@@ -83,7 +108,7 @@ import java.util.concurrent.atomic.*;
  * exclusion lock.  This is more commonly known as a <em>binary
  * semaphore</em>, because it only has two states: one permit
  * available, or zero permits available.  When used in this way, the
- * binary semaphore has the property (unlike many {@link Lock}
+ * binary semaphore has the property (unlike many {@link java.util.concurrent.locks.Lock}
  * implementations), that the &quot;lock&quot; can be released by a
  * thread other than the owner (as semaphores have no notion of
  * ownership).  This can be useful in some specialized contexts, such
@@ -127,9 +152,7 @@ import java.util.concurrent.atomic.*;
  *
  * @since 1.5
  * @author Doug Lea
- *
  */
-
 public class Semaphore implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
     /** All mechanics via AbstractQueuedSynchronizer subclass */
@@ -163,8 +186,11 @@ public class Semaphore implements java.io.Serializable {
 
         protected final boolean tryReleaseShared(int releases) {
             for (;;) {
-                int p = getState();
-                if (compareAndSetState(p, p + releases))
+                int current = getState();
+                int next = current + releases;
+                if (next < current) // overflow
+                    throw new Error("Maximum permit count exceeded");
+                if (compareAndSetState(current, next))
                     return true;
             }
         }
@@ -173,6 +199,8 @@ public class Semaphore implements java.io.Serializable {
             for (;;) {
                 int current = getState();
                 int next = current - reductions;
+                if (next > current) // underflow
+                    throw new Error("Permit count underflow");
                 if (compareAndSetState(current, next))
                     return;
             }
@@ -190,7 +218,7 @@ public class Semaphore implements java.io.Serializable {
     /**
      * NonFair version
      */
-    final static class NonfairSync extends Sync {
+    static final class NonfairSync extends Sync {
         private static final long serialVersionUID = -2694183684443567898L;
 
         NonfairSync(int permits) {
@@ -205,7 +233,7 @@ public class Semaphore implements java.io.Serializable {
     /**
      * Fair version
      */
-    final static class FairSync extends Sync {
+    static final class FairSync extends Sync {
         private static final long serialVersionUID = 2014338818796000944L;
 
         FairSync(int permits) {
@@ -213,10 +241,8 @@ public class Semaphore implements java.io.Serializable {
         }
 
         protected int tryAcquireShared(int acquires) {
-            Thread current = Thread.currentThread();
             for (;;) {
-                Thread first = getFirstQueuedThread();
-                if (first != null && first != current)
+                if (hasQueuedPredecessors())
                     return -1;
                 int available = getState();
                 int remaining = available - acquires;
@@ -251,7 +277,7 @@ public class Semaphore implements java.io.Serializable {
      *        else {@code false}
      */
     public Semaphore(int permits, boolean fair) {
-        sync = (fair)? new FairSync(permits) : new NonfairSync(permits);
+        sync = fair ? new FairSync(permits) : new NonfairSync(permits);
     }
 
     /**
@@ -462,7 +488,6 @@ public class Semaphore implements java.io.Serializable {
      *
      * @param permits the number of permits to acquire
      * @throws IllegalArgumentException if {@code permits} is negative
-     *
      */
     public void acquireUninterruptibly(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
@@ -615,7 +640,7 @@ public class Semaphore implements java.io.Serializable {
      * @throws IllegalArgumentException if {@code reduction} is negative
      */
     protected void reducePermits(int reduction) {
-	if (reduction < 0) throw new IllegalArgumentException();
+        if (reduction < 0) throw new IllegalArgumentException();
         sync.reducePermits(reduction);
     }
 

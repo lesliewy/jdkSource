@@ -1,8 +1,26 @@
 /*
- * @(#)ImageReader.java	1.140 03/08/27
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio;
@@ -51,7 +69,6 @@ import javax.imageio.stream.ImageInputStream;
  * @see javax.imageio.spi.IIORegistry
  * @see javax.imageio.spi.ImageReaderSpi
  *
- * @version 0.5
  */
 public abstract class ImageReader {
 
@@ -145,7 +162,7 @@ public abstract class ImageReader {
      * <code>List</code>.
      */
     protected List<IIOReadUpdateListener> updateListeners = null;
-    
+
     /**
      * If <code>true</code>, the current read operation should be
      * aborted.
@@ -213,8 +230,8 @@ public abstract class ImageReader {
      * increased as each image (or thumbnail, or image metadata) is
      * read.  If <code>seekForwardOnly</code> is true, then a call to
      * <code>read(index)</code> will throw an
-     * <code>IndexOutOfBoundsException</code> if <code>index &lt
-     * this.minIndex</code>; otherwise, the value of
+     * <code>IndexOutOfBoundsException</code> if {@code index < this.minIndex};
+     * otherwise, the value of
      * <code>minIndex</code> will be set to <code>index</code>.  If
      * <code>seekForwardOnly</code> is <code>false</code>, the value of
      * <code>minIndex</code> will remain 0 regardless of any read
@@ -245,10 +262,10 @@ public abstract class ImageReader {
      * accept only an <code>ImageInputStream</code>.
      *
      * <p> The default implementation checks the <code>input</code>
-     * argument against the list returned by 
+     * argument against the list returned by
      * <code>originatingProvider.getInputTypes()</code> and fails
      * if the argument is not an instance of one of the classes
-     * in the list.  If the originating provider is set to 
+     * in the list.  If the originating provider is set to
      * <code>null</code>, the input is accepted only if it is an
      * <code>ImageInputStream</code>.
      *
@@ -311,8 +328,8 @@ public abstract class ImageReader {
      * increased as each image (or thumbnail, or image metadata) is
      * read.  If <code>seekForwardOnly</code> is true, then a call to
      * <code>read(index)</code> will throw an
-     * <code>IndexOutOfBoundsException</code> if <code>index &lt
-     * this.minIndex</code>; otherwise, the value of
+     * <code>IndexOutOfBoundsException</code> if {@code index < this.minIndex};
+     * otherwise, the value of
      * <code>minIndex</code> will be set to <code>index</code>.  If
      * <code>seekForwardOnly</code> is <code>false</code>, the value of
      * <code>minIndex</code> will remain 0 regardless of any read
@@ -583,8 +600,7 @@ public abstract class ImageReader {
      * <p> Note that formats that return <code>false</code> from
      * this method may nonetheless allow tiling (<i>e.g.</i> Restart
      * Markers in JPEG), and random access will likely be reasonably
-     * efficient on tiles.  See {@link #isImageTiled 
-     * <code>isImageTiled</code>}.
+     * efficient on tiles.  See {@link #isImageTiled isImageTiled}.
      *
      * <p> A reader for which all images are guaranteed to support
      * easy random access, or are guaranteed not to support easy
@@ -616,7 +632,7 @@ public abstract class ImageReader {
      * Returns the aspect ratio of the given image (that is, its width
      * divided by its height) as a <code>float</code>.  For images
      * that are inherently resizable, this method provides a way to
-     * determine the appropriate width given a deired height, or vice
+     * determine the appropriate width given a desired height, or vice
      * versa.  For non-resizable images, the true width and height
      * are used.
      *
@@ -665,7 +681,7 @@ public abstract class ImageReader {
         return (ImageTypeSpecifier)getImageTypes(imageIndex).next();
     }
 
-    /**    
+    /**
      * Returns an <code>Iterator</code> containing possible image
      * types to which the given image may be decoded, in the form of
      * <code>ImageTypeSpecifiers</code>s.  At least one legal image
@@ -694,7 +710,7 @@ public abstract class ImageReader {
      * @see ImageReadParam#setDestinationType(ImageTypeSpecifier)
      */
     public abstract Iterator<ImageTypeSpecifier>
-	getImageTypes(int imageIndex) throws IOException;
+        getImageTypes(int imageIndex) throws IOException;
 
     /**
      * Returns a default <code>ImageReadParam</code> object
@@ -734,7 +750,7 @@ public abstract class ImageReader {
      * not associated with any particular image).  If no such data
      * exists, <code>null</code> is returned.
      *
-     * <p> The resuting metadata object is only responsible for
+     * <p> The resulting metadata object is only responsible for
      * returning documents in the format named by
      * <code>formatName</code>.  Within any documents that are
      * returned, only nodes whose names are members of
@@ -758,7 +774,7 @@ public abstract class ImageReader {
      *
      * @param formatName a metadata format name that may be used to retrieve
      * a document from the returned <code>IIOMetadata</code> object.
-     * @param nodeNames a <code>Set</code> containing the names of 
+     * @param nodeNames a <code>Set</code> containing the names of
      * nodes that may be contained in a retrieved document.
      *
      * @return an <code>IIOMetadata</code> object, or <code>null</code>.
@@ -770,14 +786,14 @@ public abstract class ImageReader {
      * @exception IOException if an error occurs during reading.
      */
     public IIOMetadata getStreamMetadata(String formatName,
-					 Set<String> nodeNames)
+                                         Set<String> nodeNames)
         throws IOException
     {
         return getMetadata(formatName, nodeNames, true, 0);
     }
 
-    private IIOMetadata getMetadata(String formatName, 
-                                    Set nodeNames, 
+    private IIOMetadata getMetadata(String formatName,
+                                    Set nodeNames,
                                     boolean wantStream,
                                     int imageIndex) throws IOException {
         if (formatName == null) {
@@ -786,9 +802,9 @@ public abstract class ImageReader {
         if (nodeNames == null) {
             throw new IllegalArgumentException("nodeNames == null!");
         }
-        IIOMetadata metadata = 
-            wantStream 
-            ? getStreamMetadata() 
+        IIOMetadata metadata =
+            wantStream
+            ? getStreamMetadata()
             : getImageMetadata(imageIndex);
         if (metadata != null) {
             if (metadata.isStandardMetadataFormatSupported() &&
@@ -819,7 +835,7 @@ public abstract class ImageReader {
      * metadata, or if no metadata is available.
      *
      * @param imageIndex the index of the image whose metadata is to
-     * be retrieved. 
+     * be retrieved.
      *
      * @return an <code>IIOMetadata</code> object, or
      * <code>null</code>.
@@ -835,11 +851,11 @@ public abstract class ImageReader {
 
     /**
      * Returns an <code>IIOMetadata</code> object representing the
-     * metadata associated with the given image, or <code>null</code> 
+     * metadata associated with the given image, or <code>null</code>
      * if the reader does not support reading metadata or none
      * is available.
      *
-     * <p> The resuting metadata object is only responsible for
+     * <p> The resulting metadata object is only responsible for
      * returning documents in the format named by
      * <code>formatName</code>.  Within any documents that are
      * returned, only nodes whose names are members of
@@ -865,7 +881,7 @@ public abstract class ImageReader {
      * be retrieved.
      * @param formatName a metadata format name that may be used to retrieve
      * a document from the returned <code>IIOMetadata</code> object.
-     * @param nodeNames a <code>Set</code> containing the names of 
+     * @param nodeNames a <code>Set</code> containing the names of
      * nodes that may be contained in a retrieved document.
      *
      * @return an <code>IIOMetadata</code> object, or <code>null</code>.
@@ -882,7 +898,7 @@ public abstract class ImageReader {
      */
     public IIOMetadata getImageMetadata(int imageIndex,
                                         String formatName,
-					Set<String> nodeNames)
+                                        Set<String> nodeNames)
         throws IOException {
         return getMetadata(formatName, nodeNames, false, imageIndex);
     }
@@ -1046,7 +1062,7 @@ public abstract class ImageReader {
         if (imageIndex < getMinIndex()) {
             throw new IndexOutOfBoundsException("imageIndex < getMinIndex()!");
         }
-        
+
         BufferedImage im = read(imageIndex, param);
 
         ArrayList thumbnails = null;
@@ -1137,8 +1153,8 @@ public abstract class ImageReader {
      * @see IIOImage
      */
     public Iterator<IIOImage>
-	readAll(Iterator<? extends ImageReadParam> params)
-	throws IOException
+        readAll(Iterator<? extends ImageReadParam> params)
+        throws IOException
     {
         List output = new ArrayList();
 
@@ -1195,17 +1211,16 @@ public abstract class ImageReader {
 
     /**
      * Returns <code>true</code> if this plug-in supports reading
-     * just a {@link java.awt.image.Raster <code>Raster</code>} of pixel data.
+     * just a {@link java.awt.image.Raster Raster} of pixel data.
      * If this method returns <code>false</code>, calls to
-     * {@link #readRaster <code>readRaster</code>} or {@link #readTileRaster
-     * <code>readTileRaster</code>} will throw an 
-     * <code>UnsupportedOperationException</code>.
+     * {@link #readRaster readRaster} or {@link #readTileRaster readTileRaster}
+     * will throw an <code>UnsupportedOperationException</code>.
      *
      * <p> The default implementation returns <code>false</code>.
-     * 
+     *
      * @return <code>true</code> if this plug-in supports reading raw
      * <code>Raster</code>s.
-     * 
+     *
      * @see #readRaster
      * @see #readTileRaster
      */
@@ -1215,11 +1230,11 @@ public abstract class ImageReader {
 
     /**
      * Returns a new <code>Raster</code> object containing the raw pixel data
-     * from the image stream, without any color conversion applied.  The 
+     * from the image stream, without any color conversion applied.  The
      * application must determine how to interpret the pixel data by other
      * means.  Any destination or image-type parameters in the supplied
      * <code>ImageReadParam</code> object are ignored, but all other
-     * parameters are used exactly as in the {@link #read <code>read</code>}
+     * parameters are used exactly as in the {@link #read read}
      * method, except that any destination offset is used as a logical rather
      * than a physical offset.  The size of the returned <code>Raster</code>
      * will always be that of the source region clipped to the actual image.
@@ -1232,11 +1247,10 @@ public abstract class ImageReader {
      *
      * <p> Any registered <code>readUpdateListener</code>s are ignored, as
      * there is no <code>BufferedImage</code>, but all other listeners are
-     * called exactly as they are for the {@link #read <code>read</code>}
-     * method.
+     * called exactly as they are for the {@link #read read} method.
      *
-     * <p> If {@link #canReadRaster <code>canReadRaster()</code>} returns
-     * <code>false</code>, this method throws an 
+     * <p> If {@link #canReadRaster canReadRaster()} returns
+     * <code>false</code>, this method throws an
      * <code>UnsupportedOperationException</code>.
      *
      * <p> If the supplied <code>ImageReadParam</code> contains
@@ -1244,7 +1258,7 @@ public abstract class ImageReader {
      * source render size or any format-specific settings), they will
      * be ignored.
      *
-     * <p> The default implementation throws an 
+     * <p> The default implementation throws an
      * <code>UnsupportedOperationException</code>.
      *
      * @param imageIndex the index of the image to be read.
@@ -1421,7 +1435,7 @@ public abstract class ImageReader {
      *
      * <p> This method is merely a convenience equivalent to calling
      * <code>read(int, ImageReadParam)</code> with a read param
-     * specifiying a source region having offsets of
+     * specifying a source region having offsets of
      * <code>tileX*getTileWidth(imageIndex)</code>,
      * <code>tileY*getTileHeight(imageIndex)</code> and width and
      * height of <code>getTileWidth(imageIndex)</code>,
@@ -1430,7 +1444,7 @@ public abstract class ImageReader {
      * <code>read</code> with a read param specifying this region
      * and different subsampling parameters.
      *
-     * <p> The default implementation returns the entire image if 
+     * <p> The default implementation returns the entire image if
      * <code>tileX</code> and <code>tileY</code> are 0, or throws
      * an <code>IllegalArgumentException</code> otherwise.
      *
@@ -1462,15 +1476,15 @@ public abstract class ImageReader {
      * Returns a new <code>Raster</code> object containing the raw
      * pixel data from the tile, without any color conversion applied.
      * The application must determine how to interpret the pixel data by other
-     * means.  
+     * means.
      *
-     * <p> If {@link #canReadRaster <code>canReadRaster()</code>} returns
-     * <code>false</code>, this method throws an 
+     * <p> If {@link #canReadRaster canReadRaster()} returns
+     * <code>false</code>, this method throws an
      * <code>UnsupportedOperationException</code>.
      *
      * <p> The default implementation checks if reading
      * <code>Raster</code>s is supported, and if so calls {@link
-     * #readRaster <code>readRaster(imageIndex, null)</code>} if
+     * #readRaster readRaster(imageIndex, null)} if
      * <code>tileX</code> and <code>tileY</code> are 0, or throws an
      * <code>IllegalArgumentException</code> otherwise.
      *
@@ -1531,8 +1545,8 @@ public abstract class ImageReader {
      * source render size or any format-specific settings), they will
      * be ignored.
      *
-     * <p> The default implementation just calls {@link #read
-     * <code>read(imageIndex, param)</code>}.
+     * <p> The default implementation just calls
+     * {@link #read read(imageIndex, param)}.
      *
      * @param imageIndex the index of the image to be retrieved.
      * @param param an <code>ImageReadParam</code> used to control
@@ -1559,7 +1573,7 @@ public abstract class ImageReader {
         throws IOException {
         return read(imageIndex, param);
     }
-  
+
     // Thumbnails
 
     /**
@@ -1607,7 +1621,7 @@ public abstract class ImageReader {
     public boolean hasThumbnails(int imageIndex) throws IOException {
         return getNumThumbnails(imageIndex) > 0;
     }
-    
+
     /**
      * Returns the number of thumbnail preview images associated with
      * the given image.  If the format does not support thumbnails,
@@ -1688,7 +1702,7 @@ public abstract class ImageReader {
      * @param thumbnailIndex the index of the thumbnail to be retrieved.
      *
      * @return the height of the desired thumbnail as an <code>int</code>.
-     * 
+     *
      * @exception UnsupportedOperationException if thumbnails are not
      * supported.
      * @exception IllegalStateException if the input source has not been set.
@@ -1846,7 +1860,7 @@ public abstract class ImageReader {
             warningLocales.remove(index);
             if (warningListeners.size() == 0) {
                 warningListeners = null;
-		warningLocales = null;
+                warningLocales = null;
             }
         }
     }
@@ -1934,7 +1948,7 @@ public abstract class ImageReader {
      *
      * <p> The final results of decoding will be the same whether or
      * not intermediate updates are performed.  Thus if only the final
-     * image is desired it may be perferable not to register any
+     * image is desired it may be preferable not to register any
      * <code>IIOReadUpdateListener</code>s.  In general, progressive
      * updating is most effective when fetching images over a network
      * connection that is very slow compared to local CPU processing;
@@ -2182,7 +2196,7 @@ public abstract class ImageReader {
     protected void processPassStarted(BufferedImage theImage,
                                       int pass,
                                       int minPass, int maxPass,
-                                      int minX, int minY, 
+                                      int minX, int minY,
                                       int periodX, int periodY,
                                       int[] bands) {
         if (updateListeners == null) {
@@ -2285,7 +2299,7 @@ public abstract class ImageReader {
     protected void processThumbnailPassStarted(BufferedImage theThumbnail,
                                                int pass,
                                                int minPass, int maxPass,
-                                               int minX, int minY, 
+                                               int minX, int minY,
                                                int periodX, int periodY,
                                                int[] bands) {
         if (updateListeners == null) {
@@ -2389,7 +2403,7 @@ public abstract class ImageReader {
         for (int i = 0; i < numListeners; i++) {
             IIOReadWarningListener listener =
                 (IIOReadWarningListener)warningListeners.get(i);
-            
+
             listener.warningOccurred(this, warning);
         }
     }
@@ -2435,35 +2449,35 @@ public abstract class ImageReader {
             IIOReadWarningListener listener =
                 (IIOReadWarningListener)warningListeners.get(i);
             Locale locale = (Locale)warningLocales.get(i);
-	    if (locale == null) {
-		locale = Locale.getDefault();
-	    }
+            if (locale == null) {
+                locale = Locale.getDefault();
+            }
 
-	    /**
+            /**
              * If an applet supplies an implementation of ImageReader and
-	     * resource bundles, then the resource bundle will need to be
-	     * accessed via the applet class loader. So first try the context
-	     * class loader to locate the resource bundle.
-	     * If that throws MissingResourceException, then try the
-	     * system class loader.
-	     */
-	    ClassLoader loader = (ClassLoader)
-	    	java.security.AccessController.doPrivileged(
-		   new java.security.PrivilegedAction() {
-		      public Object run() {
+             * resource bundles, then the resource bundle will need to be
+             * accessed via the applet class loader. So first try the context
+             * class loader to locate the resource bundle.
+             * If that throws MissingResourceException, then try the
+             * system class loader.
+             */
+            ClassLoader loader = (ClassLoader)
+                java.security.AccessController.doPrivileged(
+                   new java.security.PrivilegedAction() {
+                      public Object run() {
                         return Thread.currentThread().getContextClassLoader();
-		      }
+                      }
                 });
 
             ResourceBundle bundle = null;
             try {
                 bundle = ResourceBundle.getBundle(baseName, locale, loader);
             } catch (MissingResourceException mre) {
-		try {
-		    bundle = ResourceBundle.getBundle(baseName, locale);
-		} catch (MissingResourceException mre1) {
-		    throw new IllegalArgumentException("Bundle not found!");
-		}
+                try {
+                    bundle = ResourceBundle.getBundle(baseName, locale);
+                } catch (MissingResourceException mre1) {
+                    throw new IllegalArgumentException("Bundle not found!");
+                }
             }
 
             String warning = null;
@@ -2474,7 +2488,7 @@ public abstract class ImageReader {
             } catch (MissingResourceException mre) {
                 throw new IllegalArgumentException("Resource is missing!");
             }
-            
+
             listener.warningOccurred(this, warning);
         }
     }
@@ -2527,9 +2541,8 @@ public abstract class ImageReader {
      * the supplied <code>ImageReadParam</code>.  The actual
      * subsampling factors, destination size, and destination offset
      * are <em>not</em> taken into consideration, thus further
-     * clipping must take place.  The {@link #computeRegions
-     * <code>computeRegions</code>} method performs all necessary
-     * clipping.
+     * clipping must take place.  The {@link #computeRegions computeRegions}
+     * method performs all necessary clipping.
      *
      * @param param the <code>ImageReadParam</code> being used, or
      * <code>null</code>.
@@ -2584,13 +2597,13 @@ public abstract class ImageReader {
      * width or height of 0, an <code>IllegalArgumentException</code>
      * is thrown.
      *
-     * <p> The {@link #getSourceRegion <code>getSourceRegion</code>}
+     * <p> The {@link #getSourceRegion getSourceRegion>}
      * method may be used if only source clipping is desired.
      *
      * @param param an <code>ImageReadParam</code>, or <code>null</code>.
      * @param srcWidth the width of the source image.
      * @param srcHeight the height of the source image.
-     * @param image a <code>BufferedImage</code> that will be the 
+     * @param image a <code>BufferedImage</code> that will be the
      * destination image, or <code>null</code>.
      * @param srcRegion a <code>Rectangle</code> that will be filled with
      * the source region of interest.
@@ -2642,7 +2655,7 @@ public abstract class ImageReader {
             srcRegion.height -= gridY;
             destRegion.setLocation(param.getDestinationOffset());
         }
-        
+
         // Now clip any negative destination offsets, i.e. clip
         // to the top and left of the destination image
         if (destRegion.x < 0) {
@@ -2812,9 +2825,9 @@ public abstract class ImageReader {
      * <code>Integer.MAX_VALUE</code>.
      */
     protected static BufferedImage
-	getDestination(ImageReadParam param,
-		       Iterator<ImageTypeSpecifier> imageTypes,
-		       int width, int height)
+        getDestination(ImageReadParam param,
+                       Iterator<ImageTypeSpecifier> imageTypes,
+                       int width, int height)
         throws IIOException {
         if (imageTypes == null || !imageTypes.hasNext()) {
             throw new IllegalArgumentException("imageTypes null or empty!");
@@ -2823,7 +2836,7 @@ public abstract class ImageReader {
             throw new IllegalArgumentException
                 ("width*height > Integer.MAX_VALUE!");
         }
-        
+
         BufferedImage dest = null;
         ImageTypeSpecifier imageType = null;
 
@@ -2834,7 +2847,7 @@ public abstract class ImageReader {
             if (dest != null) {
                 return dest;
             }
-        
+
             // No image, get the image type
             imageType = param.getDestinationType();
         }
@@ -2872,7 +2885,7 @@ public abstract class ImageReader {
                        null,
                        srcRegion,
                        destRegion);
-        
+
         int destWidth = destRegion.x + destRegion.width;
         int destHeight = destRegion.y + destRegion.height;
         // Create a new image based on the type specifier

@@ -1,12 +1,16 @@
 /*
- * Copyright 1999-2002,2004 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +20,17 @@
 
 package com.sun.org.apache.xerces.internal.dom;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamField;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DocumentType;
-import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
-import java.util.Hashtable;
+import org.w3c.dom.Node;
 import org.w3c.dom.UserDataHandler;
 
 /**
@@ -39,16 +49,15 @@ import org.w3c.dom.UserDataHandler;
  * Most notably, absolutely no provision was made for storing
  * and using Element and Attribute information. Nor was the linkage
  * between Entities and Entity References nailed down solidly.
- * 
+ *
  * @xerces.internal
  *
  * @author Arnaud  Le Hors, IBM
  * @author Joe Kesselman, IBM
  * @author Andy Clark, IBM
- * @version $Id: DocumentTypeImpl.java,v 1.4 2007/07/19 04:38:19 ofung Exp $
  * @since  PR-DOM-Level-1-19980818.
  */
-public class DocumentTypeImpl 
+public class DocumentTypeImpl
     extends ParentNode
     implements DocumentType {
 
@@ -58,7 +67,7 @@ public class DocumentTypeImpl
 
     /** Serialization version. */
     static final long serialVersionUID = 7751299192316526485L;
-    
+
     //
     // Data
     //
@@ -68,7 +77,7 @@ public class DocumentTypeImpl
 
     /** Entities. */
     protected NamedNodeMapImpl entities;
-    
+
     /** Notations. */
     protected NamedNodeMapImpl notations;
 
@@ -76,26 +85,53 @@ public class DocumentTypeImpl
 
     /** Elements. */
     protected NamedNodeMapImpl elements;
-    
+
     // DOM2: support public ID.
     protected String publicID;
-    
+
     // DOM2: support system ID.
     protected String systemID;
-    
+
     // DOM2: support internal subset.
     protected String internalSubset;
 
-    /** The following are required for compareDocumentPosition 
+    /** The following are required for compareDocumentPosition
     */
-    // Doctype number.   Doc types which have no owner may be assigned 
+    // Doctype number.   Doc types which have no owner may be assigned
     // a number, on demand, for ordering purposes for compareDocumentPosition
     private int doctypeNumber=0;
+
+    private Map<String, UserDataRecord> userData =  null;
+
+
+    /**
+     * @serialField name String document type name
+     * @serialField entities NamedNodeMapImpl entities
+     * @serialField notations NamedNodeMapImpl notations
+     * @serialField elements NamedNodeMapImpl elements
+     * @serialField publicID String support public ID
+     * @serialField systemID String support system ID
+     * @serialField internalSubset String support internal subset
+     * @serialField doctypeNumber int Doctype number
+     * @serialField userData Hashtable user data
+     */
+    private static final ObjectStreamField[] serialPersistentFields =
+        new ObjectStreamField[] {
+            new ObjectStreamField("name", String.class),
+            new ObjectStreamField("entities", NamedNodeMapImpl.class),
+            new ObjectStreamField("notations", NamedNodeMapImpl.class),
+            new ObjectStreamField("elements", NamedNodeMapImpl.class),
+            new ObjectStreamField("publicID", String.class),
+            new ObjectStreamField("systemID", String.class),
+            new ObjectStreamField("internalSubset", String.class),
+            new ObjectStreamField("doctypeNumber", int.class),
+            new ObjectStreamField("userData", Hashtable.class),
+        };
 
     //
     // Constructors
     //
-    private Hashtable userData =  null;
+
     /** Factory method for creating a document type node. */
     public DocumentTypeImpl(CoreDocumentImpl ownerDocument, String name) {
         super(ownerDocument);
@@ -109,7 +145,7 @@ public class DocumentTypeImpl
         elements = new NamedNodeMapImpl(this);
 
     } // <init>(CoreDocumentImpl,String)
-  
+
     /** Factory method for creating a document type node. */
     public DocumentTypeImpl(CoreDocumentImpl ownerDocument,
                             String qualifiedName,
@@ -119,14 +155,14 @@ public class DocumentTypeImpl
         this.systemID = systemID;
 
     } // <init>(CoreDocumentImpl,String)
-    
+
     //
     // DOM2: methods.
     //
-    
+
     /**
      * Introduced in DOM Level 2. <p>
-     * 
+     *
      * Return the public identifier of this Document type.
      * @since WD-DOM-Level-2-19990923
      */
@@ -138,7 +174,7 @@ public class DocumentTypeImpl
     }
     /**
      * Introduced in DOM Level 2. <p>
-     * 
+     *
      * Return the system identifier of this Document type.
      * @since WD-DOM-Level-2-19990923
      */
@@ -148,7 +184,7 @@ public class DocumentTypeImpl
         }
         return systemID;
     }
-    
+
     /**
      * NON-DOM. <p>
      *
@@ -163,7 +199,7 @@ public class DocumentTypeImpl
 
     /**
      * Introduced in DOM Level 2. <p>
-     * 
+     *
      * Return the internalSubset given as a string.
      * @since WD-DOM-Level-2-19990923
      */
@@ -173,19 +209,19 @@ public class DocumentTypeImpl
         }
         return internalSubset;
     }
-    
+
     //
     // Node methods
     //
 
-    /** 
+    /**
      * A short integer indicating what type of node this is. The named
      * constants for this value are defined in the org.w3c.dom.Node interface.
      */
     public short getNodeType() {
         return Node.DOCUMENT_TYPE_NODE;
     }
-    
+
     /**
      * Returns the document type name
      */
@@ -199,17 +235,17 @@ public class DocumentTypeImpl
     /** Clones the node. */
     public Node cloneNode(boolean deep) {
 
-    	DocumentTypeImpl newnode = (DocumentTypeImpl)super.cloneNode(deep);
-    	// NamedNodeMaps must be cloned explicitly, to avoid sharing them.
-    	newnode.entities  = entities.cloneMap(newnode);
-    	newnode.notations = notations.cloneMap(newnode);
-    	newnode.elements  = elements.cloneMap(newnode);
+        DocumentTypeImpl newnode = (DocumentTypeImpl)super.cloneNode(deep);
+        // NamedNodeMaps must be cloned explicitly, to avoid sharing them.
+        newnode.entities  = entities.cloneMap(newnode);
+        newnode.notations = notations.cloneMap(newnode);
+        newnode.elements  = elements.cloneMap(newnode);
 
-    	return newnode;
+        return newnode;
 
     } // cloneNode(boolean):Node
 
-    /* 
+    /*
      * Get Node text content
      * @since DOM Level 3
      */
@@ -225,23 +261,23 @@ public class DocumentTypeImpl
         throws DOMException {
         // no-op
     }
-    
-	/**
-	  * DOM Level 3 WD- Experimental.
-	  * Override inherited behavior from ParentNodeImpl to support deep equal.
-	  */
+
+        /**
+          * DOM Level 3 WD- Experimental.
+          * Override inherited behavior from ParentNodeImpl to support deep equal.
+          */
     public boolean isEqualNode(Node arg) {
-        
+
         if (!super.isEqualNode(arg)) {
             return false;
         }
-        
+
         if (needsSyncData()) {
             synchronizeData();
         }
         DocumentTypeImpl argDocType = (DocumentTypeImpl) arg;
 
-        //test if the following string attributes are equal: publicId, 
+        //test if the following string attributes are equal: publicId,
         //systemId, internalSubset.
         if ((getPublicId() == null && argDocType.getPublicId() != null)
             || (getPublicId() != null && argDocType.getPublicId() == null)
@@ -328,21 +364,21 @@ public class DocumentTypeImpl
         elements.setOwnerDocument(doc);
     }
 
-    /** NON-DOM  
-        Get the number associated with this doctype.    
+    /** NON-DOM
+        Get the number associated with this doctype.
     */
     protected int getNodeNumber() {
-         // If the doctype has a document owner, get the node number 
+         // If the doctype has a document owner, get the node number
          // relative to the owner doc
-         if (getOwnerDocument()!=null) 
+         if (getOwnerDocument()!=null)
             return super.getNodeNumber();
 
          // The doctype is disconnected and not associated with any document.
          // Assign the doctype a number relative to the implementation.
          if (doctypeNumber==0) {
-          
+
             CoreDOMImplementationImpl cd = (CoreDOMImplementationImpl)CoreDOMImplementationImpl.getDOMImplementation();
-            doctypeNumber = cd.assignDocTypeNumber();   
+            doctypeNumber = cd.assignDocTypeNumber();
          }
          return doctypeNumber;
     }
@@ -360,7 +396,7 @@ public class DocumentTypeImpl
         if (needsSyncData()) {
             synchronizeData();
         }
-    	return name;
+        return name;
 
     } // getName():String
 
@@ -390,7 +426,7 @@ public class DocumentTypeImpl
         if (needsSyncChildren()) {
             synchronizeChildren();
             }
-    	return entities;
+        return entities;
     }
 
     /**
@@ -402,7 +438,7 @@ public class DocumentTypeImpl
         if (needsSyncChildren()) {
             synchronizeChildren();
             }
-    	return notations;
+        return notations;
     }
 
     //
@@ -415,7 +451,7 @@ public class DocumentTypeImpl
      * @see NodeImpl#setReadOnly
      */
     public void setReadOnly(boolean readOnly, boolean deep) {
-    	
+
         if (needsSyncChildren()) {
             synchronizeChildren();
         }
@@ -424,10 +460,10 @@ public class DocumentTypeImpl
         // set read-only property
         elements.setReadOnly(readOnly, true);
         entities.setReadOnly(readOnly, true);
-    	notations.setReadOnly(readOnly, true);
+        notations.setReadOnly(readOnly, true);
 
     } // setReadOnly(boolean,boolean)
-    
+
     /**
      * NON-DOM: Access the collection of ElementDefinitions.
      * @see ElementDefinitionImpl
@@ -436,47 +472,87 @@ public class DocumentTypeImpl
         if (needsSyncChildren()) {
             synchronizeChildren();
         }
-    	return elements;
+        return elements;
     }
-    
+
     public Object setUserData(String key,
     Object data, UserDataHandler handler) {
         if(userData == null)
-            userData = new Hashtable();
+            userData = new HashMap<>();
         if (data == null) {
             if (userData != null) {
-                Object o = userData.remove(key);
-                if (o != null) {
-                    UserDataRecord r = (UserDataRecord) o;
-                    return r.fData;
+                UserDataRecord udr = userData.remove(key);
+                if (udr != null) {
+                    return udr.fData;
                 }
             }
             return null;
         }
         else {
-            Object o = userData.put(key, new UserDataRecord(data, handler));
-            if (o != null) {
-                UserDataRecord r = (UserDataRecord) o;
-                return r.fData;
+            UserDataRecord udr = userData.put(key, new UserDataRecord(data, handler));
+            if (udr != null) {
+                return udr.fData;
             }
         }
         return null;
     }
-    
+
     public Object getUserData(String key) {
         if (userData == null) {
             return null;
         }
-        Object o = userData.get(key);
-        if (o != null) {
-            UserDataRecord r = (UserDataRecord) o;
-            return r.fData;
+        UserDataRecord udr = userData.get(key);
+        if (udr != null) {
+            return udr.fData;
         }
         return null;
     }
-    
-    protected Hashtable getUserDataRecord(){
+
+    @Override
+    protected Map<String, UserDataRecord> getUserDataRecord(){
         return userData;
     }
-    
+
+    /**
+     * @serialData Serialized fields. Convert Map to Hashtable for backward
+     * compatibility.
+     */
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        // Convert the HashMap to Hashtable
+        Hashtable<String, UserDataRecord> ud = (userData == null)? null : new Hashtable<>(userData);
+
+        // Write serialized fields
+        ObjectOutputStream.PutField pf = out.putFields();
+        pf.put("name", name);
+        pf.put("entities", entities);
+        pf.put("notations", notations);
+        pf.put("elements", elements);
+        pf.put("publicID", publicID);
+        pf.put("systemID", systemID);
+        pf.put("internalSubset", internalSubset);
+        pf.put("doctypeNumber", doctypeNumber);
+        pf.put("userData", ud);
+        out.writeFields();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(ObjectInputStream in)
+                        throws IOException, ClassNotFoundException {
+        // We have to read serialized fields first.
+        ObjectInputStream.GetField gf = in.readFields();
+        name = (String)gf.get("name", null);
+        entities = (NamedNodeMapImpl)gf.get("entities", null);
+        notations = (NamedNodeMapImpl)gf.get("notations", null);
+        elements = (NamedNodeMapImpl)gf.get("elements", null);
+        publicID = (String)gf.get("publicID", null);
+        systemID = (String)gf.get("systemID", null);
+        internalSubset = (String)gf.get("internalSubset", null);
+        doctypeNumber = gf.get("doctypeNumber", 0);
+
+        Hashtable<String, UserDataRecord> ud =
+                (Hashtable<String, UserDataRecord>)gf.get("userData", null);
+
+        //convert the Hashtable back to HashMap
+        if (ud != null) userData = new HashMap<>(ud);
+    }
 } // class DocumentTypeImpl

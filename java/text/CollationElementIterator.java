@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /*
@@ -36,14 +54,14 @@ import sun.text.normalizer.NormalizerBase;
  * For example, consider the following in Spanish:
  * <blockquote>
  * <pre>
- * "ca" -> the first key is key('c') and second key is key('a').
- * "cha" -> the first key is key('ch') and second key is key('a').
+ * "ca" &rarr; the first key is key('c') and second key is key('a').
+ * "cha" &rarr; the first key is key('ch') and second key is key('a').
  * </pre>
  * </blockquote>
  * And in German,
  * <blockquote>
  * <pre>
- * "\u00e4b"-> the first key is key('a'), the second key is key('e'), and
+ * "\u00e4b" &rarr; the first key is key('a'), the second key is key('e'), and
  * the third key is key('b').
  * </pre>
  * </blockquote>
@@ -61,9 +79,13 @@ import sun.text.normalizer.NormalizerBase;
  * <pre>
  *
  *  String testString = "This is a test";
- *  RuleBasedCollator ruleBasedCollator = (RuleBasedCollator)Collator.getInstance();
- *  CollationElementIterator collationElementIterator = ruleBasedCollator.getCollationElementIterator(testString);
- *  int primaryOrder = CollationElementIterator.primaryOrder(collationElementIterator.next());
+ *  Collator col = Collator.getInstance();
+ *  if (col instanceof RuleBasedCollator) {
+ *      RuleBasedCollator ruleBasedCollator = (RuleBasedCollator)col;
+ *      CollationElementIterator collationElementIterator = ruleBasedCollator.getCollationElementIterator(testString);
+ *      int primaryOrder = CollationElementIterator.primaryOrder(collationElementIterator.next());
+ *          :
+ *  }
  * </pre>
  * </blockquote>
  *
@@ -75,9 +97,12 @@ import sun.text.normalizer.NormalizerBase;
  * is its primary order; the next 8 bits is the secondary order and the
  * last 8 bits is the tertiary order.
  *
+ * <p><b>Note:</b> <code>CollationElementIterator</code> is a part of
+ * <code>RuleBasedCollator</code> implementation. It is only usable
+ * with <code>RuleBasedCollator</code> instances.
+ *
  * @see                Collator
  * @see                RuleBasedCollator
- * @version            1.24 07/27/98
  * @author             Helena Shih, Laura Werner, Richard Gillam
  */
 public final class CollationElementIterator
@@ -94,7 +119,7 @@ public final class CollationElementIterator
      * on the predefined collation rules.  If the source string is empty,
      * NULLORDER will be returned on the calls to next().
      * @param sourceText the source string.
-     * @param order the collation object.
+     * @param owner the collation object.
      */
     CollationElementIterator(String sourceText, RuleBasedCollator owner) {
         this.owner = owner;
@@ -112,7 +137,7 @@ public final class CollationElementIterator
      * on the predefined collation rules.  If the source string is empty,
      * NULLORDER will be returned on the calls to next().
      * @param sourceText the source string.
-     * @param order the collation object.
+     * @param owner the collation object.
      */
     CollationElementIterator(CharacterIterator sourceText, RuleBasedCollator owner) {
         this.owner = owner;
@@ -152,6 +177,8 @@ public final class CollationElementIterator
      * means that when you change direction while iterating (i.e., call next() and
      * then call previous(), or call previous() and then call next()), you'll get
      * back the same element twice.</p>
+     *
+     * @return the next collation element
      */
     public int next()
     {
@@ -210,7 +237,7 @@ public final class CollationElementIterator
         if (ordering.isSEAsianSwapping()) {
             int consonant;
             if (isThaiPreVowel(ch)) {
-	        consonant = text.next();
+                consonant = text.next();
                 if (isThaiBaseConsonant(consonant)) {
                     buffer = makeReorderedBuffer(consonant, value, buffer, true);
                     value = buffer[0];
@@ -220,7 +247,7 @@ public final class CollationElementIterator
                 }
             }
             if (isLaoPreVowel(ch)) {
-	        consonant = text.next();
+                consonant = text.next();
                 if (isLaoBaseConsonant(consonant)) {
                     buffer = makeReorderedBuffer(consonant, value, buffer, true);
                     value = buffer[0];
@@ -247,6 +274,8 @@ public final class CollationElementIterator
      * updates the pointer.  This means that when you change direction while
      * iterating (i.e., call next() and then call previous(), or call previous()
      * and then call next()), you'll get back the same element twice.</p>
+     *
+     * @return the previous collation element
      * @since 1.2
      */
     public int previous()
@@ -299,7 +328,7 @@ public final class CollationElementIterator
 
         if (ordering.isSEAsianSwapping()) {
             int vowel;
-            if (isThaiBaseConsonant(ch)) { 
+            if (isThaiBaseConsonant(ch)) {
                 vowel = text.previous();
                 if (isThaiPreVowel(vowel)) {
                     buffer = makeReorderedBuffer(vowel, value, buffer, false);
@@ -310,7 +339,7 @@ public final class CollationElementIterator
                 }
             }
             if (isLaoBaseConsonant(ch)) {
-	        vowel = text.previous();
+                vowel = text.previous();
                 if (isLaoPreVowel(vowel)) {
                     buffer = makeReorderedBuffer(vowel, value, buffer, false);
                     expIndex = buffer.length - 1;
@@ -386,7 +415,8 @@ public final class CollationElementIterator
      *
      * @param newOffset The new character offset into the original text.
      * @since 1.2
-     */  
+     */
+    @SuppressWarnings("deprecation") // getBeginIndex, getEndIndex and setIndex are deprecated
     public void setOffset(int newOffset)
     {
         if (text != null) {
@@ -403,7 +433,7 @@ public final class CollationElementIterator
                     // walk backwards through the string until we see a character
                     // that DOESN'T participate in a contracting character sequence
                     while (ordering.usedInContractSeq(c)) {
-		        c = text.previous();
+                        c = text.previous();
                     }
                     // now walk forward using this object's next() method until
                     // we pass the starting point and set our current position
@@ -415,10 +445,10 @@ public final class CollationElementIterator
                         next();
                     }
                     text.setIndexOnly(last);
-		    // we don't need this, since last is the last index 
-		    // that is the starting of the contraction which encompass
-		    // newOffset 
-		    // text.previous();
+                    // we don't need this, since last is the last index
+                    // that is the starting of the contraction which encompass
+                    // newOffset
+                    // text.previous();
                 }
             }
         }
@@ -620,14 +650,14 @@ public final class CollationElementIterator
     {
         // First get the ordering of this single character,
         // which is always the first element in the list
-        Vector list = ordering.getContractValues(ch);
-        EntryPair pair = (EntryPair)list.firstElement();
+        Vector<EntryPair> list = ordering.getContractValues(ch);
+        EntryPair pair = list.firstElement();
         int order = pair.value;
 
         // find out the length of the longest contracting character sequence in the list.
         // There's logic in the builder code to make sure the longest sequence is always
         // the last.
-        pair = (EntryPair)list.lastElement();
+        pair = list.lastElement();
         int maxLength = pair.entryName.length();
 
         // (the Normalizer is cloned here so that the seeking we do in the next loop
@@ -639,7 +669,7 @@ public final class CollationElementIterator
         // iterator is using) and store it in "fragment".
         tempText.previous();
         key.setLength(0);
-        int c = tempText.next();  
+        int c = tempText.next();
         while (maxLength > 0 && c != NormalizerBase.DONE) {
             if (Character.isSupplementaryCodePoint(c)) {
                 key.append(Character.toChars(c));
@@ -659,7 +689,7 @@ public final class CollationElementIterator
         // to this sequence
         maxLength = 1;
         for (int i = list.size() - 1; i > 0; i--) {
-            pair = (EntryPair)list.elementAt(i);
+            pair = list.elementAt(i);
             if (!pair.fwd)
                 continue;
 
@@ -696,11 +726,11 @@ public final class CollationElementIterator
         // rather than off.  Notice that we still use append() and startsWith() when
         // working on the fragment.  This is because the entry pairs that are used
         // in reverse iteration have their names reversed already.
-        Vector list = ordering.getContractValues(ch);
-        EntryPair pair = (EntryPair)list.firstElement();
+        Vector<EntryPair> list = ordering.getContractValues(ch);
+        EntryPair pair = list.firstElement();
         int order = pair.value;
 
-        pair = (EntryPair)list.lastElement();
+        pair = list.lastElement();
         int maxLength = pair.entryName.length();
 
         NormalizerBase tempText = (NormalizerBase)text.clone();
@@ -722,7 +752,7 @@ public final class CollationElementIterator
 
         maxLength = 1;
         for (int i = list.size() - 1; i > 0; i--) {
-            pair = (EntryPair)list.elementAt(i);
+            pair = list.elementAt(i);
             if (pair.fwd)
                 continue;
 

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package java.awt;
 
@@ -36,14 +54,13 @@ import java.awt.peer.ComponentPeer;
  * impact, the focusability of the Component itself.
  * <p>
  * Please see
- * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/focus.html">
+ * <a href="https://docs.oracle.com/javase/tutorial/uiswing/misc/focus.html">
  * How to Use the Focus Subsystem</a>,
  * a section in <em>The Java Tutorial</em>, and the
  * <a href="../../java/awt/doc-files/FocusSpec.html">Focus Specification</a>
  * for more information.
  *
  * @author David Mendenhall
- * @version %I%, %G%
  *
  * @see Container#getComponents
  * @see Component#isFocusable
@@ -78,34 +95,34 @@ public class DefaultFocusTraversalPolicy
      */
     protected boolean accept(Component aComponent) {
         if (!(aComponent.isVisible() && aComponent.isDisplayable() &&
-	      aComponent.isEnabled()))
-	{
-	    return false;
-	}
+              aComponent.isEnabled()))
+        {
+            return false;
+        }
 
-	// Verify that the Component is recursively enabled. Disabling a
-	// heavyweight Container disables its children, whereas disabling
-	// a lightweight Container does not.
-	if (!(aComponent instanceof Window)) {
-	    for (Container enableTest = aComponent.getParent();
-		 enableTest != null;
-		 enableTest = enableTest.getParent())
-	    {
-		if (!(enableTest.isEnabled() || enableTest.isLightweight())) {
-		    return false;
-		}
-		if (enableTest instanceof Window) {
-		    break;
-		}
-	    }
-	}
+        // Verify that the Component is recursively enabled. Disabling a
+        // heavyweight Container disables its children, whereas disabling
+        // a lightweight Container does not.
+        if (!(aComponent instanceof Window)) {
+            for (Container enableTest = aComponent.getParent();
+                 enableTest != null;
+                 enableTest = enableTest.getParent())
+            {
+                if (!(enableTest.isEnabled() || enableTest.isLightweight())) {
+                    return false;
+                }
+                if (enableTest instanceof Window) {
+                    break;
+                }
+            }
+        }
 
-	boolean focusable = aComponent.isFocusable();
-	if (aComponent.isFocusTraversableOverridden()) {
-	    return focusable;
-	}
+        boolean focusable = aComponent.isFocusable();
+        if (aComponent.isFocusTraversableOverridden()) {
+            return focusable;
+        }
 
-	ComponentPeer peer = aComponent.getPeer();
-	return (peer != null && peer.isFocusable());
+        ComponentPeer peer = aComponent.getPeer();
+        return (peer != null && peer.isFocusable());
     }
 }

@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.lang.model.util;
@@ -36,7 +54,7 @@ import javax.annotation.processing.SupportedSourceVersion;
  * added to this class in the future; to avoid incompatibilities,
  * classes which extend this class should not declare any instance
  * methods with names beginning with {@code "visit"}.
- * 
+ *
  * <p>When such a new visit method is added, the default
  * implementation in this class will be to call the {@link
  * #visitUnknown visitUnknown} method.  A new simple annotation
@@ -45,17 +63,28 @@ import javax.annotation.processing.SupportedSourceVersion;
  * behavior for the visit method in question.  When the new visitor is
  * introduced, all or portions of this visitor may be deprecated.
  *
+ * <p>Note that adding a default implementation of a new visit method
+ * in a visitor class will occur instead of adding a <em>default
+ * method</em> directly in the visitor interface since a Java SE 8
+ * language feature cannot be used to this version of the API since
+ * this version is required to be runnable on Java SE 7
+ * implementations.  Future versions of the API that are only required
+ * to run on Java SE 8 and later may take advantage of default methods
+ * in this situation.
+ *
  * @param <R> the return type of this visitor's methods
  * @param <P> the type of the additional parameter to this visitor's methods.
  *
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version %I% %E%
+ *
+ * @see SimpleAnnotationValueVisitor7
+ * @see SimpleAnnotationValueVisitor8
  * @since 1.6
  */
 @SupportedSourceVersion(RELEASE_6)
-public class SimpleAnnotationValueVisitor6<R, P> 
+public class SimpleAnnotationValueVisitor6<R, P>
     extends AbstractAnnotationValueVisitor6<R, P> {
 
     /**
@@ -70,8 +99,8 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * default value.
      */
     protected SimpleAnnotationValueVisitor6() {
-	super();
-	DEFAULT_VALUE = null;
+        super();
+        DEFAULT_VALUE = null;
     }
 
     /**
@@ -81,8 +110,8 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @param defaultValue the value to assign to {@link #DEFAULT_VALUE}
      */
     protected SimpleAnnotationValueVisitor6(R defaultValue) {
-	super();
-	DEFAULT_VALUE = defaultValue;
+        super();
+        DEFAULT_VALUE = defaultValue;
     }
 
     /**
@@ -95,7 +124,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return {@code DEFAULT_VALUE} unless overridden
      */
     protected R defaultAction(Object o, P p) {
-	return DEFAULT_VALUE;
+        return DEFAULT_VALUE;
     }
 
     /**
@@ -106,7 +135,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitBoolean(boolean b, P p) {
-	return defaultAction(b, p);
+        return defaultAction(b, p);
     }
 
     /**
@@ -117,7 +146,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitByte(byte b, P p) {
-	return defaultAction(b, p);
+        return defaultAction(b, p);
     }
 
     /**
@@ -128,7 +157,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitChar(char c, P p) {
-	return defaultAction(c, p);
+        return defaultAction(c, p);
     }
 
     /**
@@ -139,7 +168,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitDouble(double d, P p) {
-	return defaultAction(d, p);
+        return defaultAction(d, p);
     }
 
     /**
@@ -150,7 +179,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitFloat(float f, P p) {
-	return defaultAction(f, p);
+        return defaultAction(f, p);
     }
 
     /**
@@ -161,7 +190,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitInt(int i, P p) {
-	return defaultAction(i, p);
+        return defaultAction(i, p);
     }
 
     /**
@@ -172,7 +201,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitLong(long i, P p) {
-	return defaultAction(i, p);
+        return defaultAction(i, p);
     }
 
     /**
@@ -183,7 +212,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitShort(short s, P p) {
-	return defaultAction(s, p);
+        return defaultAction(s, p);
     }
 
     /**
@@ -194,7 +223,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitString(String s, P p) {
-	return defaultAction(s, p);
+        return defaultAction(s, p);
     }
 
     /**
@@ -205,7 +234,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitType(TypeMirror t, P p) {
-	return defaultAction(t, p);
+        return defaultAction(t, p);
     }
 
     /**
@@ -216,7 +245,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitEnumConstant(VariableElement c, P p) {
-	return defaultAction(c, p);
+        return defaultAction(c, p);
     }
 
     /**
@@ -227,7 +256,7 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitAnnotation(AnnotationMirror a, P p) {
-	return defaultAction(a, p);
+        return defaultAction(a, p);
     }
 
     /**
@@ -238,6 +267,6 @@ public class SimpleAnnotationValueVisitor6<R, P>
      * @return  the result of {@code defaultAction}
      */
     public R visitArray(List<? extends AnnotationValue> vals, P p) {
-	return defaultAction(vals, p);
-    }    
+        return defaultAction(vals, p);
+    }
 }

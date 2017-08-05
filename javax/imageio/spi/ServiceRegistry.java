@@ -1,8 +1,26 @@
 /*
- * %W% %E%
- *
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package javax.imageio.spi;
@@ -15,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import sun.misc.Service;
+import java.util.ServiceLoader;
 
 /**
  * A registry for service provider instances.
@@ -30,7 +48,7 @@ import sun.misc.Service;
  * each of which is defined by a class of interface (described by a
  * <code>Class</code> object) that all of its members must implement.
  * The set of categories may be changed dynamically.
- * 
+ *
  * <p> Only a single instance of a given leaf class (that is, the
  * actual class returned by <code>getClass()</code>, as opposed to any
  * inherited classes or interfaces) may be registered.  That is,
@@ -54,7 +72,7 @@ import sun.misc.Service;
  * <code>javax.someapi.SomeService</code> interface, the JAR file
  * would contain a file named: <pre>
  * META-INF/services/javax.someapi.SomeService </pre>
- * 
+ *
  * containing the line:
  *
  * <pre>
@@ -77,7 +95,6 @@ import sun.misc.Service;
  *
  * @see RegisterableService
  *
- * @version 0.5
  */
 public class ServiceRegistry {
 
@@ -109,7 +126,7 @@ public class ServiceRegistry {
     // The following two methods expose functionality from
     // sun.misc.Service.  If that class is made public, they may be
     // removed.
-    // 
+    //
     // The sun.misc.ServiceConfigurationError class may also be
     // exposed, in which case the references to 'an
     // <code>Error</code>' below should be changed to 'a
@@ -139,7 +156,9 @@ public class ServiceRegistry {
      * provider-configuration files and instantiate provider classes,
      * or <code>null</code> if the system class loader (or, failing that
      * the bootstrap class loader) is to be used.
-     * 
+     *
+     * @param <T> the type of the providerClass.
+     *
      * @return An <code>Iterator</code> that yields provider objects
      * for the given service, in some arbitrary order.  The iterator
      * will throw an <code>Error</code> if a provider-configuration
@@ -149,13 +168,13 @@ public class ServiceRegistry {
      * @exception IllegalArgumentException if
      * <code>providerClass</code> is <code>null</code>.
      */
-    public static <T> Iterator<T> lookupProviders(Class<T> providerClass, 
-						  ClassLoader loader)
+    public static <T> Iterator<T> lookupProviders(Class<T> providerClass,
+                                                  ClassLoader loader)
     {
         if (providerClass == null) {
             throw new IllegalArgumentException("providerClass == null!");
         }
-	return Service.providers(providerClass, loader);
+        return ServiceLoader.load(providerClass, loader).iterator();
     }
 
     /**
@@ -171,6 +190,8 @@ public class ServiceRegistry {
      * @param providerClass a <code>Class</code>object indicating the
      * class or interface of the service providers being detected.
      *
+     * @param <T> the type of the providerClass.
+     *
      * @return An <code>Iterator</code> that yields provider objects
      * for the given service, in some arbitrary order.  The iterator
      * will throw an <code>Error</code> if a provider-configuration
@@ -184,7 +205,7 @@ public class ServiceRegistry {
         if (providerClass == null) {
             throw new IllegalArgumentException("providerClass == null!");
         }
-	return Service.providers(providerClass);
+        return ServiceLoader.load(providerClass).iterator();
     }
 
     /**
@@ -230,6 +251,7 @@ public class ServiceRegistry {
      * @param provider the service provide object to be registered.
      * @param category the category under which to register the
      * provider.
+     * @param <T> the type of the provider.
      *
      * @return true if no provider of the same class was previously
      * registered in the same category category.
@@ -242,7 +264,7 @@ public class ServiceRegistry {
      * the <code>Class</code> defined by <code>category</code>.
      */
     public <T> boolean registerServiceProvider(T provider,
-					       Class<T> category) {
+                                               Class<T> category) {
         if (provider == null) {
             throw new IllegalArgumentException("provider == null!");
         }
@@ -253,7 +275,7 @@ public class ServiceRegistry {
         if (!category.isAssignableFrom(provider.getClass())) {
             throw new ClassCastException();
         }
-        
+
         return reg.registerServiceProvider(provider);
     }
 
@@ -331,6 +353,7 @@ public class ServiceRegistry {
      * @param provider the service provider object to be deregistered.
      * @param category the category from which to deregister the
      * provider.
+     * @param <T> the type of the provider.
      *
      * @return <code>true</code> if the provider was previously
      * registered in the same category category,
@@ -344,7 +367,7 @@ public class ServiceRegistry {
      * the class defined by <code>category</code>.
      */
     public <T> boolean deregisterServiceProvider(T provider,
-						 Class<T> category) {
+                                                 Class<T> category) {
         if (provider == null) {
             throw new IllegalArgumentException("provider == null!");
         }
@@ -403,7 +426,7 @@ public class ServiceRegistry {
         }
 
         return false;
-    } 
+    }
 
     /**
      * Returns an <code>Iterator</code> containing all registered
@@ -418,6 +441,7 @@ public class ServiceRegistry {
      * @param category the category to be retrieved from.
      * @param useOrdering <code>true</code> if pairwise orderings
      * should be taken account in ordering the returned objects.
+     * @param <T> the type of the category.
      *
      * @return an <code>Iterator</code> containing service provider
      * objects from the given category, possibly in order.
@@ -426,7 +450,7 @@ public class ServiceRegistry {
      * corresponding to <code>category</code>.
      */
     public <T> Iterator<T> getServiceProviders(Class<T> category,
-					       boolean useOrdering) {
+                                               boolean useOrdering) {
         SubRegistry reg = (SubRegistry)categoryMap.get(category);
         if (reg == null) {
             throw new IllegalArgumentException("category unknown!");
@@ -473,6 +497,7 @@ public class ServiceRegistry {
      * whose <code>filter</code> method will be invoked.
      * @param useOrdering <code>true</code> if pairwise orderings
      * should be taken account in ordering the returned objects.
+     * @param <T> the type of the category.
      *
      * @return an <code>Iterator</code> containing service provider
      * objects from the given category, possibly in order.
@@ -481,8 +506,8 @@ public class ServiceRegistry {
      * corresponding to <code>category</code>.
      */
     public <T> Iterator<T> getServiceProviders(Class<T> category,
-					       Filter filter,
-					       boolean useOrdering) {
+                                               Filter filter,
+                                               boolean useOrdering) {
         SubRegistry reg = (SubRegistry)categoryMap.get(category);
         if (reg == null) {
             throw new IllegalArgumentException("category unknown!");
@@ -500,6 +525,7 @@ public class ServiceRegistry {
      *
      * @param providerClass the <code>Class</code> of the desired
      * service provider object.
+     * @param <T> the type of the provider.
      *
      * @return a currently registered service provider object with the
      * desired <code>Class</code>type, or <code>null</code> is none is
@@ -544,6 +570,7 @@ public class ServiceRegistry {
      * @param firstProvider the preferred provider.
      * @param secondProvider the provider to which
      * <code>firstProvider</code> is preferred.
+     * @param <T> the type of the category.
      *
      * @return <code>true</code> if a previously unset ordering
      * was established.
@@ -554,8 +581,8 @@ public class ServiceRegistry {
      * corresponding to <code>category</code>.
      */
     public <T> boolean setOrdering(Class<T> category,
-				   T firstProvider,
-				   T secondProvider) {
+                                   T firstProvider,
+                                   T secondProvider) {
         if (firstProvider == null || secondProvider == null) {
             throw new IllegalArgumentException("provider is null!");
         }
@@ -589,6 +616,7 @@ public class ServiceRegistry {
      * @param firstProvider the formerly preferred provider.
      * @param secondProvider the provider to which
      * <code>firstProvider</code> was formerly preferred.
+     * @param <T> the type of the category.
      *
      * @return <code>true</code> if a previously set ordering was
      * disestablished.
@@ -599,8 +627,8 @@ public class ServiceRegistry {
      * corresponding to <code>category</code>.
      */
     public <T> boolean unsetOrdering(Class<T> category,
-				     T firstProvider,
-				     T secondProvider) {
+                                     T firstProvider,
+                                     T secondProvider) {
         if (firstProvider == null || secondProvider == null) {
             throw new IllegalArgumentException("provider is null!");
         }
@@ -703,7 +731,7 @@ class SubRegistry {
 
     /**
      * If the provider was not previously registered, do nothing.
-     * 
+     *
      * @return true if the provider was previously registered.
      */
     public boolean deregisterServiceProvider(Object provider) {
@@ -731,7 +759,7 @@ class SubRegistry {
                                Object secondProvider) {
         return poset.setOrdering(firstProvider, secondProvider);
     }
-    
+
     public boolean unsetOrdering(Object firstProvider,
                                  Object secondProvider) {
         return poset.unsetOrdering(firstProvider, secondProvider);
