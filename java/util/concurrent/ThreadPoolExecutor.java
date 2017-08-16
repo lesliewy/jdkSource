@@ -379,11 +379,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
 
     // runState is stored in the high-order bits
-    private static final int RUNNING    = -1 << COUNT_BITS;
-    private static final int SHUTDOWN   =  0 << COUNT_BITS;
-    private static final int STOP       =  1 << COUNT_BITS;
-    private static final int TIDYING    =  2 << COUNT_BITS;
-    private static final int TERMINATED =  3 << COUNT_BITS;
+    private static final int RUNNING    = -1 << COUNT_BITS;  //
+    private static final int SHUTDOWN   =  0 << COUNT_BITS;  // 0 * 2^29
+    private static final int STOP       =  1 << COUNT_BITS;  // 1 * 2^29
+    private static final int TIDYING    =  2 << COUNT_BITS;  // 2 * 2^29
+    private static final int TERMINATED =  3 << COUNT_BITS;  // 3 * 3^29
 
     // Packing and unpacking ctl
     private static int runStateOf(int c)     { return c & ~CAPACITY; }
