@@ -153,6 +153,11 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @since 1.5
  * @author Doug Lea
  */
+
+/**
+ * 可共享的同步组件，有n个许可,多个线程可以共同去获取许可，当线程申请的许可小于n时即可申请成功, 否则申请失败.
+ * ReentrantLock 是独占式, Semaphore是共享式.
+ */
 public class Semaphore implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
     /** All mechanics via AbstractQueuedSynchronizer subclass */
@@ -174,10 +179,15 @@ public class Semaphore implements java.io.Serializable {
             return getState();
         }
 
+        /**
+         * 与独占式不同, 共享式获取失败，会再次获取，直至没有permit可用,  而独占式获取失败会进入等待队列.
+         * 非公平的semaphore, 会直接去获取permit.
+         */
         final int nonfairTryAcquireShared(int acquires) {
             for (;;) {
                 int available = getState();
                 int remaining = available - acquires;
+                // 死循环更新state, 直至成功，或者没有permit
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining))
                     return remaining;
@@ -242,6 +252,7 @@ public class Semaphore implements java.io.Serializable {
 
         protected int tryAcquireShared(int acquires) {
             for (;;) {
+                // 公平的semaphore会先判断之前有没有等待的thread
                 if (hasQueuedPredecessors())
                     return -1;
                 int available = getState();

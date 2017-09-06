@@ -33,6 +33,17 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * 参考: http://ifeve.com/jdk1-8-abstractqueuedsynchronizer-part2/
+ * AQS关于共享锁方面的实现方式：
+   如果获取共享锁失败后，将请求共享锁的线程封装成Node对象放入AQS的队列中，并挂起Node对象对应的线程，实现请求锁线程的等待操作。待共享锁可以被获取后，
+   从头节点开始，依次唤醒头节点及其以后的所有共享类型的节点。
+   实现共享状态的传播。这里有几点值得注意：
+    1．与AQS的独占功能一样，共享锁是否可以被获取的判断为空方法，交由子类去实现。
+    2．与AQS的独占功能不同，当锁被头节点获取后，独占功能是只有头节点获取锁，其余节点的线程继续沉睡，等待锁被释放后，才会唤醒下一个节点的线程，
+       而共享功能是只要头节点获取锁成功，就在唤醒自身节点对应的线程的同时，
+       继续唤醒AQS队列中的下一个节点的线程，每个节点在唤醒自身的同时还会唤醒下一个节点对应的线程，以实现共享状态的“向后传播”，从而实现共享功能。
+ */
 package java.util.concurrent;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
@@ -153,6 +164,10 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @since 1.5
  * @author Doug Lea
  */
+
+/**
+ * 与Semaphore一样，是共享锁, 因为不同的线程可以同时拥有锁.
+ */
 public class CountDownLatch {
     /**
      * Synchronization control For CountDownLatch.
@@ -169,12 +184,14 @@ public class CountDownLatch {
             return getState();
         }
 
+        // await() 直到state == 0
         protected int tryAcquireShared(int acquires) {
             return (getState() == 0) ? 1 : -1;
         }
 
+        // countdown() 每次state -1
         protected boolean tryReleaseShared(int releases) {
-            // Decrement count; signal when transition to zero
+            // Decrement count; signal when transition to zero    死循环确保state值的更新成功
             for (;;) {
                 int c = getState();
                 if (c == 0)

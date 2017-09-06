@@ -374,19 +374,19 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * that workerCount is 0 (which sometimes entails a recheck -- see
      * below).
      */
-    private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+    private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0)); // 初始值是 -1 * 2^29
     private static final int COUNT_BITS = Integer.SIZE - 3;
-    private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
+    private static final int CAPACITY   = (1 << COUNT_BITS) - 1;    // 二进制: 00011111111111111111111111111111
 
-    // runState is stored in the high-order bits
-    private static final int RUNNING    = -1 << COUNT_BITS;  //
+    // runState is stored in the high-order bits   通过数字来保存状态、线程数.
+    private static final int RUNNING    = -1 << COUNT_BITS;  // -1 * 2^29
     private static final int SHUTDOWN   =  0 << COUNT_BITS;  // 0 * 2^29
     private static final int STOP       =  1 << COUNT_BITS;  // 1 * 2^29
     private static final int TIDYING    =  2 << COUNT_BITS;  // 2 * 2^29
     private static final int TERMINATED =  3 << COUNT_BITS;  // 3 * 3^29
 
     // Packing and unpacking ctl
-    private static int runStateOf(int c)     { return c & ~CAPACITY; }
+    private static int runStateOf(int c)     { return c & ~CAPACITY; }   // ~CAPACITY: -536870912   二进制: 11100000000000000000000000000000
     private static int workerCountOf(int c)  { return c & CAPACITY; }
     private static int ctlOf(int rs, int wc) { return rs | wc; }
 
@@ -541,7 +541,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private volatile int maximumPoolSize;
 
     /**
-     * The default rejected execution handler
+     * The default rejected execution handler   默认的是拒绝.
      */
     private static final RejectedExecutionHandler defaultHandler =
         new AbortPolicy();
@@ -1353,11 +1353,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * and so reject the task.
          */
         int c = ctl.get();
+        // 第一种情况, 小于corePoolSize, 新建线程.
         if (workerCountOf(c) < corePoolSize) {
             if (addWorker(command, true))
                 return;
             c = ctl.get();
         }
+        // 第二种情况, 线程数处在running区间, 则添加到队列.
         if (isRunning(c) && workQueue.offer(command)) {
             int recheck = ctl.get();
             if (! isRunning(recheck) && remove(command))
@@ -1845,6 +1847,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * threads may change dynamically during computation, the returned
      * value is only an approximation.
      *
+     * completedTaskCount + w.completedTasks(每个线程已完成的) + w.isLocked(线程正在执行的任务).
+     *
      * @return the number of tasks
      */
     public long getTaskCount() {
@@ -1869,6 +1873,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * may change dynamically during computation, the returned value
      * is only an approximation, but one that does not ever decrease
      * across successive calls.
+     *
+     * completedTaskCount + w.completedTasks(每个线程已完成的)
      *
      * @return the number of tasks
      */

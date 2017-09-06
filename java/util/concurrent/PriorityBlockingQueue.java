@@ -481,6 +481,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         int n, cap;
         Object[] array;
+        // 当前队列大小 >= 队列容量, 扩容
         while ((n = size) >= (cap = (array = queue).length))
             tryGrow(array, cap);
         try {

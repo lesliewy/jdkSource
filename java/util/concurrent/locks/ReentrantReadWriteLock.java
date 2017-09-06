@@ -33,6 +33,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * AQS的队列可以同时存放共享锁和独占锁，对于ReentrantReadWriteLock来说分别代表读锁和写锁，当队列中的头节点为读锁时，代表读操作可以执行，而写操作不能执行，因此请求写操作的线程会被挂起，
+ * 当读操作依次推出后，写锁成为头节点，请求写操作的线程被唤醒，可以执行写操作，而此时的读请求将被封装成Node放入AQS的队列中。如此往复，实现读写锁的读写交替进行。
+ */
 package java.util.concurrent.locks;
 import java.util.concurrent.TimeUnit;
 import java.util.Collection;
