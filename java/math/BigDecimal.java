@@ -418,7 +418,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
         // Use locals for all fields values until completion
         int prec = 0;                 // record precision value
         int scl = 0;                  // record scale value
-        long rs = 0;                  // the compact value in long
+        long rs = 0;                  // the compact value in long 可以使用long就用，不能用就用BigInteger.
         BigInteger rb = null;         // the inflated value in BigInteger
         // use array bounds checking to handle too-long, len == 0,
         // bad offset, etc.

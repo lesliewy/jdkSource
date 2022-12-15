@@ -661,7 +661,7 @@ public abstract class AbstractQueuedSynchronizer
          * traverse backwards from tail to find the actual
          * non-cancelled successor.
          * 如果下一个节点为空或者下一个节点的状态>0（目前大于0就是取消状态）, 则从tail节点开始遍历找到离当前节点最近的且waitStatus<=0（即非取消状态）的节点并唤醒
-         * 不太明白为什么为null或者cancell时就从后往前找.
+         * 不太明白为什么为null或者cancel时就从后往前找.
          */
         Node s = node.next;
         if (s == null || s.waitStatus > 0) {
