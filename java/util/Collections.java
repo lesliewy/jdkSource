@@ -77,6 +77,10 @@ import java.util.stream.StreamSupport;
  * @since   1.2
  */
 
+/**
+ * synchronizedxxxx: 利用了同步策略中的限制 - 对象内限制 - 适配器策略.
+ */
+
 public class Collections {
     // Suppresses default constructor, ensuring non-instantiability.
     private Collections() {
