@@ -478,6 +478,7 @@ public class Timer {
  * reschedules repeating tasks, and removes cancelled tasks and spent
  * non-repeating tasks from the queue.
  */
+/** 很显然，如果某个task抛出异常，会直接结束线程 */
 class TimerThread extends Thread {
     /**
      * This flag is set to false by the reaper to inform us that there
@@ -566,6 +567,7 @@ class TimerThread extends Thread {
  * offers log(n) performance for the add, removeMin and rescheduleMin
  * operations, and constant time performance for the getMin operation.
  */
+/** 使用堆来做排序，参看 fixUp(), fixDown() */
 class TaskQueue {
     /**
      * Priority queue represented as a balanced binary heap: the two children

@@ -1271,6 +1271,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
         // to use the constant ZERO.  This might be important enough to
         // justify a factory approach, a cache, or a few private
         // constants, later.
+        /** BigDecimal.valueOf(0.01) 会把0.01转成字符串"0.01", 不要使用new BigDecimal(0.01).  */
         return new BigDecimal(Double.toString(val));
     }
 
