@@ -1378,20 +1378,23 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * and so reject the task.
          */
         int c = ctl.get();
-        // 第一种情况, 小于corePoolSize, 新建线程.
+        /**  第一种情况, 小于corePoolSize, 新建线程. */
         if (workerCountOf(c) < corePoolSize) {
             if (addWorker(command, true))
                 return;
             c = ctl.get();
         }
-        // 第二种情况, 线程数处在running区间, 则添加到队列.
+        /**
+         * 第二种情况, 线程数处在running区间, 则添加到队列.
+         * 自定义 workQueue 可以改变theadPoolExecutor的执行逻辑, 对于io密集型业务，达到corePoolSize后继续新建线程, 而不是入队.
+         **/
         if (isRunning(c) && workQueue.offer(command)) {
             int recheck = ctl.get();
             // 双重检查，因为从上次检查到进入此方法，线程池可能已成为SHUTDOWN状态
             if (! isRunning(recheck) && remove(command))
                 reject(command);
             else if (workerCountOf(recheck) == 0)
-                // 执行到这说明线程池是 running 状态，获取线程池中的线程数量，判断是否是 0 【担保机制】，保证线程池在 running 状态下，最起码得有一个线程在工作
+                /**  执行到这说明线程池是 running 状态，获取线程池中的线程数量，判断是否是 0 【担保机制】，保证线程池在 running 状态下，最起码得有一个线程在工作 */
                 addWorker(null, false);
         }
         else if (!addWorker(command, false))
