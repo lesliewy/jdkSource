@@ -324,6 +324,7 @@ public class ThreadLocal<T> {
          * The table, resized as necessary.
          * table.length MUST always be a power of two.
          */
+        /** threadLocalMap使用的环形数组. */
         private Entry[] table;
 
         /**
