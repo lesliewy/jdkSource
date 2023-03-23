@@ -626,23 +626,28 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] tab; Node<K,V> p; int n, i;
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
+        /** tab[i] 处没有值. */
         if ((p = tab[i = (n - 1) & hash]) == null)
             tab[i] = newNode(hash, key, value, null);
         else {
             Node<K,V> e; K k;
+            /** tab[i] */
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
                 e = p;
-            else if (p instanceof TreeNode)
+            else if (p instanceof TreeNode)      /** tab[i]中的树 */
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {
+            else {                               /** tab[i]中的链表 */
                 for (int binCount = 0; ; ++binCount) {
+                    /** 链表中没有，在最后插入新节点. */
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
+                        /** 只有在遍历到最后的时候，才知道binCount, 才能判断是否要树化. */
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
                     }
+                    /** 链表中找到e */
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
                         break;
@@ -657,7 +662,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 return oldValue;
             }
         }
+        /** 如果走到这里，说明没找到e, 插入了新节点。 */
         ++modCount;
+        /** 扩容判断. */
         if (++size > threshold)
             resize();
         afterNodeInsertion(evict);
@@ -683,7 +690,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 threshold = Integer.MAX_VALUE;
                 return oldTab;
             }
-            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&      /** 两倍扩容 */
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
         }
@@ -703,20 +710,26 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
         table = newTab;
         if (oldTab != null) {
+            /** 遍历原tab. */
             for (int j = 0; j < oldCap; ++j) {
                 Node<K,V> e;
                 if ((e = oldTab[j]) != null) {
                     oldTab[j] = null;
+                    /** tab[i] 处只有一个值. */
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
-                    else if (e instanceof TreeNode)
+                    else if (e instanceof TreeNode)          /** 树处理。 */
                         ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
-                    else { // preserve order
+                    else { // preserve order                 /** 链表处理. */
                         Node<K,V> loHead = null, loTail = null;
                         Node<K,V> hiHead = null, hiTail = null;
                         Node<K,V> next;
+                        /** 依次处理链表元素. */
                         do {
                             next = e.next;
+                            /**
+                             * 高低链处理。
+                             */
                             if ((e.hash & oldCap) == 0) {
                                 if (loTail == null)
                                     loHead = e;
@@ -732,6 +745,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                                 hiTail = e;
                             }
                         } while ((e = next) != null);
+                        /**
+                         * 低链放在低位. 高链放在高位，因为hash高位为1,刚好比低链位置多oldCap.
+                         */
                         if (loTail != null) {
                             loTail.next = null;
                             newTab[j] = loHead;
