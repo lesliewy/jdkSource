@@ -1008,6 +1008,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /** Implementation for put and putIfAbsent */
     final V putVal(K key, V value, boolean onlyIfAbsent) {
+        /**
+         * 禁止null. Doug Lea 解释是无法解决二义性: key不存在 or key的value是null.
+         * hashMap中允许key,value为null是因为还可以通过contains(), containsKey()来区分这这种二义性。但是CHM是并发容器, get()和contains()之间可能会插入key.
+         *
+         * 参考: https://mp.weixin.qq.com/s?__biz=Mzg3NjU3NTkwMQ==&mid=2247505071&idx=1&sn=5b9bbe01a71cbfae4d277dd21afd6714&source=41#wechat_redirect
+         */
         if (key == null || value == null) throw new NullPointerException();
         int hash = spread(key.hashCode());
         int binCount = 0;
@@ -1639,6 +1645,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *         otherwise never complete
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is left unestablished
+     */
+    /**
+     * 存在bug.
+     * 参考: https://mp.weixin.qq.com/s?__biz=Mzg3NjU3NTkwMQ==&mid=2247505119&idx=1&sn=f68a4c4943b13e34969c1643a3cda916&chksm=cf32b92df845303b556978e9a3fedca2aa54bb0994faf9cce47ebd8c42edbeb05fdf69837512&scene=27#wechat_redirect&cpage=253
      */
     public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)

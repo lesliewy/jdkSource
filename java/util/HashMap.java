@@ -551,6 +551,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *
      * @see #put(Object, Object)
      */
+    /**
+     * 返回null: 一是没有这个key; 二是key的value就是null.
+     * containsKey()可以区分.
+     */
     public V get(Object key) {
         Node<K,V> e;
         return (e = getNode(hash(key), key)) == null ? null : e.value;
@@ -590,6 +594,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @param   key   The key whose presence in this map is to be tested
      * @return <tt>true</tt> if this map contains a mapping for the specified
      * key.
+     */
+    /**
+     * getNode()返回的是node.
+     * 对于value是null: node.val是null, 但是node并不是null,所以此时containsKey()返回true.
+     * containsKey()返回false: 说明table中没有这个key, 只有这一种可能.
      */
     public boolean containsKey(Object key) {
         return getNode(hash(key), key) != null;
